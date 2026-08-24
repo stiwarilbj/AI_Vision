@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "AI Vision - Gemini Screenshot & Browser Assistant",
+  "version": "2.0",
+  "description": "Ask Gemini about screenshots, The Tab, or All Tabs—and use Agent Mode for safe browser tasks in one Chrome window.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "contextMenus",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "src/background/service-worker.js"
+  },
+  "action": {
+    "default_title": "AI Vision - Ask Gemini about this page",
+    "default_icon": {
+      "16": "extension-assets/icons/icon-16.png",
+      "32": "extension-assets/icons/icon-32.png",
+      "48": "extension-assets/icons/icon-48.png",
+      "128": "extension-assets/icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "extension-assets/icons/icon-16.png",
+    "32": "extension-assets/icons/icon-32.png",
+    "48": "extension-assets/icons/icon-48.png",
+    "128": "extension-assets/icons/icon-128.png"
+  }
+}

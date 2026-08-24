@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Vision assistant panel harness</title>
+  <link rel="stylesheet" href="../../src/content/assistant-panel.css">
+  <style>
+    body { min-height: 100vh; margin: 0; padding: 48px; box-sizing: border-box; font: 16px/1.5 system-ui, sans-serif; background: #f4f9ff; color: #16324f; }
+    main { max-width: 680px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Assistant panel test page</h1>
+    <p>This local page supplies fake Chrome APIs so contributors can inspect the injected interface without installing the extension or using a real Gemini API key.</p>
+    <button type="button">Example page action</button>
+  </main>
+  <script>
+    window.__aiVisionTestSettings = {
+      geminiApiKey: 'local-test-key',
+      geminiModel: 'gemini-3.5-flash',
+      geminiTemperature: 1,
+      geminiMode: 'tab',
+      geminiResponseStyle: 'balanced',
+      geminiAgentMode: false,
+      needApiKeyPopup: false
+    };
+
+    const runtimeListeners = new Set();
+    window.chrome = {
+      storage: {
+        local: {
+          get(keys, callback) {
+            const result = {};
+            for (const key of keys) result[key] = window.__aiVisionTestSettings[key];
+            callback(result);
+          },
+          set(values, callback) {
+            Object.assign(window.__aiVisionTestSettings, values);
+            if (callback) callback();
+          }
+        }
+      },
+      runtime: {
+        onMessage: {
+          addListener(listener) { runtimeListeners.add(listener); },
+          removeListener(listener) { runtimeListeners.delete(listener); }
+        },
+        async sendMessage(request) {
+          if (request.action === 'captureVisibleTab') return 'data:image/jpeg;base64,dGVzdA==';
+          if (request.action === 'collectSourceTabContext') {
+            return { tabs: [{ title: document.title, url: location.href, text: document.body.innerText }] };
+          }
+          if (request.action === 'collectWindowContext') {
+            return { tabs: [{ title: document.title, url: location.href, text: document.body.innerText }] };
+          }
+          if (request.action === 'runAgentTask') return { summary: 'Local test task completed.' };
+          return null;
+        }
+      }
+    };
+  </script>
+  <script src="../../src/content/assistant-panel.js"></script>
+</body>
+</html>

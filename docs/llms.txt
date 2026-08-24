@@ -1,0 +1,26 @@
+# AI Vision – Gemini Screenshot & Browser Assistant
+
+> AI Vision is a Chrome extension for asking Google's Gemini API about a selected screenshot, The Tab, or supported tabs in one Chrome window. Its optional Agent Mode can perform constrained browser actions within the user-selected scope.
+
+Canonical website: https://gitchubst.github.io/AI_Vision/
+Chrome Web Store: https://chromewebstore.google.com/detail/ai-vision-screenshot-ask/ghmmlbclopoakmjjbkkmoefjldgjimgk
+Public source: https://github.com/gitchubst/AI_Vision
+Privacy notice: https://gitchubst.github.io/AI_Vision/privacy.html
+Current version: 2.0
+
+## Primary features
+
+- Capture mode analyzes a user-selected screenshot region.
+- The Tab mode answers questions about readable content on the current supported webpage.
+- All Tabs mode compares up to 20 supported tabs in one Chrome window.
+- Response styles include Balanced, Concise, Formal, Casual, Detailed, and Bullet-oriented.
+- Agent Mode can be enabled in Capture, The Tab, or All Tabs. Capture and The Tab remain scoped to one tab; All Tabs can search, switch, navigate, and act inside the starting Chrome window, subject to safety blocks and a 12-step limit.
+
+## Data handling
+
+- The user supplies a Gemini API key, which is stored locally with preferences in Chrome storage.
+- User-requested prompts and necessary webpage or screenshot context go directly to Google's Gemini API over HTTPS.
+- AI Vision has no developer-operated analytics, advertising, tracking, or proxy server.
+- The repository is publicly visible but does not currently contain an open-source license.
+
+AI Vision is an independent project and is not affiliated with or endorsed by Google.

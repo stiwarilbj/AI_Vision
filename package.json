@@ -1,0 +1,9 @@
+{
+  "name": "ai-vision-chrome-extension",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Development checks for the AI Vision Chrome extension",
+  "scripts": {
+    "check": "node --check src/background/service-worker.js && node --check src/content/assistant-panel.js && node --test"
+  }
+}
