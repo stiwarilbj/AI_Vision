@@ -1,6 +1,6 @@
 # AI Vision Deliverables and Images
 
-Documentation, public website files, store-submission artwork, screenshots, promotional tiles, branding, and demo media for AI Vision 2.0.
+Documentation, public website files, store-submission artwork, screenshots, promotional tiles, branding, and demo media for AI Vision.
 
 - `documentation/` — project, privacy, store listing, and growth documentation.
 - `website/` — the self-contained public discovery site.
