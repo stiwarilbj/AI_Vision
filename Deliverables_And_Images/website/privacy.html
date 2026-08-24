@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Notice – AI Vision</title>
+  <meta name="description" content="How AI Vision handles screenshots, webpage context, browser tabs, Gemini API keys, and local settings.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://gitchubst.github.io/AI_Vision/privacy.html">
+  <link rel="icon" href="assets/store-icon.png" sizes="128x128" type="image/png">
+  <style>
+    :root { color-scheme: light; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #102a43; background: #eff9ff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; line-height: 1.65; background: radial-gradient(circle at 15% 0, #d5f0ff, transparent 32rem), #f7fcff; }
+    main { width: min(820px, calc(100% - 36px)); margin: 50px auto; padding: clamp(26px, 6vw, 58px); border: 1px solid #cae9fa; border-radius: 26px; background: #fff; box-shadow: 0 24px 70px rgba(39,126,181,.13); }
+    a { color: #0875b8; } h1 { margin: 12px 0 0; font-size: clamp(36px, 6vw, 56px); line-height: 1.05; letter-spacing: -.04em; } h2 { margin-top: 35px; line-height: 1.2; } .muted { color: #587186; } .back { font-weight: 800; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="./">← AI Vision</a>
+    <h1>Privacy notice</h1>
+    <p class="muted">Last updated: August 24, 2026</p>
+    <p>AI Vision – Gemini Screenshot & Browser Assistant is a Chrome extension that lets a user ask Google's Gemini API about a selected screenshot, The Tab, or supported tabs in one Chrome window. Its optional Agent Mode can perform a limited browser task within the scope selected by the user.</p>
+
+    <h2>Data AI Vision handles</h2>
+    <p>Only when a user invokes a feature, AI Vision may handle the user's question, response-style choice, selected Gemini model, selected screenshot, visible webpage text, page titles and URLs, visible interactive-element labels or destinations, content from up to 20 supported tabs in the starting Chrome window, the user's Gemini API key, and locally saved preferences.</p>
+    <p>AI Vision reads live tab information needed for The Tab, All Tabs, and Agent Mode. It does not read the user's saved Chrome browsing-history database.</p>
+
+    <h2>Use and sharing</h2>
+    <p>AI Vision uses this information only to provide the feature the user requested. The prompt and necessary screenshot or webpage context are sent directly from the extension to the Google Gemini API over HTTPS. The Gemini API key is sent to Google in the <code>x-goog-api-key</code> request header so Google can authenticate the request.</p>
+    <p>AI Vision has no developer-operated analytics, advertising, tracking, or proxy server. The developer does not sell or rent user data. Data sent to Google is handled under Google's applicable Gemini API and privacy terms.</p>
+
+    <h2>Storage and retention</h2>
+    <p>The Gemini API key and user preferences are stored locally through <code>chrome.storage.local</code> in the user's Chrome profile. AI Vision does not intentionally store screenshots, page content, prompts, Gemini responses, or browser-task context on a developer server. Users can remove locally stored extension data by clearing the extension's data or uninstalling it.</p>
+
+    <h2>Agent Mode controls</h2>
+    <p>Agent Mode is off unless the user enables it. In Capture and The Tab modes, it can act only in the source tab. In All Tabs mode, it is limited to the Chrome window where the task started and stops if the source tab moves to another window. Every task stops after 12 steps. It blocks fields that appear to request passwords, payment information, or authentication codes and blocks automated purchases, payments, deletions, messages, posts, uploads, sign-ins, subscriptions, and acceptance of legal terms.</p>
+
+    <h2>Remote code</h2>
+    <p>AI Vision does not use remotely hosted executable code. Its JavaScript and CSS are packaged with the extension. Gemini API responses are treated as data and are not evaluated, imported, or executed as code.</p>
+
+    <h2>Limited use</h2>
+    <p>AI Vision's use and transfer of information received from Google APIs adheres to the Chrome Web Store User Data Policy, including its Limited Use requirements. Data is used only to provide or improve prominent user-facing features and for security or legal compliance where required.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this notice can be sent to <a href="mailto:gitchub@gmail.com">gitchub@gmail.com</a>.</p>
+  </main>
+</body>
+</html>
