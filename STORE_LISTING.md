@@ -1,4 +1,6 @@
-# Chrome Web Store copy – version 2.0
+# Chrome Web Store copy – version 2.1.0
+
+Official active listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
 
 ## Title from package
 
@@ -17,12 +19,12 @@ Capture part of a webpage, ask questions about the page you are viewing, or anal
 What it does:
 
 - Lets you screenshot any visible part of a website
-- Sends your selected image and question directly to the Gemini API for analysis
+- Sends your selected image and question from the service worker directly to the Gemini API for analysis
 - Reads supported content from the current tab when you choose The Tab mode
 - Summarizes, compares, and answers questions across up to 20 tabs in the same Chrome window with All Tabs mode
 - Provides summaries, explanations, and direct answers about images, articles, documents, products, research, and other webpage content
 - Lets you choose Balanced, Concise, Formal, Casual, Detailed, or Bullet-oriented responses
-- Includes five Gemini model options, with gemini-3.5-flash selected by default
+- Discovers Gemini models that are available to the user's API key
 - Can open AI Vision without attaching a picture when you click instead of dragging in Capture mode
 
 Agent Mode:
@@ -31,8 +33,11 @@ Agent Mode:
 - In Capture mode, Agent Mode uses the selected screenshot and acts only in The Tab where the capture started
 - In The Tab mode, Agent Mode can read, navigate, click, type, and scroll only in that tab
 - In All Tabs mode, Agent Mode can search, switch tabs, navigate, click, type, and scroll across supported tabs in the starting Chrome window
+- When the optional local Google ADK companion is running, every planning step rotates through five configured Gemini models; otherwise the constrained direct-Gemini planner remains available
+- Opening a new tab, going back or forward, and reloading are supported only after approval; new tabs stay in the starting window
 - All Tabs Agent Mode stops if the source tab moves to another window
-- Sensitive actions such as passwords, payments, purchases, deletions, uploads, posts, sign-ins, and acceptance of legal terms are blocked
+- Reading, waiting, and scrolling can proceed automatically; every click, text entry, and model-generated navigation requires explicit approval
+- Sensitive actions such as passwords, credentials, payments, purchases, deletions, uploads, posts, sign-ins, permissions, and acceptance of legal terms are permanently blocked
 - Every task stops after a 12-step safety limit so you can review what happened
 
 How to use:
@@ -41,7 +46,7 @@ How to use:
 - Choose Capture, The Tab, or All Tabs using the mode control above the question box
 - In Capture mode, drag to select the area you want to analyze; click once to open AI Vision without a picture
 - Type a question or use Summarize, Explain, or Answer for an AI-powered response
-- Choose a response style and Gemini model in Settings
+- Choose a response style and an available Gemini model in Settings
 - Your mode, Agent Mode, and response settings remain selected until you manually change them
 
 Getting started:
@@ -51,14 +56,14 @@ You'll need a Google Gemini API key from Google AI Studio. Visit aistudio.google
 Privacy and control:
 
 - AI Vision runs only when you open it or start a task
-- Your API key and preferences are stored locally in your Chrome profile
+- Your API key is stored by the service worker with preferences locally in your Chrome profile; the panel receives only masked key status
 - Requests go directly from the extension to Google's Gemini API over HTTPS
 - AI Vision has no developer-operated analytics, advertising, tracking, or proxy server
 - Chrome internal pages, the Chrome Web Store, and other restricted pages cannot be analyzed
 
 Source and support:
 
-The source is publicly available at github.com/gitchubst/AI_Vision. If AI Vision saves you time, please leave an honest rating on the Chrome Web Store. Ratings are never required or rewarded.
+The source is publicly available at github.com/stiwarilbj/AI_Vision. If AI Vision saves you time, please leave an honest rating on the Chrome Web Store. Ratings are never required or rewarded.
 
 AI Vision is an independent project and is not affiliated with or endorsed by Google. Gemini and Chrome are trademarks of Google LLC.
 
@@ -74,7 +79,7 @@ The activeTab permission supports user-initiated activation from the toolbar or 
 
 ### scripting justification
 
-The scripting permission is required to inject the packaged AI Vision interface and stylesheet after the user clicks the extension icon or context-menu item. It is also used, at the user's request, to extract visible page text and visible interactive-element labels for The Tab, All Tabs, and Agent Mode, and to carry out an approved click, typing, or scroll action. No remotely hosted script is injected.
+The scripting permission is required to inject the packaged AI Vision interface after the user clicks the extension icon or context-menu item. It is also used, at the user's request, to extract visible page text and visible interactive-element labels for The Tab, All Tabs, and Agent Mode, and to carry out an approved click, typing, or scroll action. No remotely hosted script is injected.
 
 ### contextMenus justification
 
@@ -86,11 +91,11 @@ The storage permission saves the user's Gemini API key and selected model, tempe
 
 ### tabs justification
 
-The tabs permission supports the prominent The Tab, All Tabs, and Agent Mode features. AI Vision identifies the source tab, queries tabs in the starting Chrome window for All Tabs, reads titles and URLs, and switches a selected tab only when All Tabs Agent Mode is enabled. It does not read Chrome's saved browsing-history database, and it limits All Tabs context to 20 tabs per request.
+The optional tabs permission supports All Tabs and All Tabs Agent Mode. AI Vision identifies the source tab, queries tabs in the starting Chrome window, reads titles and URLs, and switches a selected tab only when All Tabs Agent Mode is enabled. It requests this permission only after the user chooses All Tabs, fails closed when permission is denied, does not read Chrome's saved browsing-history database, and limits context to 20 tabs per request.
 
 ### Host permission justification
 
-Access to http://*/* and https://*/* is required because users may invoke Capture, The Tab, All Tabs, or Agent Mode on ordinary websites across many domains. The access is used only for a user-requested feature: injecting the packaged UI, reading visible page context, capturing the visible tab, or performing a constrained browser action. Restricted Chrome pages and the Chrome Web Store remain inaccessible.
+The required host permission is limited to `https://generativelanguage.googleapis.com/*` for direct Gemini requests. Optional `http://127.0.0.1/*` access is requested when Agent Mode connects to a Google ADK companion started by the user. Optional `http://*/*` and `https://*/*` access is requested only when the user chooses All Tabs, because that mode reads supported pages across multiple domains. Capture and The Tab use user-initiated `activeTab` access. Restricted Chrome pages and the Chrome Web Store remain inaccessible.
 
 ### Are you using remote code?
 
@@ -109,8 +114,8 @@ Disclose these data categories because the extension handles them for its user-f
 - Web history/browsing activity: live tab titles and URLs used for The Tab, All Tabs, and Agent Mode. AI Vision does not read Chrome's stored browsing-history database.
 - User activity: the user's prompts and selected browser task actions.
 
-State that data is used only for the extension's single purpose, is not sold, is not used for advertising or credit decisions, and is sent directly to Google when the user requests Gemini analysis. Link the store listing to the hosted version of `PRIVACY.md` before submission.
+State that data is used only for the extension's single purpose, is not sold, and is not used for advertising or credit decisions. Normal requests are sent directly to Google. When the user separately runs and permits the loopback Google ADK companion, bounded Agent Mode planning context goes to that local service and then to Google. Link the store listing to the hosted version of `PRIVACY.md` before submission.
 
 ## Reviewer note about the retained permissions
 
-This version keeps the extension's existing permissions as requested. Chrome's permission guidance notes that broad host permissions can overlap with `activeTab` and sensitive tab metadata access. If a reviewer asks for further minimization, remove permissions only after retesting Capture, The Tab, All Tabs, and Agent Mode, then update the corresponding disclosures.
+This version keeps only `activeTab`, `scripting`, `contextMenus`, `storage`, and the narrow Gemini host permission as required permissions. Loopback ADK access, `tabs`, and ordinary HTTP/HTTPS host access are optional. Retest Capture, The Tab, All Tabs, ADK rotation, and Agent Mode after any permission change.

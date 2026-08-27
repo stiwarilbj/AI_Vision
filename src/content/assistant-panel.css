@@ -48,10 +48,10 @@
   top: 20px;
   right: 20px;
   width: 500px;
-  height: 500px;
+  height: min(500px, calc(100vh - 32px));
   max-width: calc(100vw - 32px);
   min-width: 340px;
-  min-height: 500px;
+  min-height: 0;
   max-height: calc(100vh - 32px);
   background: var(--gemini-blue-50);
   border: 1px solid #91bdf2;
@@ -433,6 +433,45 @@
   animation: gemini-spin 700ms linear infinite;
 }
 
+#gemini-popup .gemini-api-key-actions,
+#gemini-popup .gemini-approval-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 8px;
+}
+
+#gemini-popup .gemini-secondary-button,
+#gemini-popup .gemini-approve-button {
+  min-height: 32px;
+  padding: 5px 11px;
+  color: #175fae;
+  background: #ffffff;
+  border: 1px solid #a9cdf4;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#gemini-popup .gemini-approve-button {
+  color: #ffffff;
+  background: var(--gemini-blue-500);
+  border-color: #1e70db;
+}
+
+#gemini-popup .gemini-secondary-button:hover:not(:disabled),
+#gemini-popup .gemini-approve-button:hover:not(:disabled) {
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+}
+
+#gemini-popup .gemini-secondary-button:disabled,
+#gemini-popup .gemini-approve-button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
 @keyframes gemini-spin {
   to { transform: rotate(360deg); }
 }
@@ -530,6 +569,12 @@
   font-size: 13px;
 }
 
+#gemini-popup-response-area.automation p {
+  margin: 0;
+  color: #365979;
+  font-size: 12px;
+}
+
 #gemini-popup .gemini-automation-status {
   color: #5f7691;
   font-size: 11px;
@@ -594,7 +639,8 @@
   margin: 0;
   min-height: 0;
   flex: 1 1 auto;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 #gemini-settings-panel.show,
@@ -1135,6 +1181,7 @@
     max-width: none;
     min-width: 0;
     max-height: calc(100vh - 16px);
+    height: min(500px, calc(100vh - 16px));
   }
 
   #gemini-popup-header {
@@ -1172,6 +1219,36 @@
     padding: 8px 6px;
     gap: 5px;
     font-size: 12px;
+  }
+}
+
+@media (max-height: 560px) {
+  #gemini-popup {
+    top: 8px;
+    right: 8px;
+    height: calc(100vh - 16px);
+    max-height: calc(100vh - 16px);
+  }
+
+  #gemini-popup-header {
+    min-height: 48px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  #gemini-popup .gemini-brand-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  #gemini-popup-content {
+    padding: 8px;
+    gap: 7px;
+  }
+
+  #gemini-popup-response-area {
+    min-height: 48px;
+    padding: 11px 12px;
   }
 }
 

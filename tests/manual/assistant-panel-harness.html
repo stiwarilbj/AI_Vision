@@ -18,13 +18,13 @@
   </main>
   <script>
     window.__aiVisionTestSettings = {
-      geminiApiKey: 'local-test-key',
       geminiModel: 'gemini-3.5-flash',
       geminiTemperature: 1,
       geminiMode: 'tab',
       geminiResponseStyle: 'balanced',
       geminiAgentMode: false,
-      needApiKeyPopup: false
+      hasApiKey: true,
+      apiKeyMasked: '••••-key'
     };
 
     const runtimeListeners = new Set();
@@ -43,24 +43,51 @@
         }
       },
       runtime: {
+        getURL(file) { return `../../${file}`; },
         onMessage: {
           addListener(listener) { runtimeListeners.add(listener); },
           removeListener(listener) { runtimeListeners.delete(listener); }
         },
         async sendMessage(request) {
           if (request.action === 'captureVisibleTab') return 'data:image/jpeg;base64,dGVzdA==';
+          if (request.action === 'getSettings') return window.__aiVisionTestSettings;
+          if (request.action === 'getAvailableModels') return { models: ['gemini-3.5-flash'] };
+          if (request.action === 'saveSettings') {
+            Object.assign(window.__aiVisionTestSettings, {
+              geminiModel: request.geminiModel,
+              geminiTemperature: request.geminiTemperature,
+              geminiMode: request.geminiMode,
+              geminiResponseStyle: request.geminiResponseStyle,
+              geminiAgentMode: request.geminiAgentMode
+            });
+            if (request.clearApiKey) {
+              window.__aiVisionTestSettings.hasApiKey = false;
+              window.__aiVisionTestSettings.apiKeyMasked = '';
+            } else if (request.apiKey) {
+              window.__aiVisionTestSettings.hasApiKey = true;
+              window.__aiVisionTestSettings.apiKeyMasked = '••••-key';
+            }
+            return window.__aiVisionTestSettings;
+          }
           if (request.action === 'collectSourceTabContext') {
             return { tabs: [{ title: document.title, url: location.href, text: document.body.innerText }] };
           }
           if (request.action === 'collectWindowContext') {
             return { tabs: [{ title: document.title, url: location.href, text: document.body.innerText }] };
           }
-          if (request.action === 'runAgentTask') return { summary: 'Local test task completed.' };
+          if (request.action === 'ensureAllTabsAccess') return { granted: true };
+          if (request.action === 'askGemini') return { requestId: request.requestId, text: 'Local test response.' };
+          if (request.action === 'startAgentTask') {
+            const taskId = 'local-test-task';
+            setTimeout(() => runtimeListeners.forEach((listener) => listener({ action: 'agentModeComplete', taskId, summary: 'Local test task completed.' }, {}, () => {})), 0);
+            return { taskId };
+          }
           return null;
         }
       }
     };
   </script>
+  <script src="../../src/content/capture-utils.js"></script>
   <script src="../../src/content/assistant-panel.js"></script>
 </body>
 </html>

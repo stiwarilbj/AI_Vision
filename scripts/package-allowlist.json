@@ -1,0 +1,13 @@
+[
+  "manifest.json",
+  "permission.html",
+  "permission.js",
+  "src/background/service-worker.js",
+  "src/content/capture-utils.js",
+  "src/content/assistant-panel.js",
+  "src/content/assistant-panel.css",
+  "extension-assets/icons/icon-16.png",
+  "extension-assets/icons/icon-32.png",
+  "extension-assets/icons/icon-48.png",
+  "extension-assets/icons/icon-128.png"
+]

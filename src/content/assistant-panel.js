@@ -1,24 +1,19 @@
 (function() {
-    // User configuration. These values mirror the keys stored in chrome.storage.local.
-    let geminiApiKey = "";
+    // Secrets and Gemini requests stay in the service worker. The panel only
+    // receives a boolean and a masked key suffix for settings display.
+    let hasApiKey = false;
+    let apiKeyMasked = "";
     const DEFAULT_MODEL = "gemini-3.5-flash";
     const DEFAULT_MODE = "capture";
     const DEFAULT_RESPONSE_STYLE = "balanced";
-    const STORE_URL = "https://chromewebstore.google.com/detail/ai-vision-screenshot-ask/ghmmlbclopoakmjjbkkmoefjldgjimgk";
-    const GITHUB_URL = "https://github.com/gitchubst/AI_Vision";
+    const STORE_URL = "https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en";
+    const GITHUB_URL = "https://github.com/stiwarilbj/AI_Vision";
     let selectedModel = DEFAULT_MODEL;
     let responseTemperature = 1;
     let selectedMode = DEFAULT_MODE;
     let selectedResponseStyle = DEFAULT_RESPONSE_STYLE;
     let isAgentModeEnabled = false;
-
-    const MODELS = [
-        "gemini-3.5-flash",
-        "gemini-3-flash-preview",
-        "gemini-2.5-flash",
-        "gemini-3.1-flash-lite",
-        "gemini-2.5-flash-lite"
-    ];
+    let availableModels = [];
 
     const MODES = [
         { value: "capture", label: "Capture" },
@@ -44,52 +39,92 @@
         bullets: "Organize the answer as short, scannable bullet points whenever possible."
     };
 
-    // Persisted settings
-    function saveSettings() {
-        chrome.storage.local.set({
-            'geminiApiKey': geminiApiKey,
-            'geminiModel': selectedModel,
-            'geminiTemperature': responseTemperature,
-            'geminiMode': selectedMode,
-            'geminiResponseStyle': selectedResponseStyle,
-            'geminiAgentMode': isAgentModeEnabled
-        }, () => {
-        });
+    let uiHost = null;
+    let uiShadowRoot = null;
+
+    function uiQuery(selector) {
+        return uiShadowRoot ? uiShadowRoot.querySelector(selector) : null;
     }
-    async function loadSettings() {
-        return new Promise((resolve) => {
-            chrome.storage.local.get([
-                'geminiApiKey',
-                'geminiModel',
-                'geminiTemperature',
-                'geminiMode',
-                'geminiResponseStyle',
-                'geminiAgentMode',
-                'geminiAutoBrowse'
-            ], (result) => {
-                if (result.geminiApiKey) geminiApiKey = result.geminiApiKey;
-                if (result.geminiModel && MODELS.includes(result.geminiModel)) {
-                    selectedModel = result.geminiModel;
-                } else {
-                    selectedModel = DEFAULT_MODEL;
-                }
-                if (result.geminiTemperature !== undefined) responseTemperature = result.geminiTemperature;
-                if (MODES.some((mode) => mode.value === result.geminiMode)) {
-                    selectedMode = result.geminiMode;
-                } else {
-                    selectedMode = DEFAULT_MODE;
-                }
-                if (RESPONSE_STYLES.some((style) => style.value === result.geminiResponseStyle)) {
-                    selectedResponseStyle = result.geminiResponseStyle;
-                } else {
-                    selectedResponseStyle = DEFAULT_RESPONSE_STYLE;
-                }
-                isAgentModeEnabled = result.geminiAgentMode === true
-                    || (result.geminiAgentMode === undefined && result.geminiAutoBrowse === true);
-                geminiApiUrl = buildGeminiApiUrl();
-                resolve();
-            });
+
+    function uiQueryAll(selector) {
+        return uiShadowRoot ? Array.from(uiShadowRoot.querySelectorAll(selector)) : [];
+    }
+
+    function ensureUiRoot() {
+        if (uiShadowRoot && uiHost && uiHost.isConnected) return uiShadowRoot;
+        const oldHost = document.getElementById('ai-vision-host');
+        const oldTaskId = oldHost?.dataset?.agentTaskId;
+        const oldRequestId = oldHost?.dataset?.requestId;
+        if (oldTaskId) void chrome.runtime.sendMessage({ action: 'cancelAgentTask', taskId: oldTaskId }).catch(() => {});
+        if (oldRequestId) void chrome.runtime.sendMessage({ action: 'cancelGeminiRequest', requestId: oldRequestId }).catch(() => {});
+        if (oldHost) oldHost.remove();
+        uiHost = document.createElement('div');
+        uiHost.id = 'ai-vision-host';
+        uiHost.setAttribute('aria-label', 'AI Vision extension interface');
+        uiHost.style.position = 'fixed';
+        uiHost.style.inset = '0';
+        uiHost.style.zIndex = '2147483647';
+        uiHost.style.pointerEvents = 'none';
+        uiShadowRoot = uiHost.attachShadow({ mode: 'closed' });
+        const stylesheet = document.createElement('link');
+        stylesheet.rel = 'stylesheet';
+        stylesheet.href = chrome.runtime.getURL
+            ? chrome.runtime.getURL('src/content/assistant-panel.css')
+            : 'assistant-panel.css';
+        uiShadowRoot.appendChild(stylesheet);
+        document.documentElement.appendChild(uiHost);
+        return uiShadowRoot;
+    }
+
+    async function sendWorkerMessage(request) {
+        const response = await chrome.runtime.sendMessage(request);
+        if (response?.error) throw new Error(response.error);
+        return response;
+    }
+
+    // Persisted settings. The API key is only sent when the user presses Save.
+    async function saveSettings(extra = {}) {
+        const response = await sendWorkerMessage({
+            action: 'saveSettings',
+            ...extra,
+            geminiModel: selectedModel,
+            geminiTemperature: responseTemperature,
+            geminiMode: selectedMode,
+            geminiResponseStyle: selectedResponseStyle,
+            geminiAgentMode: isAgentModeEnabled
         });
+        if (response) {
+            hasApiKey = response.hasApiKey === true;
+            apiKeyMasked = response.apiKeyMasked || '';
+        }
+        return response;
+    }
+
+    async function loadSettings() {
+        const result = await sendWorkerMessage({ action: 'getSettings' });
+        selectedModel = typeof result?.geminiModel === 'string' && result.geminiModel
+            ? result.geminiModel
+            : DEFAULT_MODEL;
+        responseTemperature = validateTemperature(result?.geminiTemperature)
+            ? Number(result.geminiTemperature)
+            : 1;
+        selectedMode = MODES.some((mode) => mode.value === result?.geminiMode)
+            ? result.geminiMode
+            : DEFAULT_MODE;
+        selectedResponseStyle = RESPONSE_STYLES.some((style) => style.value === result?.geminiResponseStyle)
+            ? result.geminiResponseStyle
+            : DEFAULT_RESPONSE_STYLE;
+        isAgentModeEnabled = result?.geminiAgentMode === true;
+        hasApiKey = result?.hasApiKey === true;
+        apiKeyMasked = result?.apiKeyMasked || '';
+        try {
+            const modelResult = await sendWorkerMessage({ action: 'getAvailableModels' });
+            if (Array.isArray(modelResult?.models)) availableModels = modelResult.models;
+        } catch (_) {
+            availableModels = [];
+        }
+        if (availableModels.length && !availableModels.includes(selectedModel)) selectedModel = availableModels[0];
+        if (!availableModels.length) availableModels = [selectedModel];
     }
 
     // Gemini request configuration
@@ -99,14 +134,6 @@
             return false;
         }
         return true;
-    }
-
-    function validateApiKey(key) {
-        return key && key.trim() !== "";
-    }
-
-    function buildGeminiApiUrl() {
-        return `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent`;
     }
 
     function buildStyledPrompt(queryText) {
@@ -143,10 +170,17 @@
         return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${icons[name] || ''}</svg>`;
     }
 
-    let geminiApiUrl = buildGeminiApiUrl();
-
     // Remove a previous panel instance before opening a fresh one.
     try {
+        if (window.geminiExtensionGlobalDragPointerMove) {
+            document.removeEventListener('pointermove', window.geminiExtensionGlobalDragPointerMove);
+            window.geminiExtensionGlobalDragPointerMove = null;
+        }
+        if (window.geminiExtensionGlobalDragPointerUp) {
+            document.removeEventListener('pointerup', window.geminiExtensionGlobalDragPointerUp);
+            document.removeEventListener('pointercancel', window.geminiExtensionGlobalDragPointerUp);
+            window.geminiExtensionGlobalDragPointerUp = null;
+        }
         if (window.geminiExtensionGlobalDragMouseMove) {
             document.removeEventListener('mousemove', window.geminiExtensionGlobalDragMouseMove);
             window.geminiExtensionGlobalDragMouseMove = null;
@@ -164,36 +198,36 @@
             window.geminiExtensionKeydownListener = null;
         }
 
-        const idsToRemove = ['gemini-screenshot-overlay', 'gemini-selection-rectangle', 'gemini-popup', 'gemini-temp-error', 'gemini-uncaught-error-fallback'];
-        idsToRemove.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.remove();
-            }
-        });
-
-        if (document.body.classList.contains('gemini-extension-active')) {
-            document.body.classList.remove('gemini-extension-active');
-        }
+        const oldHost = document.getElementById('ai-vision-host');
+        const oldTaskId = oldHost?.dataset?.agentTaskId;
+        const oldRequestId = oldHost?.dataset?.requestId;
+        if (oldTaskId) void chrome.runtime.sendMessage({ action: 'cancelAgentTask', taskId: oldTaskId }).catch(() => {});
+        if (oldRequestId) void chrome.runtime.sendMessage({ action: 'cancelGeminiRequest', requestId: oldRequestId }).catch(() => {});
+        if (oldHost) oldHost.remove();
+        uiHost = null;
+        uiShadowRoot = null;
 
         let overlay, selectionRectDiv, startX, startY, isSelecting = false;
         let capturedImageData = null;
         let popup, queryInput, responseArea, sendButton;
+        let activeAgentTaskId = null;
+        let activeRequestId = null;
+        let panelGeneration = 0;
         let refreshModeControls = () => {};
 
         // Capture selection
         function startCaptureSelection() {
+            ensureUiRoot();
             overlay = document.createElement('div');
             overlay.id = 'gemini-screenshot-overlay';
-            document.body.appendChild(overlay);
             selectionRectDiv = document.createElement('div');
             selectionRectDiv.id = 'gemini-selection-rectangle';
             selectionRectDiv.style.display = 'none';
             overlay.appendChild(selectionRectDiv);
-            overlay.addEventListener('mousedown', handleMouseDown);
-            overlay.addEventListener('mousemove', handleMouseMove);
-            overlay.addEventListener('mouseup', handleMouseUp);
-            overlay.addEventListener('mouseleave', cancelSelection);
+            overlay.addEventListener('pointerdown', handlePointerDown);
+            overlay.addEventListener('pointermove', handlePointerMove);
+            overlay.addEventListener('pointerup', handlePointerUp);
+            overlay.addEventListener('pointercancel', cancelSelection);
 
             overlay.style.position = 'fixed';
             overlay.style.top = '0';
@@ -203,9 +237,12 @@
             overlay.style.zIndex = '2147483647';
             overlay.style.backgroundColor = 'rgba(0, 100, 200, 0.1)';
             overlay.style.cursor = 'crosshair';
+            overlay.style.touchAction = 'none';
+            overlay.style.pointerEvents = 'auto';
+            uiShadowRoot.appendChild(overlay);
         }
 
-        function handleMouseDown(e) {
+        function handlePointerDown(e) {
             if (e.button !== 0) return;
             startX = e.clientX;
             startY = e.clientY;
@@ -215,10 +252,11 @@
             selectionRectDiv.style.height = '0px';
             selectionRectDiv.style.display = 'block';
             isSelecting = true;
+            overlay.setPointerCapture?.(e.pointerId);
             e.preventDefault();
         }
 
-        function handleMouseMove(e) {
+        function handlePointerMove(e) {
             if (!isSelecting) return;
             const currentX = e.clientX;
             const currentY = e.clientY;
@@ -233,7 +271,7 @@
             e.preventDefault();
         }
 
-        async function handleMouseUp(e) {
+        async function handlePointerUp(e) {
             if (!isSelecting) return;
             isSelecting = false;
             const rect = {
@@ -282,13 +320,32 @@
         function cropCapturedImage(dataUrl, cropX, cropY, cropWidth, cropHeight, callback) {
             const img = new Image();
             img.onload = () => {
-                const dpr = window.devicePixelRatio || 1;
+                // captureVisibleTab pixels are not guaranteed to equal CSS
+                // pixels. Scale against the actual screenshot dimensions and
+                // clamp the source rectangle so short or high-DPI viewports
+                // cannot produce an invalid drawImage call.
+                const cropCalculator = globalThis.aiVisionCaptureUtils?.calculateSourceCrop;
+                if (typeof cropCalculator !== 'function') {
+                    callback(null);
+                    return;
+                }
+                const crop = cropCalculator(
+                    cropX,
+                    cropY,
+                    cropWidth,
+                    cropHeight,
+                    img.naturalWidth,
+                    img.naturalHeight,
+                    window.innerWidth,
+                    window.innerHeight
+                );
                 const canvas = document.createElement('canvas');
-                canvas.width = cropWidth * dpr;
-                canvas.height = cropHeight * dpr;
+                canvas.width = crop.canvasWidth;
+                canvas.height = crop.canvasHeight;
                 const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, cropX * dpr, cropY * dpr, cropWidth * dpr, cropHeight * dpr, 0, 0, cropWidth * dpr, cropHeight * dpr);
-                callback(canvas.toDataURL('image/jpeg', 0.9));
+                ctx.drawImage(img, crop.sourceX, crop.sourceY, crop.sourceWidth, crop.sourceHeight, 0, 0, canvas.width, canvas.height);
+                const result = canvas.toDataURL('image/jpeg', 0.86);
+                callback(result.length <= 8000000 ? result : null);
             };
             img.onerror = () => {
                 showUserError("Failed to process image. Page content might be restricted or image failed to load.");
@@ -299,10 +356,10 @@
 
         function removeCaptureSelection() {
             if (overlay) {
-                overlay.removeEventListener('mousedown', handleMouseDown);
-                overlay.removeEventListener('mousemove', handleMouseMove);
-                overlay.removeEventListener('mouseup', handleMouseUp);
-                overlay.removeEventListener('mouseleave', cancelSelection);
+                overlay.removeEventListener('pointerdown', handlePointerDown);
+                overlay.removeEventListener('pointermove', handlePointerMove);
+                overlay.removeEventListener('pointerup', handlePointerUp);
+                overlay.removeEventListener('pointercancel', cancelSelection);
                 overlay.remove();
                 overlay = null;
             }
@@ -320,15 +377,22 @@
 
         // Assistant panel construction and mode controls
         async function openAssistantPanel() {
+            const generation = ++panelGeneration;
             await loadSettings();
+            if (generation !== panelGeneration) return;
+            ensureUiRoot();
             
-            const existingPopup = document.getElementById('gemini-popup');
+            const existingPopup = uiQuery('#gemini-popup');
             if (existingPopup) {
                 existingPopup.remove();
             }
             
             popup = document.createElement('div');
             popup.id = 'gemini-popup';
+            popup.tabIndex = -1;
+            popup.setAttribute('role', 'dialog');
+            popup.setAttribute('aria-modal', 'false');
+            popup.setAttribute('aria-labelledby', 'gemini-popup-title');
             
             const header = document.createElement('div');
             header.id = 'gemini-popup-header';
@@ -338,6 +402,7 @@
             brandIcon.className = 'gemini-brand-icon';
             brandIcon.innerHTML = iconSvg('vision');
             const title = document.createElement('span');
+            title.id = 'gemini-popup-title';
             title.textContent = 'AI Vision';
             brand.appendChild(brandIcon);
             brand.appendChild(title);
@@ -392,7 +457,7 @@
                 button.setAttribute('role', 'tab');
                 button.onclick = () => {
                     selectedMode = mode.value;
-                    saveSettings();
+                    void saveSettings().catch((error) => showUserError(error.message));
                     if (selectedMode === 'capture' && !capturedImageData) {
                         closeAssistantPanel();
                         startCaptureSelection();
@@ -422,7 +487,7 @@
             agentModeToggle.setAttribute('aria-label', 'Agent Mode');
             agentModeToggle.onclick = () => {
                 isAgentModeEnabled = !isAgentModeEnabled;
-                saveSettings();
+                void saveSettings().catch((error) => showUserError(error.message));
                 renderSelectedMode();
             };
             agentModeRow.appendChild(agentModeCopy);
@@ -442,7 +507,7 @@
                 ['Capture', 'Drag over a page area, then ask Gemini about the image.'],
                 ['The Tab', 'Read and ask about the current page.'],
                 ['All Tabs', 'Compare supported pages in the starting Chrome window.'],
-                ['Agent Mode', 'Turn it on in any mode to let AI Vision complete a multi-step task. Capture and The Tab stay in one tab; All Tabs stays in one window.']
+                ['Agent Mode', 'Google ADK plans each step through five rotating Gemini models. Chrome executes only validated actions; Capture and The Tab stay in one tab, and All Tabs stays in one window.']
             ].forEach(([label, description]) => {
                 const item = document.createElement('li');
                 const strong = document.createElement('strong');
@@ -496,7 +561,7 @@
                 instructionsButton.classList.toggle('active', willShow);
                 instructionsButton.setAttribute('aria-expanded', String(willShow));
                 content.classList.toggle('gemini-panel-open', willShow);
-                const settingsPanel = document.getElementById('gemini-settings-panel');
+                const settingsPanel = uiQuery('#gemini-settings-panel');
                 if (settingsPanel) {
                     settingsPanel.classList.remove('show');
                 }
@@ -516,6 +581,7 @@
                 instructionsPanel.classList.remove('show');
                 instructionsButton.classList.remove('active');
                 instructionsButton.setAttribute('aria-expanded', 'false');
+                if (willShow) setTimeout(() => apiKeyInput.focus(), 0);
             };
 
             function closeUtilityPanels() {
@@ -542,8 +608,8 @@
             apiKeyLabel.htmlFor = 'gemini-settings-api-key';
             const apiKeyStatus = document.createElement('span');
             apiKeyStatus.className = 'gemini-api-key-status';
-            apiKeyStatus.textContent = validateApiKey(geminiApiKey) ? 'Saved locally' : 'Required';
-            apiKeyStatus.classList.toggle('valid', validateApiKey(geminiApiKey));
+            apiKeyStatus.textContent = hasApiKey ? `Saved locally${apiKeyMasked ? ` (${apiKeyMasked})` : ''}` : 'Required';
+            apiKeyStatus.classList.toggle('valid', hasApiKey);
             apiKeyTitle.appendChild(apiKeyIcon);
             apiKeyTitle.appendChild(apiKeyLabel);
             apiKeyTitleRow.appendChild(apiKeyTitle);
@@ -553,8 +619,7 @@
             const apiKeyInput = document.createElement('input');
             apiKeyInput.id = 'gemini-settings-api-key';
             apiKeyInput.type = 'password';
-            apiKeyInput.value = geminiApiKey;
-            apiKeyInput.placeholder = 'Enter your Gemini API key';
+            apiKeyInput.placeholder = hasApiKey ? 'Enter a new key to replace the saved key' : 'Enter your Gemini API key';
             apiKeyInput.autocomplete = 'off';
             apiKeyInput.setAttribute('autocorrect', 'off');
             apiKeyInput.setAttribute('autocapitalize', 'off');
@@ -577,18 +642,33 @@
             apiKeyField.appendChild(apiKeyInput);
             apiKeyField.appendChild(apiKeyVisibility);
 
+            const apiKeyActions = document.createElement('div');
+            apiKeyActions.className = 'gemini-api-key-actions';
+            const saveKeyButton = document.createElement('button');
+            saveKeyButton.type = 'button';
+            saveKeyButton.className = 'gemini-secondary-button';
+            saveKeyButton.textContent = 'Save key';
+            const clearKeyButton = document.createElement('button');
+            clearKeyButton.type = 'button';
+            clearKeyButton.className = 'gemini-secondary-button';
+            clearKeyButton.textContent = 'Clear';
+            clearKeyButton.disabled = !hasApiKey;
+            apiKeyActions.appendChild(saveKeyButton);
+            apiKeyActions.appendChild(clearKeyButton);
+
             const apiKeyHelp = document.createElement('div');
             apiKeyHelp.className = 'api-key-help';
             apiKeyHelp.innerHTML = `Stored only in this Chrome profile · <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">Get a key ${iconSvg('external')}</a>`;
             
             const apiKeyError = document.createElement('div');
             apiKeyError.className = 'error-message';
-            if (!validateApiKey(geminiApiKey)) {
+            if (!hasApiKey) {
                 apiKeyError.textContent = 'Put an API key';
             }
             
             apiKeyGroup.appendChild(apiKeyTitleRow);
             apiKeyGroup.appendChild(apiKeyField);
+            apiKeyGroup.appendChild(apiKeyActions);
             apiKeyGroup.appendChild(apiKeyHelp);
             apiKeyGroup.appendChild(apiKeyError);
             
@@ -601,7 +681,7 @@
             modelSelect.id = 'gemini-model-select';
             modelSelect.setAttribute('aria-label', 'Gemini model');
             
-            MODELS.forEach((model) => {
+            availableModels.forEach((model) => {
                 const option = document.createElement('option');
                 option.value = model;
                 option.textContent = model;
@@ -672,7 +752,7 @@
 
             const settingsFooter = document.createElement('div');
             settingsFooter.className = 'gemini-settings-footer';
-            settingsFooter.innerHTML = `${iconSvg('spark')}<span>Changes save automatically. Agent Mode stays above the question box.</span>`;
+            settingsFooter.innerHTML = `${iconSvg('spark')}<span>Preferences save when changed. API keys save only when you press Save key.</span>`;
 
             settingsPanel.appendChild(apiKeyGroup);
             settingsPanel.appendChild(compactSettingsGrid);
@@ -680,32 +760,70 @@
             settingsPanel.appendChild(settingsFooter);
             content.appendChild(settingsPanel);
             
-            apiKeyInput.oninput = (e) => {
-                const newKey = e.target.value.trim();
-                if (validateApiKey(newKey)) {
-                    geminiApiKey = newKey;
-                    apiKeyError.textContent = '';
-                    apiKeyStatus.textContent = 'Saved locally';
+            saveKeyButton.onclick = async () => {
+                const newKey = apiKeyInput.value.trim();
+                if (!newKey) {
+                    apiKeyError.textContent = 'Enter an API key before saving.';
+                    apiKeyInput.focus();
+                    return;
+                }
+                saveKeyButton.disabled = true;
+                apiKeyError.textContent = '';
+                try {
+                    const result = await saveSettings({ apiKey: newKey });
+                    apiKeyInput.value = '';
+                    apiKeyInput.type = 'password';
+                    apiKeyVisibility.innerHTML = iconSvg('eye');
+                    apiKeyVisibility.title = 'Show API key';
+                    apiKeyVisibility.setAttribute('aria-label', 'Show API key');
+                    apiKeyStatus.textContent = `Saved locally${result?.apiKeyMasked ? ` (${result.apiKeyMasked})` : ''}`;
                     apiKeyStatus.classList.add('valid');
-                } else {
-                    geminiApiKey = '';
-                    apiKeyError.textContent = 'Put an API key';
+                    clearKeyButton.disabled = false;
+                    try {
+                        const modelResult = await sendWorkerMessage({ action: 'getAvailableModels' });
+                        if (Array.isArray(modelResult?.models) && modelResult.models.length) {
+                            availableModels = modelResult.models;
+                            if (!availableModels.includes(selectedModel)) selectedModel = availableModels[0];
+                            modelSelect.replaceChildren(...availableModels.map((model) => {
+                                const option = document.createElement('option');
+                                option.value = model;
+                                option.textContent = model;
+                                option.selected = model === selectedModel;
+                                return option;
+                            }));
+                        }
+                    } catch (_) {
+                        // The key is saved even if model discovery is temporarily unavailable.
+                    }
+                } catch (error) {
+                    apiKeyError.textContent = error.message || 'The API key could not be saved.';
+                } finally {
+                    saveKeyButton.disabled = false;
+                }
+            };
+
+            clearKeyButton.onclick = async () => {
+                clearKeyButton.disabled = true;
+                try {
+                    await saveSettings({ clearApiKey: true });
+                    apiKeyInput.value = '';
                     apiKeyStatus.textContent = 'Required';
                     apiKeyStatus.classList.remove('valid');
+                    apiKeyError.textContent = 'Put an API key';
+                } catch (error) {
+                    apiKeyError.textContent = error.message || 'The API key could not be cleared.';
+                    clearKeyButton.disabled = false;
                 }
-                geminiApiUrl = buildGeminiApiUrl();
-                saveSettings();
             };
             
             modelSelect.onchange = (e) => {
                 selectedModel = e.target.value;
-                geminiApiUrl = buildGeminiApiUrl();
-                saveSettings();
+                void saveSettings().catch((error) => showUserError(error.message));
             };
 
             responseStyleSelect.onchange = (e) => {
                 selectedResponseStyle = e.target.value;
-                saveSettings();
+                void saveSettings().catch((error) => showUserError(error.message));
             };
             
             tempInput.oninput = (e) => {
@@ -723,7 +841,7 @@
                     responseTemperature = 1;
                 }
                 tempValue.textContent = String(responseTemperature);
-                saveSettings();
+                void saveSettings().catch((error) => showUserError(error.message));
             };
             
             textOnlyMessage = document.createElement('div');
@@ -775,6 +893,9 @@
             
             responseArea = document.createElement('div');
             responseArea.id = 'gemini-popup-response-area';
+            responseArea.setAttribute('role', 'status');
+            responseArea.setAttribute('aria-live', 'polite');
+            responseArea.setAttribute('aria-atomic', 'true');
             responseArea.textContent = 'Put in a question';
             content.appendChild(responseArea);
 
@@ -826,22 +947,51 @@
             popup.appendChild(header);
             popup.appendChild(content);
             
-            document.body.appendChild(popup);
+            uiShadowRoot.appendChild(popup);
+            popup.addEventListener('keydown', (event) => {
+                if (event.key !== 'Tab') return;
+                const focusable = Array.from(popup.querySelectorAll('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]'));
+                if (!focusable.length) return;
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                const activeElement = uiShadowRoot.activeElement || document.activeElement;
+                if (event.shiftKey && activeElement === first) {
+                    event.preventDefault();
+                    last.focus();
+                } else if (!event.shiftKey && activeElement === last) {
+                    event.preventDefault();
+                    first.focus();
+                }
+            });
             enablePanelDragging(popup, header);
             renderSelectedMode();
             queryInput.focus();
         }
 
         function closeAssistantPanel() {
+            panelGeneration += 1;
+            if (activeAgentTaskId) {
+                void sendWorkerMessage({ action: 'cancelAgentTask', taskId: activeAgentTaskId }).catch(() => {});
+                activeAgentTaskId = null;
+            }
+            if (activeRequestId) {
+                void sendWorkerMessage({ action: 'cancelGeminiRequest', requestId: activeRequestId }).catch(() => {});
+                activeRequestId = null;
+            }
             if (popup) {
                 popup.remove();
                 popup = null;
             }
+            if (overlay) removeCaptureSelection();
+            if (uiHost) uiHost.remove();
+            uiHost = null;
+            uiShadowRoot = null;
             capturedImageData = null;
         }
 
         // Request state and progress rendering
         function setRequestInProgress(isLoading, label = 'Sending') {
+            if (!sendButton) return;
             sendButton.disabled = isLoading;
             sendButton.classList.toggle('loading', isLoading);
             if (isLoading) {
@@ -851,7 +1001,7 @@
                 sendButton.removeAttribute('aria-busy');
                 refreshModeControls();
             }
-            document.querySelectorAll('#gemini-mode-rail button, #gemini-agent-mode-row button').forEach((button) => {
+            uiQueryAll('#gemini-mode-rail button, #gemini-agent-mode-row button').forEach((button) => {
                 button.disabled = isLoading;
             });
         }
@@ -896,61 +1046,19 @@
             popup.style.visibility = 'hidden';
             await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
             try {
-                const dataUrl = await chrome.runtime.sendMessage({
+                const dataUrl = await sendWorkerMessage({
                     action: 'captureVisibleTab',
                     options: { format: 'jpeg', quality: 88 }
                 });
-                if (typeof dataUrl !== 'string' || !dataUrl.includes(',')) return null;
+                if (typeof dataUrl !== 'string' || !dataUrl.includes(',') || dataUrl.length > 8000000) return null;
                 return dataUrl.split(',')[1];
             } finally {
                 if (popup) popup.style.visibility = previousVisibility;
             }
         }
 
-        function formatTabContextForGemini(context) {
-            if (!context || !Array.isArray(context.tabs)) return '';
-            const tabSections = context.tabs.map((tab, index) => {
-                const content = tab.restricted
-                    ? `[This page could not be read: ${tab.reason || 'restricted Chrome page'}]`
-                    : (tab.text || '[No readable page text]');
-                return `TAB ${index + 1}\nTitle: ${tab.title || 'Untitled'}\nURL: ${tab.url || 'Unavailable'}\n${content}`;
-            });
-            return `Browser context from the Chrome window where AI Vision is open:\n\n${tabSections.join('\n\n---\n\n')}`;
-        }
-
-        async function requestGeminiAnswer(parts) {
-            const response = await fetch(geminiApiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-goog-api-key': geminiApiKey
-                },
-                body: JSON.stringify({
-                    contents: [{ parts }],
-                    generationConfig: { temperature: responseTemperature }
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: { message: 'Unknown API error structure' } }));
-                const errorMessage = errorData?.error?.message || 'No specific message.';
-                if (errorMessage.includes('API key not valid')) {
-                    throw new Error('API key not valid. Please put in a valid API key.');
-                }
-                throw new Error(`API Error: ${response.status} ${response.statusText}. ${errorMessage}`);
-            }
-
-            const data = await response.json();
-            const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (responseText) return stripLightMarkdown(responseText);
-            if (data.promptFeedback?.blockReason) {
-                throw new Error(`Blocked: ${data.promptFeedback.blockReason}. ${data.promptFeedback.blockReasonMessage || ''}`.trim());
-            }
-            throw new Error('Received an empty or unexpected response from Gemini.');
-        }
-
         async function submitUserRequest(presetQuery = null) {
-            if (!validateApiKey(geminiApiKey)) {
+            if (!hasApiKey && !isAgentModeEnabled) {
                 showUserError('Please set your Gemini API key in Settings');
                 return;
             }
@@ -966,27 +1074,50 @@
 
             const requestMode = selectedMode;
             const shouldRunAgent = isAgentModeEnabled;
+            let agentStarted = false;
+            const requestGeneration = panelGeneration;
             setRequestInProgress(true, shouldRunAgent ? 'Working' : 'Sending');
             responseArea.classList.remove('error', 'automation');
 
             try {
+                if (requestMode === 'all-tabs') {
+                    const permission = await sendWorkerMessage({ action: 'ensureAllTabsAccess' });
+                    if (!permission?.granted) {
+                        responseArea.textContent = permission?.pending
+                            ? 'All Tabs permission opened in a new tab. Grant it, return here, and press Send again.'
+                            : 'All Tabs access was not enabled.';
+                        setRequestInProgress(false);
+                        return;
+                    }
+                }
+
                 if (shouldRunAgent) {
+                    const adkPermission = await sendWorkerMessage({ action: 'ensureAdkAccess' });
+                    if (!adkPermission?.granted) {
+                        responseArea.textContent = adkPermission?.pending
+                            ? 'Local Google ADK permission opened in a new tab. Grant it, return here, and press Send again.'
+                            : 'Local Google ADK access was not enabled. Agent Mode can still use its safe fallback after permission is granted.';
+                        setRequestInProgress(false);
+                        return;
+                    }
                     renderAgentProgress(1, 'Understanding your task');
-                    const taskResult = await chrome.runtime.sendMessage({
-                        action: 'runAgentTask',
+                    const taskResult = await sendWorkerMessage({
+                        action: 'startAgentTask',
                         task: queryText,
                         mode: requestMode,
                         captureImageData: requestMode === 'capture' ? capturedImageData : null,
-                        apiKey: geminiApiKey,
                         model: selectedModel,
                         temperature: responseTemperature,
                         responseStyle: selectedResponseStyle
                     });
-                    if (!taskResult || taskResult.error) {
-                        throw new Error(taskResult?.error || 'The browser task could not be completed.');
+                    if (!taskResult?.taskId) throw new Error('The browser task could not be started.');
+                    if (requestGeneration !== panelGeneration || !popup) {
+                        await sendWorkerMessage({ action: 'cancelAgentTask', taskId: taskResult.taskId }).catch(() => {});
+                        return;
                     }
-                    responseArea.classList.remove('automation');
-                    responseArea.textContent = stripLightMarkdown(taskResult.summary || 'Task completed.');
+                    activeAgentTaskId = taskResult.taskId;
+                    if (uiHost) uiHost.dataset.agentTaskId = activeAgentTaskId;
+                    agentStarted = true;
                     return;
                 }
 
@@ -996,44 +1127,44 @@
                         ? 'Reading this tab'
                         : 'Reading tabs in this window';
 
-                const parts = [];
-                if (requestMode === 'capture' && capturedImageData) {
-                    parts.push({ inline_data: { mime_type: 'image/jpeg', data: capturedImageData } });
-                }
-
-                if (requestMode === 'tab') {
-                    const [context, tabImage] = await Promise.all([
-                        chrome.runtime.sendMessage({ action: 'collectSourceTabContext' }),
-                        captureVisibleSourceTab()
-                    ]);
-                    if (context?.error) throw new Error(context.error);
-                    const browserContext = formatTabContextForGemini(context);
-                    if (browserContext) parts.push({ text: browserContext });
-                    if (tabImage) parts.push({ inline_data: { mime_type: 'image/jpeg', data: tabImage } });
-                } else if (requestMode === 'all-tabs') {
-                    const context = await chrome.runtime.sendMessage({ action: 'collectWindowContext' });
-                    if (context?.error) throw new Error(context.error);
-                    const browserContext = formatTabContextForGemini(context);
-                    if (browserContext) parts.push({ text: browserContext });
-                }
-
-                parts.push({ text: buildStyledPrompt(queryText) });
-                responseArea.textContent = await requestGeminiAnswer(parts);
+                const requestId = `request-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+                activeRequestId = requestId;
+                if (uiHost) uiHost.dataset.requestId = requestId;
+                const tabImage = requestMode === 'tab' ? await captureVisibleSourceTab() : null;
+                if (requestGeneration !== panelGeneration || !popup) return;
+                const result = await sendWorkerMessage({
+                    action: 'askGemini',
+                    requestId,
+                    query: buildStyledPrompt(queryText),
+                    mode: requestMode,
+                    captureImageData: requestMode === 'capture' ? capturedImageData : null,
+                    tabImageData: tabImage,
+                    model: selectedModel,
+                    temperature: responseTemperature,
+                    responseStyle: selectedResponseStyle
+                });
+                responseArea.textContent = stripLightMarkdown(result?.text || 'Gemini returned an empty response.');
             } catch (error) {
-                responseArea.classList.remove('automation');
-                responseArea.textContent = `Error: ${error.message}`;
-                responseArea.classList.add('error');
+                if (popup && responseArea) {
+                    responseArea.classList.remove('automation');
+                    responseArea.textContent = `Error: ${error.message}`;
+                    responseArea.classList.add('error');
+                }
             } finally {
-                setRequestInProgress(false);
+                if (!agentStarted) {
+                    activeRequestId = null;
+                    setRequestInProgress(false);
+                }
             }
         }
 
         // Panel interaction and cleanup
         function enablePanelDragging(element, handle) {
-            let dragMouseMoveHandler, dragMouseUpHandler;
-            handle.onmousedown = function(event) {
+            let dragPointerMoveHandler, dragPointerUpHandler;
+            handle.onpointerdown = function(event) {
                 if (event.button !== 0) return;
                 event.preventDefault();
+                handle.setPointerCapture?.(event.pointerId);
                 let shiftX = event.clientX - element.getBoundingClientRect().left;
                 let shiftY = event.clientY - element.getBoundingClientRect().top;
                 element.style.position = 'fixed';
@@ -1042,24 +1173,26 @@
                     let newY = mouseClientY - shiftY;
                     const maxX = window.innerWidth - element.offsetWidth;
                     const maxY = window.innerHeight - element.offsetHeight;
-                    newX = Math.max(0, Math.min(newX, maxX));
-                    newY = Math.max(0, Math.min(newY, maxY));
+                    newX = Math.max(0, Math.min(newX, Math.max(0, maxX)));
+                    newY = Math.max(0, Math.min(newY, Math.max(0, maxY)));
                     element.style.left = newX + 'px';
                     element.style.top = newY + 'px';
                 }
                 moveAt(event.clientX, event.clientY);
-                dragMouseMoveHandler = function(e_move) { moveAt(e_move.clientX, e_move.clientY); };
-                window.geminiExtensionGlobalDragMouseMove = dragMouseMoveHandler;
-                dragMouseUpHandler = function() {
-                    document.removeEventListener('mousemove', dragMouseMoveHandler);
-                    document.removeEventListener('mouseup', dragMouseUpHandler);
-                    if(handle) handle.style.userSelect = '';
-                    window.geminiExtensionGlobalDragMouseMove = null;
-                    window.geminiExtensionGlobalDragMouseUp = null;
+                dragPointerMoveHandler = function(e_move) { moveAt(e_move.clientX, e_move.clientY); };
+                window.geminiExtensionGlobalDragPointerMove = dragPointerMoveHandler;
+                dragPointerUpHandler = function() {
+                    document.removeEventListener('pointermove', dragPointerMoveHandler);
+                    document.removeEventListener('pointerup', dragPointerUpHandler);
+                    document.removeEventListener('pointercancel', dragPointerUpHandler);
+                    if (handle) handle.style.userSelect = '';
+                    window.geminiExtensionGlobalDragPointerMove = null;
+                    window.geminiExtensionGlobalDragPointerUp = null;
                 };
-                window.geminiExtensionGlobalDragMouseUp = dragMouseUpHandler;
-                document.addEventListener('mousemove', dragMouseMoveHandler);
-                document.addEventListener('mouseup', dragMouseUpHandler);
+                window.geminiExtensionGlobalDragPointerUp = dragPointerUpHandler;
+                document.addEventListener('pointermove', dragPointerMoveHandler);
+                document.addEventListener('pointerup', dragPointerUpHandler, { once: true });
+                document.addEventListener('pointercancel', dragPointerUpHandler, { once: true });
                 if(handle) handle.style.userSelect = 'none';
             };
             if(handle) handle.ondragstart = () => false;
@@ -1070,7 +1203,8 @@
                 responseArea.textContent = message;
                 responseArea.classList.add('error');
             } else {
-                let tempErrorDiv = document.getElementById('gemini-temp-error');
+                ensureUiRoot();
+                let tempErrorDiv = uiQuery('#gemini-temp-error');
                 if (tempErrorDiv) tempErrorDiv.remove();
                 tempErrorDiv = document.createElement('div');
                 tempErrorDiv.id = 'gemini-temp-error';
@@ -1085,14 +1219,110 @@
                 closeBtn.onclick = () => tempErrorDiv.remove();
                 tempErrorDiv.appendChild(closeBtn);
 
-                document.body.appendChild(tempErrorDiv);
+                uiShadowRoot.appendChild(tempErrorDiv);
                 setTimeout(() => { if (tempErrorDiv && tempErrorDiv.parentNode) tempErrorDiv.remove(); }, 5000);
             }
         }
 
+        function renderAgentProposal(proposal) {
+            if (!responseArea || !popup) return;
+            responseArea.textContent = '';
+            responseArea.classList.remove('error');
+            responseArea.classList.add('automation');
+
+            const title = document.createElement('strong');
+            title.textContent = 'Approval required';
+            responseArea.appendChild(title);
+
+            const description = document.createElement('p');
+            const action = proposal?.action?.action || 'browser action';
+            const target = proposal?.preview?.label || proposal?.tabTitle || 'the selected page';
+            description.textContent = `AI Vision wants to ${action} ${target}. Review the page and choose whether to continue.`;
+            responseArea.appendChild(description);
+
+            const actions = document.createElement('div');
+            actions.className = 'gemini-approval-actions';
+            const approve = document.createElement('button');
+            approve.type = 'button';
+            approve.className = 'gemini-approve-button';
+            approve.textContent = 'Approve';
+            const reject = document.createElement('button');
+            reject.type = 'button';
+            reject.className = 'gemini-secondary-button';
+            reject.textContent = 'Stop task';
+            approve.onclick = async () => {
+                approve.disabled = true;
+                reject.disabled = true;
+                try {
+                    const result = await sendWorkerMessage({ action: 'approveAgentAction', taskId: activeAgentTaskId });
+                    if (result?.error) throw new Error(result.error);
+                } catch (error) {
+                    responseArea.classList.remove('automation');
+                    responseArea.classList.add('error');
+                    responseArea.textContent = error.message || 'The action could not be approved.';
+                    activeAgentTaskId = null;
+                    setRequestInProgress(false);
+                }
+            };
+            reject.onclick = async () => {
+                approve.disabled = true;
+                reject.disabled = true;
+                try {
+                    await sendWorkerMessage({ action: 'rejectAgentAction', taskId: activeAgentTaskId });
+                } catch (error) {
+                    responseArea.classList.remove('automation');
+                    responseArea.classList.add('error');
+                    responseArea.textContent = error.message || 'The task could not be stopped.';
+                    activeAgentTaskId = null;
+                    setRequestInProgress(false);
+                }
+            };
+            actions.appendChild(approve);
+            actions.appendChild(reject);
+            responseArea.appendChild(actions);
+        }
+
         const runtimeMessageListener = (request, sender, sendResponse) => {
-            if (request.action === 'agentModeProgress' && responseArea && popup) {
+            if (request.action === 'agentModeProgress'
+                && request.taskId === activeAgentTaskId
+                && responseArea && popup) {
                 renderAgentProgress(request.step || 1, request.message || 'Working in this window');
+                sendResponse({ status: 'received' });
+                return false;
+            }
+            if (request.action === 'agentModeProposal'
+                && request.taskId === activeAgentTaskId
+                && responseArea && popup) {
+                renderAgentProposal(request.proposal);
+                sendResponse({ status: 'received' });
+                return false;
+            }
+            if (request.action === 'agentModeComplete'
+                && request.taskId === activeAgentTaskId
+                && responseArea && popup) {
+                activeAgentTaskId = null;
+                responseArea.classList.remove('automation');
+                responseArea.classList.toggle('error', Boolean(request.error));
+                responseArea.textContent = stripLightMarkdown(request.summary || (request.error ? 'The task failed.' : 'Task completed.'));
+                setRequestInProgress(false);
+                sendResponse({ status: 'received' });
+                return false;
+            }
+            if (request.action === 'allTabsPermissionResult' && responseArea && popup) {
+                responseArea.classList.toggle('error', request.granted !== true);
+                responseArea.textContent = request.granted === true
+                    ? 'All Tabs access is enabled. Press Send to continue.'
+                    : 'All Tabs access was not enabled.';
+                setRequestInProgress(false);
+                sendResponse({ status: 'received' });
+                return false;
+            }
+            if (request.action === 'adkPermissionResult' && responseArea && popup) {
+                responseArea.classList.toggle('error', request.granted !== true);
+                responseArea.textContent = request.granted === true
+                    ? 'Local Google ADK access is enabled. Start the companion runtime, then press Send to continue.'
+                    : 'Local Google ADK access was not enabled.';
+                setRequestInProgress(false);
                 sendResponse({ status: 'received' });
                 return false;
             }
@@ -1101,12 +1331,12 @@
         chrome.runtime.onMessage.addListener(runtimeMessageListener);
 
         const keydownListener = (e) => {
-            if (e.ctrlKey && e.key.toLowerCase() === 'e') {
+            if ((e.ctrlKey && e.key.toLowerCase() === 'e') || e.key === 'Escape') {
                 e.preventDefault();
-                if (document.getElementById('gemini-screenshot-overlay')) {
+                if (uiQuery('#gemini-screenshot-overlay')) {
                     removeCaptureSelection();
                 }
-                if (document.getElementById('gemini-popup')) {
+                if (uiQuery('#gemini-popup')) {
                     closeAssistantPanel();
                 }
             }
@@ -1123,70 +1353,20 @@
             }
         }
 
-        // First-run API key setup
-        function openApiKeySetup() {
-            const popup = document.createElement('div');
-            popup.id = 'gemini-api-key-popup';
-            popup.innerHTML = `
-                <div id="gemini-api-key-header">Enter API Key <button id="gemini-api-key-close">×</button></div>
-                <div id="gemini-api-key-body">
-                    <p>Visit <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a> to get your API key</p>
-                    <input type="password" id="gemini-api-key-input" placeholder="Enter your API key here" />
-                    <button id="gemini-api-key-save">Save</button>
-                </div>
-            `;
-            document.body.appendChild(popup);
-
-            const closeButton = document.getElementById('gemini-api-key-close');
-            const saveButton = document.getElementById('gemini-api-key-save');
-
-            closeButton.addEventListener('click', () => {
-                popup.remove();
-                chrome.storage.local.set({ 'needApiKeyPopup': true });
-            });
-
-            saveButton.addEventListener('click', () => {
-                const apiKeyInput = document.getElementById('gemini-api-key-input');
-                const apiKey = apiKeyInput.value.trim();
-                if (apiKey) {
-                    geminiApiKey = apiKey;
-                    chrome.storage.local.set({
-                        'geminiApiKey': apiKey,
-                        'needApiKeyPopup': false
-                    }, () => {
-                        saveSettings();
-                        popup.remove();
-                        openSelectedMode();
-                    });
-                } else {
-                    alert('Please enter a valid API key.');
-                }
-            });
-
-            popup.style.position = 'fixed';
-            popup.style.top = '50px';
-            popup.style.right = '50px';
-        }
-
         (async () => {
             try {
                 await loadSettings();
-                chrome.storage.local.get(['needApiKeyPopup', 'geminiApiKey'], (result) => {
-                    if (!result.geminiApiKey || result.needApiKeyPopup) {
-                        openApiKeySetup();
-                    } else {
-                        openSelectedMode();
-                    }
-                });
+                openSelectedMode();
             } catch (error) {
                 console.error('Error during initialization:', error);
-                openApiKeySetup();
+                showUserError(error.message || 'AI Vision could not start.');
             }
         })();
 
     } catch (e) {
         try {
-            let errorFallbackDiv = document.getElementById('gemini-uncaught-error-fallback');
+            ensureUiRoot();
+            let errorFallbackDiv = uiQuery('#gemini-uncaught-error-fallback');
             if (errorFallbackDiv) errorFallbackDiv.remove();
             errorFallbackDiv = document.createElement('div');
             errorFallbackDiv.id = 'gemini-uncaught-error-fallback';
@@ -1204,7 +1384,7 @@
             errorFallbackDiv.style.fontSize = '16px';
             errorFallbackDiv.style.textAlign = 'center';
             errorFallbackDiv.textContent = `Extension Error: AI Vision Helper encountered a critical issue. Error: ${e.message}`;
-            document.body.appendChild(errorFallbackDiv);
+            uiShadowRoot.appendChild(errorFallbackDiv);
             setTimeout(() => { if (errorFallbackDiv) errorFallbackDiv.remove(); }, 10000);
         } catch (fallbackError) {
         }

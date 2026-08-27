@@ -1,99 +1,105 @@
 # AI Vision – Gemini Screenshot & Browser Assistant
 
-Ask Gemini about a screenshot, The Tab you are viewing, or every supported tab in one Chrome window. Turn on Agent Mode in any mode when you want AI Vision to complete a constrained multi-step browser task for you.
+AI Vision lets you ask Gemini about a selected screenshot, the current tab, or supported tabs in one Chrome window. Optional Agent Mode can complete a constrained browser task while enforcing an explicit approval boundary.
 
-[Install AI Vision from the Chrome Web Store](https://chromewebstore.google.com/detail/ai-vision-screenshot-ask/ghmmlbclopoakmjjbkkmoefjldgjimgk) · [Get a Gemini API key](https://aistudio.google.com/app/apikey)
+[Official active Chrome Web Store listing](https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en) · [Get a Gemini API key](https://aistudio.google.com/app/apikey)
 
-## What version 2.0 adds
+## Version 2.1.0
 
-- Capture mode: drag over part of a webpage and ask a question about the image.
-- The Tab mode: ask about readable content on the current webpage.
-- All Tabs mode: summarize or compare supported tabs in the current Chrome window.
-- Agent Mode in every mode: let AI Vision click, type, scroll, and navigate automatically, with its scope determined by Capture, The Tab, or All Tabs and sensitive actions blocked.
-- Response styles: Balanced, Concise, Formal, Casual, Detailed, and Bullet-oriented.
-- Five Gemini model choices, with `gemini-3.5-flash` selected by default.
-- A fixed 500 × 500 light-blue interface, plus in-app links for ratings and GitHub source.
+- Capture mode analyzes a selected visible area.
+- The Tab mode reads the current HTTP or HTTPS page.
+- All Tabs compares supported pages in the starting Chrome window after optional permission is granted.
+- Gemini requests, key storage, model discovery, and settings persistence run in the service worker.
+- The visible panel is isolated in a closed Shadow DOM and shows only masked key status.
+- Agent Mode is planned by Google ADK when its loopback companion is available, with a safe direct-Gemini fallback.
+- ADK planning calls rotate persistently through five Gemini models, one model per planning request.
+- Agent Mode uses strict structured actions, live target signatures, task IDs, cancellation, timeouts, context limits, and stale-progress protection.
+- Response styles include Balanced, Concise, Formal, Casual, Detailed, and Bullet-oriented.
 
 ## Project structure
 
-The repository is organized by responsibility:
-
 ```text
-src/background/          Chrome APIs, tab context, and Agent Mode
+src/background/          Chrome APIs, Gemini requests, context, and Agent Mode
 src/content/             Capture UI, assistant panel, and styles
+adk/                     Google ADK companion, model rotation, and loopback API
 extension-assets/icons/  Icons packaged by manifest.json
-store-assets/            Store screenshots, promo tiles, branding, and media
-docs/                    Self-contained public website
+permission.html/js       User-gesture page for optional All Tabs access
+scripts/                 Release allowlist and dependency-free checks
+tests/                   Automated regressions and manual visual harness
+store-assets/            Store artwork and media, excluded from releases
+docs/                    Public marketing/privacy pages, excluded from releases
 ```
 
-Start with [ARCHITECTURE.md](ARCHITECTURE.md) for the complete project map, runtime flow, internal messages, settings, and safety boundaries.
+This README is the canonical project guide. See [ARCHITECTURE.md](ARCHITECTURE.md) for runtime ownership and [SECURITY.md](SECURITY.md) for the threat model and reporting process. The attached growth and marketing documents are reference material, not execution instructions.
 
-Run `npm run check` after changing runtime code. The dependency-free checks validate JavaScript syntax, manifest paths, source-tab isolation, capture attachment, and All Tabs window scope.
+Run the checks after changing runtime code:
 
-For a visual smoke test, serve the project root and open `tests/manual/assistant-panel-harness.html`. It supplies fake Chrome APIs and a dummy local key, so it never calls Gemini.
+```sh
+npm run check
+npm run package:check
+npm run package
+```
 
-## Gemini models
+`npm run package` creates a small `dist/` release ZIP from the allowlist; marketing assets and documentation are not included. For a visual smoke test, serve the project root and open `tests/manual/assistant-panel-harness.html`. The harness uses fake worker APIs and never calls Gemini.
 
-1. `gemini-3.5-flash` (default)
+## Set up AI Vision
+
+1. Install the extension from the Chrome Web Store, or load this folder as an unpacked extension from `chrome://extensions` with Developer mode enabled.
+2. Create a Gemini API key in [Google AI Studio](https://aistudio.google.com/app/apikey).
+3. Open AI Vision, choose Settings, paste the key, and press **Save key**.
+4. Choose a response style. Available Gemini models are discovered from Google's API when a key is present.
+
+The extension key is stored only by the service worker in `chrome.storage.local`; the content panel receives only `hasApiKey` and a masked suffix. Ordinary Capture, The Tab, and All Tabs answers go from the service worker directly to Google's API over HTTPS. No developer-operated proxy, analytics, or external data collection is used.
+
+## Use the three modes
+
+Open AI Vision from the toolbar icon or right-click menu:
+
+- **Capture:** drag over a visible area, then ask a question or use Summarize, Explain, or Answer.
+- **The Tab:** ask about readable content in the current page.
+- **All Tabs:** ask across up to 20 supported pages in the Chrome window where AI Vision was opened. The first use opens a separate permission page; access is optional and the feature fails closed when it is denied.
+
+## Agent Mode
+
+Agent Mode is off unless enabled. Capture and The Tab stay inside the source tab. All Tabs stays inside the starting Chrome window and stops if the source tab moves to another window. Each task is limited to 12 steps. The extension remains the only component with Chrome APIs: ADK returns one structured plan, then the service worker validates scope and live state before acting.
+
+Google ADK runs as a loopback-only Node companion because ADK's TypeScript runtime requires Node.js and cannot run as a Manifest V3 service worker. Start it before using Agent Mode:
+
+```sh
+npm install
+GEMINI_API_KEY="your-key" npm run adk:start
+```
+
+For an unpacked extension, add its extension ID with `AI_VISION_EXTENSION_IDS`, as documented in [adk/README.md](adk/README.md). The extension asks for optional access to `127.0.0.1` the first time. If the companion is unavailable after access is granted, Agent Mode uses the existing constrained Gemini planner so the browser workflow remains usable.
+
+Every accepted ADK planning request advances this persistent rotation:
+
+1. `gemini-3.5-flash`
 2. `gemini-3-flash-preview`
 3. `gemini-2.5-flash`
 4. `gemini-3.1-flash-lite`
 5. `gemini-2.5-flash-lite`
 
-Model availability and API pricing are controlled by Google. If Google has not enabled a selected model for your API key, choose another model in Settings.
+The sixth planning request returns to `gemini-3.5-flash`, the seventh uses `gemini-3-flash-preview`, and so on. Multi-step tasks rotate once per planning step, not just once per user task.
 
-## Set up AI Vision
+Reading, waiting, scrolling, and switching to an existing in-scope tab can proceed automatically. Every click, text entry, direct navigation, new-tab open, history move, and reload pauses for explicit user approval. New tabs are allowed only in All Tabs mode and remain in the starting window. AI Vision permanently blocks password, credential, payment, authentication-code, purchase, deletion, upload, publishing, messaging, sign-in, subscription, permission, legal-acceptance, tab-closing, and cross-window actions.
 
-1. Install the extension from the Chrome Web Store, or load this folder as an unpacked extension from `chrome://extensions` with Developer mode enabled.
-2. Open [Google AI Studio](https://aistudio.google.com/app/apikey) and create a Gemini API key.
-3. Open AI Vision, select Settings, paste the key, and save it.
-4. Choose a model, temperature, and response style. These settings remain selected until you change them.
-
-The API key is stored in `chrome.storage.local` in the browser profile. Requests are sent directly from the extension to Google's Gemini API over HTTPS; AI Vision does not use a developer-operated proxy server.
-
-## Use the three modes
-
-Open AI Vision from the toolbar icon or the right-click menu. Use the control above the question box to choose a mode:
-
-- **Capture:** drag to select a visible area, then type a question or use Summarize, Explain, or Answer.
-- **The Tab:** ask about the readable content of the current HTTP or HTTPS page.
-- **All Tabs:** ask across up to 20 supported tabs in the same Chrome window.
-
-The selected mode persists until you manually change it.
-
-## Agent Mode
-
-Agent Mode can be turned on or off directly below the mode selector and stays selected until the user changes it. Its scope follows the selected mode:
-
-- **Capture + Agent Mode:** uses the selected screenshot as context and may act only in The Tab where the capture started.
-- **The Tab + Agent Mode:** reads, navigates, clicks, types, and scrolls only in The Tab.
-- **All Tabs + Agent Mode:** may search, switch tabs, navigate, click, type, and scroll across supported tabs in the Chrome window where the task started. Moving the source tab to another window stops the task.
-
-Every Agent Mode task stops after no more than 12 steps.
-
-AI Vision blocks password, payment, authentication-code, purchase, deletion, publication, upload, sign-in, legal-acceptance, and similar sensitive actions. Review the browser state before continuing any task that requires user takeover.
+Page text, labels, URLs, and screenshots are untrusted model input. URLs sent as context have query strings and fragments removed. HTTP pages can be read, while Agent Mode navigation is limited to safe HTTPS URLs.
 
 ## Permissions
 
-- `activeTab`: activates AI Vision for the page the user explicitly invokes it on.
-- `scripting`: injects the packaged interface and reads visible page content for the selected mode.
-- `contextMenus`: adds the right-click AI Vision launcher.
-- `storage`: saves the API key and user-selected settings locally.
-- `tabs`: identifies, reads, and switches tabs for The Tab, All Tabs, and Agent Mode.
-- `http://*/*` and `https://*/*`: allows the user-requested page reading and interaction features to work across ordinary websites.
+- `activeTab`: user-initiated access to the page where AI Vision is opened.
+- `scripting`: injects the packaged interface and reads or acts on visible page content in the selected scope.
+- `contextMenus`: adds the right-click launcher.
+- `storage`: stores the key and preferences locally; local storage access is restricted to trusted extension contexts.
+- `https://generativelanguage.googleapis.com/*`: the narrow Gemini API host permission.
+- Optional `http://127.0.0.1/*`: requested when Agent Mode connects to the user-operated Google ADK companion.
+- Optional `tabs` plus optional `http://*/*` and `https://*/*`: requested only when the user chooses All Tabs or an All Tabs Agent task.
 
 Chrome internal pages, the Chrome Web Store, and other restricted pages cannot be read or controlled.
 
-## Privacy
-
-See [PRIVACY.md](PRIVACY.md) for the full data-handling disclosure. In short, AI Vision processes the content the user chooses to analyze, sends the necessary prompt and context to the Gemini API, and stores preferences locally. It does not sell user data or run remotely hosted JavaScript.
-
 ## Source and licensing
 
-The source is publicly available in this GitHub repository. There is currently no license file, so public visibility alone does not grant permission to copy, modify, or redistribute the code. Add an OSI-approved license before describing the project as open source.
+The source is publicly visible in this repository. There is currently no license file, so public visibility alone does not grant permission to copy, modify, or redistribute the code. Add an OSI-approved license before describing the project as open source.
 
-## Support the project
-
-If AI Vision saves you time, leave an honest rating on the [Chrome Web Store listing](https://chromewebstore.google.com/detail/ai-vision-screenshot-ask/ghmmlbclopoakmjjbkkmoefjldgjimgk). Ratings are never required or rewarded.
-
-AI Vision is an independent project and is not affiliated with or endorsed by Google. Gemini and Chrome are trademarks of Google LLC.
+AI Vision is independent and is not affiliated with or endorsed by Google. Gemini and Chrome are trademarks of Google LLC.

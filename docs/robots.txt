@@ -4,4 +4,4 @@ Allow: /
 User-agent: OAI-SearchBot
 Allow: /
 
-Sitemap: https://gitchubst.github.io/AI_Vision/sitemap.xml
+Sitemap: https://stiwarilbj.github.io/AI_Vision/sitemap.xml
