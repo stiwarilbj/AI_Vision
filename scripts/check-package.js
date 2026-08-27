@@ -21,7 +21,7 @@ const runtime = fs.readFileSync(runtimePath, 'utf8');
 if (!runtime.includes('AIVisionAdkRuntime') || runtime.length < 100000) {
   throw new Error('The release package must contain the generated Google ADK browser runtime.');
 }
-if (/\beval\s*\(/.test(runtime)) {
+if (/\beval\s*\(|\bnew\s+Function\s*\(|\bFunction\s*\(/.test(runtime)) {
   throw new Error('The generated Google ADK runtime contains unsupported dynamic code.');
 }
 

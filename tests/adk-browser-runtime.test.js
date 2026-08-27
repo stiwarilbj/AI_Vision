@@ -78,6 +78,7 @@ test('the packaged Google ADK runtime runs in a worker-like browser context', as
   const body = JSON.parse(requests[0].options.body);
   assert.equal(body.contents[0].parts[0].text, 'finish safely');
   assert.equal(body.generationConfig.responseMimeType, 'application/json');
+  assert.doesNotMatch(RUNTIME_CODE, /\beval\s*\(|\bnew\s+Function\s*\(|\bFunction\s*\(/);
 });
 
 test('the packaged Google ADK runtime honors AbortSignal cancellation', async () => {

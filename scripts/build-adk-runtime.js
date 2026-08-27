@@ -17,6 +17,15 @@ const plugin = {
     build.onResolve({ filter: /(?:^|\/)utils\/client_labels\.js$/ }, () => ({ path: exactShim('client-labels.js') }));
     build.onResolve({ filter: /(?:^|\/)logger\.js$/ }, () => ({ path: exactShim('logger.js') }));
     build.onResolve({ filter: /(?:^|\/)apigee_llm\.js$/ }, () => ({ path: exactShim('apigee-llm.js') }));
+    build.onResolve({ filter: /^jsonpath-plus$/ }, () => ({ path: exactShim('jsonpath-plus.js') }));
+    build.onResolve({ filter: /^zod$/ }, () => ({ path: exactShim('zod.js') }));
+    build.onResolve({ filter: /^zod\/v4$/ }, () => ({ path: exactShim('zod.js') }));
+    build.onResolve({ filter: /^zod-to-json-schema$/ }, () => ({ path: exactShim('zod.js') }));
+    build.onResolve({ filter: /^\.\/_root\.js$/ }, (args) => (
+      args.importer.includes(`${path.sep}lodash-es${path.sep}`)
+        ? { path: exactShim('lodash-root.js') }
+        : undefined
+    ));
     build.onResolve({ filter: /^node:crypto$/ }, () => ({ path: exactShim('env-aware-utils.js') }));
     build.onResolve({ filter: /^node:async_hooks$/ }, () => ({ path: exactShim('async-hooks.js') }));
   }

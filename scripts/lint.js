@@ -56,7 +56,7 @@ if (worker.includes('127.0.0.1') || panel.includes('127.0.0.1')) {
 if (adkBundle.length < 100000 || !adkBundle.includes('AIVisionAdkRuntime')) {
   throw new Error('ADK lint failed: the generated in-extension runtime bundle is missing or unexpectedly small.');
 }
-if (/\beval\s*\(/.test(adkBundle)) {
+if (/\beval\s*\(|\bnew\s+Function\s*\(|\bFunction\s*\(/.test(adkBundle)) {
   throw new Error('ADK lint failed: the packaged runtime contains unsupported dynamic code.');
 }
 for (const [index, model] of expectedAgentModels.entries()) {
