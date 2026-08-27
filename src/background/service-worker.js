@@ -10,11 +10,11 @@ const MAX_IMAGE_DATA_CHARS = 8000000;
 const DEFAULT_MODEL = 'gemini-3.5-flash';
 const DEFAULT_TEMPERATURE = 1;
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
-const ADK_AGENT_ENDPOINT = 'http://127.0.0.1:8765/v1/agent/step';
 const ALL_TABS_ORIGINS = ['http://*/*', 'https://*/*'];
-const ADK_RUNTIME_ORIGINS = ['http://127.0.0.1/*'];
 const PERMISSION_PAGE = 'permission.html';
 const TASK_STORAGE_PREFIX = 'aiVisionAgentTask:';
+const ADK_ROTATION_STORAGE_KEY = 'aiVisionAdkRotation';
+const ADK_REQUEST_TIMEOUT_MS = 60000;
 const AGENT_ROTATION_MODELS = Object.freeze([
   'gemini-3.5-flash',
   'gemini-3-flash-preview',
@@ -22,6 +22,15 @@ const AGENT_ROTATION_MODELS = Object.freeze([
   'gemini-3.1-flash-lite',
   'gemini-2.5-flash-lite'
 ]);
+
+// The release package contains this generated browser bundle. importScripts is
+// available in a classic MV3 service worker; the optional call keeps the
+// policy helpers testable in the Node VM harness as well.
+try {
+  globalThis.importScripts?.('src/background/adk-runtime.js');
+} catch (error) {
+  console.warn('AI Vision could not load the bundled Google ADK runtime:', error?.message || error);
+}
 
 const VALID_MODES = new Set(['capture', 'tab', 'all-tabs']);
 const VALID_RESPONSE_STYLES = new Set(['balanced', 'concise', 'formal', 'casual', 'detailed', 'bullets']);
@@ -39,6 +48,7 @@ const activeTaskBySourceTab = new Map();
 const requestControllers = new Map();
 const permissionRequests = new Map();
 let modelCache = null;
+let adkRotationQueue = Promise.resolve();
 
 const AGENT_RESPONSE_SCHEMA = {
   type: 'object',
@@ -168,6 +178,32 @@ async function getStoredApiKey() {
   const key = typeof result.geminiApiKey === 'string' ? result.geminiApiKey.trim() : '';
   if (!key) throw new Error('Please set your Gemini API key in Settings.');
   return key;
+}
+
+function reserveAdkModel() {
+  const operation = adkRotationQueue.then(async () => {
+    const result = await chrome.storage.local.get([ADK_ROTATION_STORAGE_KEY]);
+    const stored = result?.[ADK_ROTATION_STORAGE_KEY];
+    const nextIndex = Number.isInteger(stored?.nextIndex)
+      && stored.nextIndex >= 0
+      && stored.nextIndex < AGENT_ROTATION_MODELS.length
+      ? stored.nextIndex
+      : 0;
+    const requestCount = Number.isSafeInteger(stored?.requestCount) && stored.requestCount >= 0
+      ? stored.requestCount
+      : 0;
+    const model = AGENT_ROTATION_MODELS[nextIndex];
+    const nextModel = AGENT_ROTATION_MODELS[(nextIndex + 1) % AGENT_ROTATION_MODELS.length];
+    await chrome.storage.local.set({
+      [ADK_ROTATION_STORAGE_KEY]: {
+        nextIndex: (nextIndex + 1) % AGENT_ROTATION_MODELS.length,
+        requestCount: requestCount + 1
+      }
+    });
+    return { model, nextModel, requestNumber: requestCount + 1 };
+  });
+  adkRotationQueue = operation.catch(() => {});
+  return operation;
 }
 
 async function saveSettings(request = {}) {
@@ -640,22 +676,39 @@ async function callGemini({ apiKey, model, contents, temperature, systemInstruct
 }
 
 async function callAdkAgent({ prompt, imageData, temperature, taskId }) {
-  const data = await fetchJson(
-    ADK_AGENT_ENDPOINT,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, imageData: imageData || '', temperature: Math.min(clampTemperature(temperature), 0.8) })
-    },
-    { timeoutMs: 60000, retries: 0, taskId }
-  );
-  if (data?.provider !== 'google-adk' || !AGENT_ROTATION_MODELS.includes(data?.model)) throw new Error('The local ADK runtime returned invalid planner metadata.');
-  return {
-    decision: validateAgentDecision(data.decision),
-    model: data.model,
-    nextModel: AGENT_ROTATION_MODELS.includes(data.nextModel) ? data.nextModel : null,
-    requestNumber: Number.isSafeInteger(data.requestNumber) ? data.requestNumber : null
-  };
+  const runtime = globalThis.AIVisionAdkRuntime;
+  if (!runtime || typeof runtime.runAgentStep !== 'function') throw new Error('The bundled Google ADK runtime is unavailable.');
+  const apiKey = await getStoredApiKey();
+  const task = taskId ? await assertTaskIsActive(taskId) : null;
+  const reservation = await reserveAdkModel();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), ADK_REQUEST_TIMEOUT_MS);
+  if (task) {
+    task.abortController = controller;
+    task.timer = timeout;
+  }
+  try {
+    const decision = await runtime.runAgentStep({
+      apiKey,
+      model: reservation.model,
+      prompt,
+      imageData: imageData || '',
+      temperature: Math.min(clampTemperature(temperature), 0.8),
+      abortSignal: controller.signal
+    });
+    if (taskId) await assertTaskIsActive(taskId);
+    return {
+      decision: validateAgentDecision(decision),
+      ...reservation
+    };
+  } catch (error) {
+    if (error?.name === 'AbortError' || controller.signal.aborted) throw new Error('Agent Mode was cancelled.');
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+    if (task?.abortController === controller) task.abortController = null;
+    if (task?.timer === timeout) task.timer = null;
+  }
 }
 
 function modelCacheKey(apiKey) {
@@ -720,11 +773,10 @@ async function assertAllTabsAccess() {
   if (!granted) throw new Error('All Tabs access is not enabled. Use the permission tab to grant access, then try again.');
 }
 
-async function openPermissionPage(sender, scope) {
+async function openPermissionPage(sender) {
   if (sender.tab?.id === undefined || sender.tab.windowId === undefined) throw new Error('Could not identify the source tab.');
-  const permission = scope === 'adk-runtime'
-    ? { origins: ADK_RUNTIME_ORIGINS }
-    : { permissions: ['tabs'], origins: ALL_TABS_ORIGINS };
+  const scope = 'all-tabs';
+  const permission = { permissions: ['tabs'], origins: ALL_TABS_ORIGINS };
   if (!chrome.permissions?.contains || await chrome.permissions.contains(permission)) return { granted: true, scope };
   const requestId = createId('permission');
   permissionRequests.set(requestId, {
@@ -740,11 +792,7 @@ async function openPermissionPage(sender, scope) {
 }
 
 async function openAllTabsPermissionPage(sender) {
-  return openPermissionPage(sender, 'all-tabs');
-}
-
-async function openAdkPermissionPage(sender) {
-  return openPermissionPage(sender, 'adk-runtime');
+  return openPermissionPage(sender);
 }
 
 async function handlePermissionPageResult(request, sender) {
@@ -759,7 +807,7 @@ async function handlePermissionPageResult(request, sender) {
   const sourceTab = await chrome.tabs.get(sourceTabId).catch(() => null);
   if (!sourceTab || sourceTab.windowId !== sourceWindowId) return { ok: false };
   await chrome.tabs.sendMessage(sourceTabId, {
-    action: pending.scope === 'adk-runtime' ? 'adkPermissionResult' : 'allTabsPermissionResult',
+    action: 'allTabsPermissionResult',
     requestId,
     scope: pending.scope,
     granted: request.granted === true
@@ -1166,6 +1214,7 @@ async function advanceAgentTask(taskId) {
 async function startAgentTask(request, sender) {
   if (sender.tab?.id === undefined || sender.tab.windowId === undefined) throw new Error('Could not identify the starting Chrome window.');
   if (typeof request.task !== 'string' || request.task.trim() === '' || request.task.length > MAX_AGENT_TASK_CHARS) throw new Error('Enter a browser task under 8,000 characters.');
+  await getStoredApiKey();
   const mode = normalizeMode(request.mode);
   if (mode === 'all-tabs') await assertAllTabsAccess();
   const previousTaskId = activeTaskBySourceTab.get(sender.tab.id);
@@ -1295,8 +1344,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return listAvailableModels();
       case 'ensureAllTabsAccess':
         return openAllTabsPermissionPage(sender);
-      case 'ensureAdkAccess':
-        return openAdkPermissionPage(sender);
       case 'permissionPageResult':
         return handlePermissionPageResult(request, sender);
       case 'captureVisibleTab':

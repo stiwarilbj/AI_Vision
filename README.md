@@ -2,16 +2,16 @@
 
 AI Vision lets you ask Gemini about a selected screenshot, the current tab, or supported tabs in one Chrome window. Optional Agent Mode can complete a constrained browser task while enforcing an explicit approval boundary.
 
-[Official active Chrome Web Store listing](https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en) · [Get a Gemini API key](https://aistudio.google.com/app/apikey)
+[Actual active Chrome Web Store extension listing](https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en) · [Get a Gemini API key](https://aistudio.google.com/app/apikey)
 
-## Version 2.1.0
+## Version 2.2.0
 
 - Capture mode analyzes a selected visible area.
 - The Tab mode reads the current HTTP or HTTPS page.
 - All Tabs compares supported pages in the starting Chrome window after optional permission is granted.
 - Gemini requests, key storage, model discovery, and settings persistence run in the service worker.
 - The visible panel is isolated in a closed Shadow DOM and shows only masked key status.
-- Agent Mode is planned by Google ADK when its loopback companion is available, with a safe direct-Gemini fallback.
+- Agent Mode is powered by the Google ADK runtime bundled in the extension; no terminal, Node.js install, companion process, or download is needed.
 - ADK planning calls rotate persistently through five Gemini models, one model per planning request.
 - Agent Mode uses strict structured actions, live target signatures, task IDs, cancellation, timeouts, context limits, and stale-progress protection.
 - Response styles include Balanced, Concise, Formal, Casual, Detailed, and Bullet-oriented.
@@ -21,7 +21,7 @@ AI Vision lets you ask Gemini about a selected screenshot, the current tab, or s
 ```text
 src/background/          Chrome APIs, Gemini requests, context, and Agent Mode
 src/content/             Capture UI, assistant panel, and styles
-adk/                     Google ADK companion, model rotation, and loopback API
+adk/                     Notes about the bundled Google ADK runtime
 extension-assets/icons/  Icons packaged by manifest.json
 permission.html/js       User-gesture page for optional All Tabs access
 scripts/                 Release allowlist and dependency-free checks
@@ -49,6 +49,10 @@ npm run package
 3. Open AI Vision, choose Settings, paste the key, and press **Save key**.
 4. Choose a response style. Available Gemini models are discovered from Google's API when a key is present.
 
+Agent Mode is ready immediately after the same key is saved: enable Agent Mode
+in the panel and send a task. The packaged extension already contains the ADK
+runtime, so unpacked installs do not require terminal setup.
+
 The extension key is stored only by the service worker in `chrome.storage.local`; the content panel receives only `hasApiKey` and a masked suffix. Ordinary Capture, The Tab, and All Tabs answers go from the service worker directly to Google's API over HTTPS. No developer-operated proxy, analytics, or external data collection is used.
 
 ## Use the three modes
@@ -63,14 +67,11 @@ Open AI Vision from the toolbar icon or right-click menu:
 
 Agent Mode is off unless enabled. Capture and The Tab stay inside the source tab. All Tabs stays inside the starting Chrome window and stops if the source tab moves to another window. Each task is limited to 12 steps. The extension remains the only component with Chrome APIs: ADK returns one structured plan, then the service worker validates scope and live state before acting.
 
-Google ADK runs as a loopback-only Node companion because ADK's TypeScript runtime requires Node.js and cannot run as a Manifest V3 service worker. Start it before using Agent Mode:
-
-```sh
-npm install
-GEMINI_API_KEY="your-key" npm run adk:start
-```
-
-For an unpacked extension, add its extension ID with `AI_VISION_EXTENSION_IDS`, as documented in [adk/README.md](adk/README.md). The extension asks for optional access to `127.0.0.1` the first time. If the companion is unavailable after access is granted, Agent Mode uses the existing constrained Gemini planner so the browser workflow remains usable.
+The Google ADK browser runtime is packaged at `src/background/adk-runtime.js`
+and loaded by the service worker. It uses the Gemini API key saved in AI Vision
+Settings, so the only setup required for Agent Mode is copying the key into the
+extension and pressing **Save key**. The worker owns the key and the ADK
+request; the page panel receives only masked key status.
 
 Every accepted ADK planning request advances this persistent rotation:
 
@@ -93,7 +94,6 @@ Page text, labels, URLs, and screenshots are untrusted model input. URLs sent as
 - `contextMenus`: adds the right-click launcher.
 - `storage`: stores the key and preferences locally; local storage access is restricted to trusted extension contexts.
 - `https://generativelanguage.googleapis.com/*`: the narrow Gemini API host permission.
-- Optional `http://127.0.0.1/*`: requested when Agent Mode connects to the user-operated Google ADK companion.
 - Optional `tabs` plus optional `http://*/*` and `https://*/*`: requested only when the user chooses All Tabs or an All Tabs Agent task.
 
 Chrome internal pages, the Chrome Web Store, and other restricted pages cannot be read or controlled.

@@ -21,7 +21,7 @@ AI Vision does not read the user's saved Chrome browsing-history database. Page 
 
 AI Vision uses this information only to provide the feature the user requested. For ordinary questions, the necessary prompt, screenshot, and webpage context are sent directly from the service worker to Google's Gemini API over HTTPS. The extension API key is sent to Google in the `x-goog-api-key` request header for authentication.
 
-When the user grants optional loopback access and runs the Google ADK companion, Agent Mode sends its bounded planning prompt to `127.0.0.1`. The user-operated companion uses its own `GEMINI_API_KEY` or `GOOGLE_API_KEY` environment variable to call Gemini through Google ADK and returns one structured plan. The extension never sends its stored API key to the companion. If the companion is unavailable, Agent Mode uses the extension's constrained direct-Gemini fallback.
+For Agent Mode, the packaged Google ADK browser runtime runs inside the extension service worker. It sends the bounded planning prompt to Gemini using the API key saved in AI Vision Settings and returns one structured plan. No localhost companion, terminal process, or developer-operated proxy is involved. If the bundled ADK runtime is unavailable, Agent Mode uses the extension's constrained direct-Gemini fallback.
 
 AI Vision has no developer-operated analytics, advertising, tracking, proxy, or data-collection server. The developer does not sell or rent user data. Data sent to Google is handled under Google's applicable Gemini API and privacy terms.
 
@@ -31,7 +31,7 @@ URLs sent as context have query strings and fragments removed. HTTP pages may be
 
 The full Gemini API key and preferences are stored locally in the current Chrome profile through `chrome.storage.local`. Local storage access is restricted to trusted extension contexts, and the content script receives only a boolean key status and masked suffix. The full key is not rendered in the page DOM or sent to the content panel's settings state.
 
-AI Vision does not intentionally store screenshots, page content, prompts, Gemini responses, or task context on a developer server. In-progress Agent Mode state may be held in Chrome session storage so a service-worker restart can validate a task ID; it is removed when the task ends or is cancelled. The optional local ADK companion stores only its next model index and request count in `adk/.data/`; it does not intentionally persist prompt or page context. Users can remove extension data by clearing the extension's data or uninstalling it, and can remove local rotation state by deleting that companion data directory.
+AI Vision does not intentionally store screenshots, page content, prompts, Gemini responses, or task context on a developer server. In-progress Agent Mode state and the next ADK model index may be held in Chrome extension storage so a service-worker restart can validate a task ID and preserve rotation; task state is removed when the task ends or is cancelled. Users can remove extension data by clearing the extension's data or uninstalling it.
 
 ## Agent Mode controls
 
@@ -46,7 +46,6 @@ Reading, waiting, scrolling, and activating an existing in-scope tab can proceed
 - `contextMenus` provides the right-click launcher.
 - `storage` stores the key and preferences locally.
 - `https://generativelanguage.googleapis.com/*` is the narrow Gemini API host permission.
-- Optional `http://127.0.0.1/*` access connects Agent Mode to a companion runtime that the user starts locally.
 - Optional `tabs`, `http://*/*`, and `https://*/*` access is requested only when the user chooses All Tabs or an All Tabs Agent task.
 
 Chrome internal pages, the Chrome Web Store, and other restricted pages are not accessible to these features.

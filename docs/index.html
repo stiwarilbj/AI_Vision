@@ -23,7 +23,7 @@
     "description": "A Chrome extension for asking Gemini about screenshots, The Tab, or All Tabs, with optional Agent Mode for constrained browser tasks.",
     "applicationCategory": "BrowserApplication",
     "operatingSystem": "Google Chrome",
-    "softwareVersion": "2.1.0",
+    "softwareVersion": "2.2.0",
     "image": "https://stiwarilbj.github.io/AI_Vision/assets/marquee.png",
     "downloadUrl": "https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en",
     "sameAs": "https://github.com/stiwarilbj/AI_Vision",
@@ -168,7 +168,7 @@
           <a class="button" href="https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&amp;hl=en">Get AI Vision</a>
           <a class="button secondary" href="#features">See how it works</a>
         </div>
-        <div class="trust">Version 2.1.0 · Google ADK Agent Mode · Bring your own Gemini API key · Source available on GitHub</div>
+        <div class="trust">Version 2.2.0 · Bundled Google ADK Agent Mode · Bring your own Gemini API key · Source available on GitHub</div>
       </div>
       <div class="product-shot">
         <img src="assets/settings.png" alt="AI Vision light-blue interface with response style and Gemini model settings" width="1280" height="800">
@@ -195,14 +195,14 @@
 
         <div class="feature-row">
           <div class="showcase"><img src="assets/agent-mode.png" alt="AI Vision Agent Mode controls for browser tasks" loading="lazy" width="1280" height="800"></div>
-          <div class="feature-copy"><div class="eyebrow">Google ADK Agent Mode</div><h2>Let it work, then review.</h2><p>When the optional loopback companion is running, Google ADK plans each step with a persistent five-model Gemini rotation. Chrome still validates every action. Clicks, typing, navigation, new tabs, history moves, and reloads pause for approval.</p><ul><li>Capture and The Tab stay within one tab</li><li>All Tabs and new tabs stay within the starting window</li><li>Every task stops after a 12-step safety limit</li><li>Sensitive and consequential actions are blocked</li></ul></div>
+          <div class="feature-copy"><div class="eyebrow">Google ADK Agent Mode</div><h2>Let it work, then review.</h2><p>The Google ADK browser runtime is bundled into the extension and plans each step with a persistent five-model Gemini rotation. Chrome still validates every action. Clicks, typing, navigation, new tabs, history moves, and reloads pause for approval.</p><ul><li>Capture and The Tab stay within one tab</li><li>All Tabs and new tabs stay within the starting window</li><li>Every task stops after a 12-step safety limit</li><li>Sensitive and consequential actions are blocked</li></ul></div>
         </div>
       </div>
     </section>
 
     <section id="privacy">
       <div class="wrap privacy">
-        <div><div class="eyebrow">Private by design</div><h2>Your key stays out of the page.</h2><p>AI Vision stores the extension key in its service worker. Normal requests go directly to Gemini. The optional user-operated ADK companion uses its own environment key and never receives the key stored by Chrome.</p><a href="privacy.html">Read the full privacy notice →</a></div>
+        <div><div class="eyebrow">Private by design</div><h2>Your key stays out of the page.</h2><p>AI Vision stores the extension key in its service worker. Normal and Agent Mode requests go directly to Gemini through the bundled ADK runtime; the page never receives the saved key.</p><a href="privacy.html">Read the full privacy notice →</a></div>
         <ul><li>No developer analytics, advertising, or cross-site tracking</li><li>No remotely hosted executable code</li><li>Runs when you open it or start a task</li><li>Restricted Chrome pages cannot be analyzed</li></ul>
       </div>
     </section>

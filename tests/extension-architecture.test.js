@@ -25,6 +25,7 @@ function createServiceWorkerHarness({
   permissionsGranted = true,
   fetchResponses = null,
   adkResponses = null,
+  adkAvailable = true,
   executeScriptResult = null,
   tabs = null
 } = {}) {
@@ -34,6 +35,7 @@ function createServiceWorkerHarness({
     fetchBodies: [],
     queriedWindows: [],
     sentMessages: [],
+    adkCalls: [],
     createdTabs: [],
     tabNavigation: [],
     executedScripts: [],
@@ -55,7 +57,7 @@ function createServiceWorkerHarness({
   const sessionValues = {};
   let runtimeMessageListener;
   const responseQueue = fetchResponses ? [...fetchResponses] : null;
-  const adkResponseQueue = adkResponses ? [...adkResponses] : null;
+  const adkResponseQueue = adkResponses ? [...adkResponses] : [];
 
   const storageArea = {
     async get(keys) {
@@ -153,13 +155,6 @@ function createServiceWorkerHarness({
   async function fetchImpl(url, options = {}) {
     calls.fetchRequests.push({ url, options });
     if (options.body) calls.fetchBodies.push(JSON.parse(options.body));
-    if (String(url).startsWith('http://127.0.0.1:8765/')) {
-      if (adkResponseQueue && adkResponseQueue.length) {
-        const next = adkResponseQueue.shift();
-        return typeof next === 'function' ? next(url, options) : next;
-      }
-      return responseForJson({ error: 'ADK runtime is offline in this test.' }, 503);
-    }
     if (responseQueue && responseQueue.length) {
       const next = responseQueue.shift();
       return typeof next === 'function' ? next(url, options) : next;
@@ -186,6 +181,17 @@ function createServiceWorkerHarness({
     globalThis: {}
   };
   sandbox.globalThis = sandbox;
+  if (adkAvailable) {
+    sandbox.AIVisionAdkRuntime = {
+      async runAgentStep(request) {
+        calls.adkCalls.push({ ...request });
+        const next = adkResponseQueue.length ? adkResponseQueue.shift() : { action: 'done', summary: 'Task complete' };
+        let response = typeof next === 'function' ? await next(request) : next;
+        if (response?.json && typeof response.json === 'function') response = await response.json();
+        return response?.decision || response;
+      }
+    };
+  }
   vm.runInNewContext(SERVICE_WORKER_CODE, sandbox, { filename: SERVICE_WORKER_PATH });
 
   async function dispatch(request, senderTabId = 10, senderOverrides = {}) {
@@ -229,7 +235,8 @@ test('manifest references existing runtime files and keeps broad access optional
     ...Object.values(manifest.action.default_icon),
     'permission.html',
     'permission.js',
-    'src/content/assistant-panel.css'
+    'src/content/assistant-panel.css',
+    'src/background/adk-runtime.js'
   ];
   for (const relativePath of packagedPaths) assert.equal(fs.existsSync(path.join(PROJECT_ROOT, relativePath)), true, relativePath);
   assert.equal(manifest.permissions.includes('tabs'), false);
@@ -302,45 +309,52 @@ test('strict action parsing rejects malformed, out-of-range, and unsafe actions'
   assert.throws(() => exports.parseAgentDecision('{"action":"open_tab","url":"https://example.com/login"}'));
 });
 
-test('Agent Mode prefers Google ADK and accepts only the five-model rotation metadata', async () => {
+test('Agent Mode runs the bundled Google ADK runtime and records its rotating model', async () => {
   const harness = createServiceWorkerHarness({
-    adkResponses: [responseForJson({
-      ok: true,
-      provider: 'google-adk',
-      adkVersion: '2.0.0',
-      model: 'gemini-3.5-flash',
-      nextModel: 'gemini-3-flash-preview',
-      requestNumber: 1,
-      decision: { action: 'done', summary: 'ADK completed the task' }
-    })]
+    adkResponses: [{ action: 'done', summary: 'ADK completed the task' }]
   });
   const result = await harness.dispatch({ action: 'startAgentTask', task: 'Read this tab', mode: 'tab' });
   const complete = await waitForMessage(harness.calls, 'agentModeComplete');
   assert.match(result.taskId, /^agent-/);
   assert.equal(complete.summary, 'ADK completed the task');
-  assert.equal(harness.calls.fetchRequests.some(({ url }) => String(url).includes('127.0.0.1:8765/v1/agent/step')), true);
+  assert.equal(harness.calls.adkCalls.length, 1);
+  assert.equal(harness.calls.adkCalls[0].model, 'gemini-3.5-flash');
+  assert.equal(harness.calls.adkCalls[0].apiKey, 'test-key');
   assert.equal(harness.calls.fetchRequests.some(({ url }) => String(url).includes('generativelanguage.googleapis.com')), false);
+  assert.equal(JSON.stringify(harness.localValues.aiVisionAdkRotation), JSON.stringify({ nextIndex: 1, requestCount: 1 }));
   assert.equal(harness.calls.sentMessages.some(({ message }) => /Google ADK planned this step with gemini-3.5-flash/.test(message.message || '')), true);
 });
 
-test('Agent Mode can use the companion key without exposing or requiring the extension key', async () => {
+test('bundled Agent Mode rotates through all five models and persists the next request', async () => {
   const harness = createServiceWorkerHarness({
-    storageValues: { geminiApiKey: undefined },
-    adkResponses: [responseForJson({
-      ok: true,
-      provider: 'google-adk',
-      model: 'gemini-3.5-flash',
-      nextModel: 'gemini-3-flash-preview',
-      requestNumber: 1,
-      decision: { action: 'done', summary: 'Companion-only key worked' }
-    })]
+    adkResponses: Array.from({ length: 7 }, () => ({ action: 'done', summary: 'rotation step' }))
   });
-  const started = await harness.dispatch({ action: 'startAgentTask', task: 'Summarize safely', mode: 'tab' });
-  const complete = await waitForMessage(harness.calls, 'agentModeComplete');
-  assert.match(started.taskId, /^agent-/);
-  assert.equal(complete.summary, 'Companion-only key worked');
-  assert.equal(harness.calls.fetchBodies.some((body) => Object.hasOwn(body, 'apiKey')), false);
-  assert.equal(harness.calls.fetchRequests.some(({ url }) => String(url).includes('generativelanguage.googleapis.com')), false);
+  const models = [];
+  for (let index = 0; index < 7; index += 1) {
+    const result = await harness.exports.callAdkAgent({ prompt: `step ${index + 1}`, temperature: 0.4 });
+    models.push(result.model);
+    assert.equal(result.requestNumber, index + 1);
+  }
+  assert.deepEqual(models, [
+    'gemini-3.5-flash',
+    'gemini-3-flash-preview',
+    'gemini-2.5-flash',
+    'gemini-3.1-flash-lite',
+    'gemini-2.5-flash-lite',
+    'gemini-3.5-flash',
+    'gemini-3-flash-preview'
+  ]);
+  assert.equal(JSON.stringify(harness.localValues.aiVisionAdkRotation), JSON.stringify({ nextIndex: 2, requestCount: 7 }));
+});
+
+test('Agent Mode requires the extension API key and never places it in panel code', async () => {
+  const harness = createServiceWorkerHarness({
+    storageValues: { geminiApiKey: undefined }
+  });
+  const response = await harness.dispatch({ action: 'startAgentTask', task: 'Summarize safely', mode: 'tab' });
+  assert.match(response.error, /API key/i);
+  assert.doesNotMatch(PANEL_CODE, /geminiApiKey/);
+  assert.doesNotMatch(PANEL_CODE, /x-goog-api-key/);
 });
 
 test('prompt injection text is delimited and explicitly treated as data', () => {
@@ -433,7 +447,7 @@ test('Capture Agent Mode is asynchronous, scoped, and carries the capture', asyn
   const complete = await waitForMessage(calls, 'agentModeComplete');
   assert.equal(complete.summary, 'Task complete');
   assert.deepEqual(calls.queriedWindows, []);
-  assert.equal(calls.fetchBodies.some((body) => body.contents?.[0]?.parts?.some((part) => part.inline_data?.data === 'selected-capture')), true);
+  assert.equal(calls.adkCalls.some((request) => request.imageData === 'selected-capture'), true);
   assert.equal(calls.sentMessages.filter(({ message }) => message.action === 'agentModeProgress').every(({ message }) => message.taskId === response.taskId), true);
 });
 
@@ -460,6 +474,7 @@ test('mutating Agent actions wait for explicit approval and revalidate the targe
   ];
   const { calls, dispatch } = createServiceWorkerHarness({
     fetchResponses,
+    adkAvailable: false,
     executeScriptResult(details) {
       if (details.func?.name === 'inspectVisiblePageAction') return { ok: true, requiresApproval: true, target: { label: 'Continue', signature: 'button||Continue' } };
       if (details.func?.name === 'performVisiblePageAction') return { ok: true, detail: 'Clicked Continue' };
@@ -530,11 +545,26 @@ test('cancellation stops the task and reports a terminal cancellation once', asy
   const neverRespond = (_url, options) => new Promise((resolve, reject) => {
     options.signal.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })));
   });
-  const { calls, dispatch } = createServiceWorkerHarness({ fetchResponses: [responseForJson({ models: [{ name: 'models/gemini-3.5-flash', supportedGenerationMethods: ['generateContent'] }] }), neverRespond] });
+  const { calls, dispatch } = createServiceWorkerHarness({ adkAvailable: false, fetchResponses: [responseForJson({ models: [{ name: 'models/gemini-3.5-flash', supportedGenerationMethods: ['generateContent'] }] }), neverRespond] });
   const response = await dispatch({ action: 'startAgentTask', task: 'Wait for a response', mode: 'tab' });
   await new Promise((resolve) => setTimeout(resolve, 15));
   assert.equal((await dispatch({ action: 'cancelAgentTask', taskId: response.taskId })).ok, true);
   const messages = calls.sentMessages.filter(({ message }) => message.action === 'agentModeComplete' && message.taskId === response.taskId);
+  assert.equal(messages.length, 1);
+  assert.equal(messages[0].message.summary, 'Task cancelled.');
+});
+
+test('cancellation aborts an in-extension ADK planning request', async () => {
+  const harness = createServiceWorkerHarness({
+    adkResponses: [({ abortSignal }) => new Promise((resolve, reject) => {
+      abortSignal.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })), { once: true });
+    })]
+  });
+  const response = await harness.dispatch({ action: 'startAgentTask', task: 'Wait for a bundled planner response', mode: 'tab' });
+  await new Promise((resolve) => setTimeout(resolve, 15));
+  assert.equal(harness.calls.adkCalls.length, 1);
+  assert.equal((await harness.dispatch({ action: 'cancelAgentTask', taskId: response.taskId })).ok, true);
+  const messages = harness.calls.sentMessages.filter(({ message }) => message.action === 'agentModeComplete' && message.taskId === response.taskId);
   assert.equal(messages.length, 1);
   assert.equal(messages[0].message.summary, 'Task cancelled.');
 });
@@ -561,15 +591,11 @@ test('All Tabs fails closed when optional permission is denied', async () => {
   assert.match(harness.calls.createdTabs[0].url, /permission\.html/);
 });
 
-test('Google ADK loopback access is separately optional and user initiated', async () => {
-  const harness = createServiceWorkerHarness({ permissionsGranted: false });
-  const permission = await harness.dispatch({ action: 'ensureAdkAccess' });
-  assert.equal(permission.pending, true);
-  assert.equal(permission.scope, 'adk-runtime');
-  assert.equal(harness.calls.createdTabs.length, 1);
-  assert.match(harness.calls.createdTabs[0].url, /permission\.html/);
-  assert.match(harness.calls.createdTabs[0].url, /scope=adk-runtime/);
-  assert.match(fs.readFileSync(path.join(PROJECT_ROOT, 'permission.js'), 'utf8'), /http:\/\/127\.0\.0\.1\/\*/);
+test('the bundled Google ADK runtime does not request loopback permission or a companion', () => {
+  assert.doesNotMatch(SERVICE_WORKER_CODE, /127\.0\.0\.1/);
+  assert.doesNotMatch(PANEL_CODE, /ensureAdkAccess|adkPermissionResult|127\.0\.0\.1/);
+  assert.doesNotMatch(fs.readFileSync(path.join(PROJECT_ROOT, 'permission.js'), 'utf8'), /127\.0\.0\.1|adk-runtime/);
+  assert.match(SERVICE_WORKER_CODE, /src\/background\/adk-runtime\.js/);
 });
 
 test('model discovery filters unsupported models and does not hard-code the panel list', async () => {

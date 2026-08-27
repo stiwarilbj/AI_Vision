@@ -1,22 +1,22 @@
 {
   "name": "ai-vision-chrome-extension",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
-  "description": "AI Vision Chrome extension with a Google ADK browser-agent companion",
+  "description": "AI Vision Chrome extension with a bundled Google ADK browser agent",
   "engines": {
     "node": ">=24.13.0"
   },
   "scripts": {
-    "adk:start": "node adk/server.mjs",
-    "check": "node --check src/background/service-worker.js && node --check src/content/capture-utils.js && node --check src/content/assistant-panel.js && node --check permission.js && node --check adk/model-rotation.mjs && node --check adk/agent.mjs && node --check adk/server.mjs && node scripts/check-version.js && node scripts/lint.js && node scripts/check-package.js && node --test",
-    "lint": "node --check src/background/service-worker.js && node --check src/content/capture-utils.js && node --check src/content/assistant-panel.js && node --check permission.js && node --check adk/model-rotation.mjs && node --check adk/agent.mjs && node --check adk/server.mjs && node scripts/check-version.js && node scripts/lint.js",
-    "package:check": "node scripts/check-package.js",
-    "package": "node scripts/check-package.js && node scripts/package-extension.js",
+    "build:adk": "node scripts/build-adk-runtime.js",
+    "check": "npm run build:adk && node --check src/background/service-worker.js && node --check src/content/capture-utils.js && node --check src/content/assistant-panel.js && node --check permission.js && node scripts/check-version.js && node scripts/lint.js && node scripts/check-package.js && node --test",
+    "lint": "npm run build:adk && node --check src/background/service-worker.js && node --check src/content/capture-utils.js && node --check src/content/assistant-panel.js && node --check permission.js && node scripts/check-version.js && node scripts/lint.js",
+    "package:check": "npm run build:adk && node scripts/check-package.js",
+    "package": "npm run build:adk && node scripts/check-package.js && node scripts/package-extension.js",
     "version:check": "node scripts/check-version.js"
   },
-  "dependencies": {
+  "devDependencies": {
     "@google/adk": "2.0.0",
-    "zod": "4.2.1"
+    "esbuild": "^0.28.2"
   },
   "overrides": {
     "adm-zip": "0.6.0",

@@ -3,6 +3,7 @@
   "permission.html",
   "permission.js",
   "src/background/service-worker.js",
+  "src/background/adk-runtime.js",
   "src/content/capture-utils.js",
   "src/content/assistant-panel.js",
   "src/content/assistant-panel.css",

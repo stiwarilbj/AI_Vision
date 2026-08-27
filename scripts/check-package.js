@@ -16,4 +16,13 @@ for (const relativePath of normalized) {
   if (/\.mp4$|^Deliverables_And_Images\//i.test(relativePath)) throw new Error(`Marketing asset is not allowed in the extension package: ${relativePath}`);
 }
 
+const runtimePath = path.join(projectRoot, 'src/background/adk-runtime.js');
+const runtime = fs.readFileSync(runtimePath, 'utf8');
+if (!runtime.includes('AIVisionAdkRuntime') || runtime.length < 100000) {
+  throw new Error('The release package must contain the generated Google ADK browser runtime.');
+}
+if (/\beval\s*\(/.test(runtime)) {
+  throw new Error('The generated Google ADK runtime contains unsupported dynamic code.');
+}
+
 console.log(`Release allowlist OK: ${normalized.length} files.`);

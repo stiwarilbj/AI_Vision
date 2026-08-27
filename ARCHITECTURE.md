@@ -2,11 +2,11 @@
 
 AI Vision is a Manifest V3 Chrome extension with a deliberately small privileged boundary:
 
-1. `src/background/service-worker.js` owns Chrome APIs, local settings, direct Gemini requests, tab context, model discovery, permission checks, Agent Mode task persistence, and guarded browser actions.
+1. `src/background/service-worker.js` owns Chrome APIs, local settings, direct Gemini requests, tab context, model discovery, permission checks, Agent Mode task persistence, and guarded browser actions. It loads the packaged Google ADK browser runtime before handling requests.
 2. `src/content/assistant-panel.js` owns capture selection and the visible panel. It communicates with the worker through runtime messages and never reads storage or calls Gemini.
 3. `src/content/assistant-panel.css` is loaded inside the panel's closed Shadow DOM.
-4. `adk/` is a loopback-only Node companion using Google ADK. It rotates models and returns one structured browser plan, but it has no Chrome APIs.
-5. `permission.html` and `permission.js` request optional All Tabs or loopback ADK access only from an extension-page user gesture.
+4. `src/background/adk-runtime.js` is the generated browser bundle of the Google ADK planner. It runs inside the service worker, uses the key from trusted extension storage, and has no separate process or Chrome API authority.
+5. `permission.html` and `permission.js` request optional All Tabs access only from an extension-page user gesture.
 
 The worker injects the panel only after a user clicks the toolbar icon or AI Vision context-menu item. The panel host is visible in the page DOM, but its controls—including the API-key input—are inside a closed Shadow DOM.
 
@@ -25,7 +25,7 @@ panel sends a request to the worker
         ↓
 worker collects bounded context and sends normal questions directly to Gemini
         ↓
-Agent Mode asks loopback Google ADK for one plan (or uses the safe fallback)
+Agent Mode asks the bundled Google ADK runtime for one plan (or uses the safe fallback)
         ↓
 worker revalidates scope/live state, pauses before mutations, and acts by task ID
 ```
@@ -47,7 +47,6 @@ The panel can send:
 - `getSettings` / `saveSettings`: retrieve masked status or explicitly save preferences and a newly entered key;
 - `getAvailableModels`: discover models that advertise `generateContent` support;
 - `ensureAllTabsAccess`: open the extension permission page when All Tabs access is missing;
-- `ensureAdkAccess`: request access only to the loopback Google ADK companion;
 - `captureVisibleTab`, `collectSourceTabContext`, and `collectWindowContext`;
 - `askGemini`: perform a bounded, cancellable normal request;
 - `startAgentTask`, `approveAgentAction`, `rejectAgentAction`, and `cancelAgentTask`;
@@ -66,9 +65,7 @@ Page text, labels, URLs, and screenshots are untrusted model input. The worker:
 - uses structured JSON output for Agent Mode and rejects extra fields, invalid indexes, unsafe URLs, overlong text, and mismatched target signatures;
 - discovers available models rather than maintaining a stale hard-coded model menu.
 
-Normal question models remain discoverable and user-selectable. Agent Mode ADK calls intentionally use the fixed persistent cycle `gemini-3.5-flash` → `gemini-3-flash-preview` → `gemini-2.5-flash` → `gemini-3.1-flash-lite` → `gemini-2.5-flash-lite` → repeat. `adk/model-rotation.mjs` advances the counter atomically once for every accepted planning request.
-
-The companion reads its own `GEMINI_API_KEY` or `GOOGLE_API_KEY` environment variable. The extension never transmits its stored key to localhost. Requests are accepted only from configured `chrome-extension://` origins (or from no-origin command-line clients), and the service binds to `127.0.0.1` by default.
+Normal question models remain discoverable and user-selectable. Agent Mode ADK calls intentionally use the fixed persistent cycle `gemini-3.5-flash` → `gemini-3-flash-preview` → `gemini-2.5-flash` → `gemini-3.1-flash-lite` → `gemini-2.5-flash-lite` → repeat. The service worker advances the counter atomically in trusted extension storage once for every accepted planning request.
 
 ## Agent safety boundary
 
@@ -95,7 +92,7 @@ The full key is read only by the worker when constructing the Google API request
 
 ## Release layout
 
-`store-assets/` and `docs/` contain marketing and website material, not extension runtime. `scripts/package-allowlist.json` is the authoritative release list; `npm run package:check` verifies every listed file exists and rejects marketing media.
+`store-assets/` and `docs/` contain marketing and website material, not extension runtime. `scripts/package-allowlist.json` is the authoritative release list; `npm run package:check` verifies every listed file exists, includes the generated ADK runtime, and rejects marketing media.
 
 ## Naming convention
 

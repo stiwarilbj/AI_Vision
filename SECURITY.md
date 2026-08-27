@@ -6,7 +6,7 @@ AI Vision is a Manifest V3 browser extension. The highest-risk areas are the Gem
 
 The service worker is the Chrome-privileged boundary. It owns the extension API key, storage, direct Gemini calls, permissions, task state, and browser actions. The content panel uses a closed Shadow DOM and receives only masked key status. Webpage text, labels, URLs, screenshots, and Google ADK responses are untrusted data.
 
-The optional Google ADK companion binds to `127.0.0.1`, allows configured `chrome-extension://` origins, owns a separate environment-provided Gemini key, and has no Chrome APIs. It can propose an action but cannot approve or execute one. The extension never sends its stored key to localhost.
+The bundled Google ADK browser runtime runs inside the service worker, uses the key stored in trusted extension storage, and has no direct Chrome API authority. It can propose an action but cannot approve or execute one; the worker validates and executes approved actions.
 
 ## Agent safety policy
 
@@ -30,4 +30,4 @@ The project will acknowledge valid reports when possible, investigate the affect
 
 ## Release checks
 
-Before packaging a release, run `npm run check` and `npm audit`. They validate syntax, ADK rotation, sender and scope checks, key isolation, action schema guards, cancellation and timeout behavior, context limits, permission failure behavior, dependency advisories, and the release allowlist. Only files listed in `scripts/package-allowlist.json` belong in the extension upload; the Node companion is distributed as source and is not loaded by Chrome.
+Before packaging a release, run `npm run check` and `npm audit`. They validate syntax, the generated ADK bundle, model rotation, sender and scope checks, key isolation, action schema guards, cancellation and timeout behavior, context limits, permission failure behavior, dependency advisories, and the release allowlist. Only files listed in `scripts/package-allowlist.json` belong in the extension upload; the ADK runtime is included in that package and no companion process is required.

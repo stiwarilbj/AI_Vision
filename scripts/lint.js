@@ -4,7 +4,8 @@ const path = require('node:path');
 const projectRoot = path.resolve(__dirname, '..');
 const worker = fs.readFileSync(path.join(projectRoot, 'src/background/service-worker.js'), 'utf8');
 const panel = fs.readFileSync(path.join(projectRoot, 'src/content/assistant-panel.js'), 'utf8');
-const rotation = fs.readFileSync(path.join(projectRoot, 'adk/model-rotation.mjs'), 'utf8');
+const adkBundlePath = path.join(projectRoot, 'src/background/adk-runtime.js');
+const adkBundle = fs.existsSync(adkBundlePath) ? fs.readFileSync(adkBundlePath, 'utf8') : '';
 const readme = fs.readFileSync(path.join(projectRoot, 'README.md'), 'utf8');
 const manifest = JSON.parse(fs.readFileSync(path.join(projectRoot, 'manifest.json'), 'utf8'));
 const packageJson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8'));
@@ -37,19 +38,28 @@ if (!manifest.permissions.includes('activeTab') || manifest.permissions.includes
 if (!manifest.host_permissions.includes('https://generativelanguage.googleapis.com/*')) {
   throw new Error('Permission lint failed: missing narrow Gemini host permission.');
 }
-if (!manifest.optional_host_permissions.includes('http://*/*')) {
-  throw new Error('Permission lint failed: the optional loopback ADK origin must be requestable.');
+if (!manifest.optional_host_permissions.includes('http://*/*') || !manifest.optional_host_permissions.includes('https://*/*')) {
+  throw new Error('Permission lint failed: broad HTTP/HTTPS access must remain optional for All Tabs.');
 }
 if (!/responseSchema/.test(worker) || !/targetSignature/.test(worker)) {
   throw new Error('Security lint failed: structured actions and live target signatures are required.');
 }
-if (packageJson.dependencies?.['@google/adk'] !== '2.0.0') {
-  throw new Error('ADK lint failed: @google/adk must remain pinned to 2.0.0.');
+if (packageJson.devDependencies?.['@google/adk'] !== '2.0.0') {
+  throw new Error('ADK lint failed: the vendored build must remain pinned to @google/adk 2.0.0.');
+}
+if (!worker.includes("importScripts?.('src/background/adk-runtime.js')")) {
+  throw new Error('ADK lint failed: the service worker must load the packaged browser bundle.');
+}
+if (worker.includes('127.0.0.1') || panel.includes('127.0.0.1')) {
+  throw new Error('ADK lint failed: the extension must not depend on a localhost companion.');
+}
+if (adkBundle.length < 100000 || !adkBundle.includes('AIVisionAdkRuntime')) {
+  throw new Error('ADK lint failed: the generated in-extension runtime bundle is missing or unexpectedly small.');
+}
+if (/\beval\s*\(/.test(adkBundle)) {
+  throw new Error('ADK lint failed: the packaged runtime contains unsupported dynamic code.');
 }
 for (const [index, model] of expectedAgentModels.entries()) {
-  const previous = index === 0 ? -1 : rotation.indexOf(expectedAgentModels[index - 1]);
-  const current = rotation.indexOf(model);
-  if (current < 0 || current < previous) throw new Error(`ADK rotation lint failed at ${model}.`);
   if (!worker.includes(`'${model}'`)) throw new Error(`Worker ADK model allowlist is missing ${model}.`);
 }
 if (!readme.includes(officialStoreUrl) || !panel.includes(officialStoreUrl)) {

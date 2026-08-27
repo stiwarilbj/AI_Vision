@@ -6,7 +6,7 @@ Canonical website: https://stiwarilbj.github.io/AI_Vision/
 Official active Chrome Web Store listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
 Public source: https://github.com/stiwarilbj/AI_Vision
 Privacy notice: https://stiwarilbj.github.io/AI_Vision/privacy.html
-Current version: 2.1.0
+Current version: 2.2.0
 
 Canonical project guide: https://github.com/stiwarilbj/AI_Vision/blob/main/README.md
 Security policy: https://github.com/stiwarilbj/AI_Vision/blob/main/SECURITY.md
@@ -17,13 +17,13 @@ Security policy: https://github.com/stiwarilbj/AI_Vision/blob/main/SECURITY.md
 - The Tab mode answers questions about readable content on the current supported webpage.
 - All Tabs mode compares up to 20 supported tabs in one Chrome window.
 - Response styles include Balanced, Concise, Formal, Casual, Detailed, and Bullet-oriented.
-- Agent Mode can be enabled in Capture, The Tab, or All Tabs. Its optional loopback Google ADK companion rotates one planning request at a time through gemini-3.5-flash, gemini-3-flash-preview, gemini-2.5-flash, gemini-3.1-flash-lite, and gemini-2.5-flash-lite, then repeats.
+- Agent Mode can be enabled in Capture, The Tab, or All Tabs. Its bundled Google ADK browser runtime rotates one planning request at a time through gemini-3.5-flash, gemini-3-flash-preview, gemini-2.5-flash, gemini-3.1-flash-lite, and gemini-2.5-flash-lite, then repeats. No terminal or companion process is needed.
 - Reading, waiting, scrolling, and activating an existing in-scope tab can run automatically. Every click, type, direct navigation, new tab, history move, and reload requires approval. Capture and The Tab remain scoped to one tab; All Tabs is optional-permission gated and remains inside the starting Chrome window, subject to permanent safety blocks and a 12-step limit.
 
 ## Data handling
 
 - The user supplies a Gemini API key, which is stored by the service worker with preferences in trusted local Chrome storage. The panel receives only masked key status inside a closed Shadow DOM.
-- Ordinary requests go directly to Google's Gemini API over HTTPS. When the user starts and permits the loopback Google ADK companion, bounded Agent Mode planning context goes to that local runtime and then to Gemini using the companion's separate environment-provided key.
+- Ordinary and Agent Mode requests go directly to Google's Gemini API over HTTPS from the service worker. The bundled ADK runtime uses the key saved in the extension settings.
 - AI Vision has no developer-operated analytics, advertising, tracking, or proxy server.
 - The repository is publicly visible but does not currently contain an open-source license.
 

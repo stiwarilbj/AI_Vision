@@ -507,7 +507,7 @@
                 ['Capture', 'Drag over a page area, then ask Gemini about the image.'],
                 ['The Tab', 'Read and ask about the current page.'],
                 ['All Tabs', 'Compare supported pages in the starting Chrome window.'],
-                ['Agent Mode', 'Google ADK plans each step through five rotating Gemini models. Chrome executes only validated actions; Capture and The Tab stay in one tab, and All Tabs stays in one window.']
+                ['Agent Mode', 'Bundled Google ADK plans each step through five rotating Gemini models. Chrome executes only validated actions; Capture and The Tab stay in one tab, and All Tabs stays in one window.']
             ].forEach(([label, description]) => {
                 const item = document.createElement('li');
                 const strong = document.createElement('strong');
@@ -1058,7 +1058,7 @@
         }
 
         async function submitUserRequest(presetQuery = null) {
-            if (!hasApiKey && !isAgentModeEnabled) {
+            if (!hasApiKey) {
                 showUserError('Please set your Gemini API key in Settings');
                 return;
             }
@@ -1092,14 +1092,6 @@
                 }
 
                 if (shouldRunAgent) {
-                    const adkPermission = await sendWorkerMessage({ action: 'ensureAdkAccess' });
-                    if (!adkPermission?.granted) {
-                        responseArea.textContent = adkPermission?.pending
-                            ? 'Local Google ADK permission opened in a new tab. Grant it, return here, and press Send again.'
-                            : 'Local Google ADK access was not enabled. Agent Mode can still use its safe fallback after permission is granted.';
-                        setRequestInProgress(false);
-                        return;
-                    }
                     renderAgentProgress(1, 'Understanding your task');
                     const taskResult = await sendWorkerMessage({
                         action: 'startAgentTask',
@@ -1313,15 +1305,6 @@
                 responseArea.textContent = request.granted === true
                     ? 'All Tabs access is enabled. Press Send to continue.'
                     : 'All Tabs access was not enabled.';
-                setRequestInProgress(false);
-                sendResponse({ status: 'received' });
-                return false;
-            }
-            if (request.action === 'adkPermissionResult' && responseArea && popup) {
-                responseArea.classList.toggle('error', request.granted !== true);
-                responseArea.textContent = request.granted === true
-                    ? 'Local Google ADK access is enabled. Start the companion runtime, then press Send to continue.'
-                    : 'Local Google ADK access was not enabled.';
                 setRequestInProgress(false);
                 sendResponse({ status: 'received' });
                 return false;

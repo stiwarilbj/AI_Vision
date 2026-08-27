@@ -1,4 +1,4 @@
-# Chrome Web Store copy – version 2.1.0
+# Chrome Web Store copy – version 2.2.0
 
 Official active listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
 
@@ -33,7 +33,7 @@ Agent Mode:
 - In Capture mode, Agent Mode uses the selected screenshot and acts only in The Tab where the capture started
 - In The Tab mode, Agent Mode can read, navigate, click, type, and scroll only in that tab
 - In All Tabs mode, Agent Mode can search, switch tabs, navigate, click, type, and scroll across supported tabs in the starting Chrome window
-- When the optional local Google ADK companion is running, every planning step rotates through five configured Gemini models; otherwise the constrained direct-Gemini planner remains available
+- The Google ADK browser runtime is bundled in the extension, so every planning step rotates through five configured Gemini models without a terminal, Node.js install, companion process, or download
 - Opening a new tab, going back or forward, and reloading are supported only after approval; new tabs stay in the starting window
 - All Tabs Agent Mode stops if the source tab moves to another window
 - Reading, waiting, and scrolling can proceed automatically; every click, text entry, and model-generated navigation requires explicit approval
@@ -95,7 +95,7 @@ The optional tabs permission supports All Tabs and All Tabs Agent Mode. AI Visio
 
 ### Host permission justification
 
-The required host permission is limited to `https://generativelanguage.googleapis.com/*` for direct Gemini requests. Optional `http://127.0.0.1/*` access is requested when Agent Mode connects to a Google ADK companion started by the user. Optional `http://*/*` and `https://*/*` access is requested only when the user chooses All Tabs, because that mode reads supported pages across multiple domains. Capture and The Tab use user-initiated `activeTab` access. Restricted Chrome pages and the Chrome Web Store remain inaccessible.
+The required host permission is limited to `https://generativelanguage.googleapis.com/*` for Gemini requests and the bundled ADK planner. Optional `http://*/*` and `https://*/*` access is requested only when the user chooses All Tabs, because that mode reads supported pages across multiple domains. Capture and The Tab use user-initiated `activeTab` access. Restricted Chrome pages and the Chrome Web Store remain inaccessible.
 
 ### Are you using remote code?
 
@@ -114,8 +114,8 @@ Disclose these data categories because the extension handles them for its user-f
 - Web history/browsing activity: live tab titles and URLs used for The Tab, All Tabs, and Agent Mode. AI Vision does not read Chrome's stored browsing-history database.
 - User activity: the user's prompts and selected browser task actions.
 
-State that data is used only for the extension's single purpose, is not sold, and is not used for advertising or credit decisions. Normal requests are sent directly to Google. When the user separately runs and permits the loopback Google ADK companion, bounded Agent Mode planning context goes to that local service and then to Google. Link the store listing to the hosted version of `PRIVACY.md` before submission.
+State that data is used only for the extension's single purpose, is not sold, and is not used for advertising or credit decisions. Normal and Agent Mode requests are sent directly to Google from the service worker using the user-supplied key. Link the store listing to the hosted version of `PRIVACY.md` before submission.
 
 ## Reviewer note about the retained permissions
 
-This version keeps only `activeTab`, `scripting`, `contextMenus`, `storage`, and the narrow Gemini host permission as required permissions. Loopback ADK access, `tabs`, and ordinary HTTP/HTTPS host access are optional. Retest Capture, The Tab, All Tabs, ADK rotation, and Agent Mode after any permission change.
+This version keeps only `activeTab`, `scripting`, `contextMenus`, `storage`, and the narrow Gemini host permission as required permissions. `tabs` and ordinary HTTP/HTTPS host access are optional. Retest Capture, The Tab, All Tabs, ADK rotation, and Agent Mode after any permission change.
