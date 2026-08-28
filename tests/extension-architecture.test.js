@@ -255,6 +255,10 @@ test('the content panel never exposes the key to normal page DOM or performs Gem
   assert.match(PANEL_CODE, /request\.taskId === activeAgentTaskId/);
   assert.match(PANEL_CODE, /Stop Agent Mode task/);
   assert.match(PANEL_CODE, /Planner rationale:/);
+  assert.match(PANEL_CODE, /id = 'gemini-primary-mode'/);
+  assert.match(PANEL_CODE, /id = 'gemini-advanced-modes'/);
+  assert.match(PANEL_CODE, /id = 'gemini-settings-store-link'/);
+  assert.match(PANEL_CODE, /Only setup: paste a key and press Save key/);
 });
 
 test('The Tab context reads only the source tab and redacts URL query strings', async () => {

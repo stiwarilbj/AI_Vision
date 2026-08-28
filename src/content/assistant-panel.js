@@ -445,11 +445,36 @@
             let textOnlyMessage = null;
             const modeButtons = [];
 
+            const primaryModeButton = document.createElement('button');
+            primaryModeButton.id = 'gemini-primary-mode';
+            primaryModeButton.type = 'button';
+            primaryModeButton.className = 'gemini-primary-mode-button';
+            primaryModeButton.innerHTML = `${iconSvg('vision')}<span class="gemini-primary-mode-copy"><strong>Capture</strong><small>Ask about an area of this page</small></span><span class="gemini-primary-mode-arrow" aria-hidden="true">→</span>`;
+            primaryModeButton.setAttribute('aria-label', 'Capture an area of this page');
+            primaryModeButton.onclick = () => {
+                selectedMode = 'capture';
+                void saveSettings().catch((error) => showUserError(error.message));
+                if (!capturedImageData) {
+                    closeAssistantPanel();
+                    startCaptureSelection();
+                    return;
+                }
+                closeUtilityPanels();
+                renderSelectedMode();
+            };
+            content.appendChild(primaryModeButton);
+
+            const advancedModes = document.createElement('details');
+            advancedModes.id = 'gemini-advanced-modes';
+            const advancedModesSummary = document.createElement('summary');
+            advancedModesSummary.textContent = 'More modes and tools';
+            advancedModes.appendChild(advancedModesSummary);
+
             const modeRail = document.createElement('div');
             modeRail.id = 'gemini-mode-rail';
             modeRail.setAttribute('role', 'tablist');
             modeRail.setAttribute('aria-label', 'AI Vision mode');
-            MODES.forEach((mode) => {
+            MODES.filter((mode) => mode.value !== 'capture').forEach((mode) => {
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.dataset.mode = mode.value;
@@ -469,7 +494,7 @@
                 modeButtons.push(button);
                 modeRail.appendChild(button);
             });
-            content.appendChild(modeRail);
+            advancedModes.appendChild(modeRail);
 
             const agentModeRow = document.createElement('div');
             agentModeRow.id = 'gemini-agent-mode-row';
@@ -492,14 +517,15 @@
             };
             agentModeRow.appendChild(agentModeCopy);
             agentModeRow.appendChild(agentModeToggle);
-            content.appendChild(agentModeRow);
+            advancedModes.appendChild(agentModeRow);
+            content.appendChild(advancedModes);
             
             const instructionsPanel = document.createElement('div');
             instructionsPanel.id = 'gemini-instructions-panel';
 
             const helpIntro = document.createElement('p');
             helpIntro.className = 'gemini-help-intro';
-            helpIntro.textContent = 'Choose a mode above the question box. Your mode and response style stay selected until you change them.';
+            helpIntro.textContent = 'Capture is the simple default. Open More modes and tools when you want to read a tab, compare tabs, or use Agent Mode.';
 
             const helpList = document.createElement('ul');
             helpList.className = 'gemini-help-list';
@@ -658,7 +684,7 @@
 
             const apiKeyHelp = document.createElement('div');
             apiKeyHelp.className = 'api-key-help';
-            apiKeyHelp.innerHTML = `Stored only in this Chrome profile · <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">Get a key ${iconSvg('external')}</a>`;
+            apiKeyHelp.innerHTML = `Only setup: paste a key and press Save key · <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">Get a key ${iconSvg('external')}</a>`;
             
             const apiKeyError = document.createElement('div');
             apiKeyError.className = 'error-message';
@@ -750,14 +776,33 @@
             compactSettingsGrid.appendChild(modelGroup);
             compactSettingsGrid.appendChild(responseStyleGroup);
 
+            const optionalSettings = document.createElement('details');
+            optionalSettings.id = 'gemini-optional-settings';
+            const optionalSettingsSummary = document.createElement('summary');
+            optionalSettingsSummary.textContent = 'Optional preferences';
+            optionalSettings.appendChild(optionalSettingsSummary);
+            optionalSettings.appendChild(compactSettingsGrid);
+            optionalSettings.appendChild(tempGroup);
+
             const settingsFooter = document.createElement('div');
             settingsFooter.className = 'gemini-settings-footer';
             settingsFooter.innerHTML = `${iconSvg('spark')}<span>Preferences save when changed. API keys save only when you press Save key.</span>`;
 
+            const storeFooter = document.createElement('div');
+            storeFooter.id = 'gemini-settings-store-link';
+            storeFooter.className = 'gemini-settings-store-link';
+            const storeLink = document.createElement('a');
+            storeLink.href = STORE_URL;
+            storeLink.target = '_blank';
+            storeLink.rel = 'noreferrer';
+            storeLink.textContent = 'Get the live AI Vision extension from Chrome Web Store ↗';
+            storeLink.setAttribute('aria-label', 'Open the live AI Vision extension in the Chrome Web Store');
+            storeFooter.appendChild(storeLink);
+
             settingsPanel.appendChild(apiKeyGroup);
-            settingsPanel.appendChild(compactSettingsGrid);
-            settingsPanel.appendChild(tempGroup);
+            settingsPanel.appendChild(optionalSettings);
             settingsPanel.appendChild(settingsFooter);
+            settingsPanel.appendChild(storeFooter);
             content.appendChild(settingsPanel);
             
             saveKeyButton.onclick = async () => {
@@ -900,6 +945,10 @@
             content.appendChild(responseArea);
 
             function renderSelectedMode() {
+                const isCaptureActive = selectedMode === 'capture';
+                primaryModeButton.classList.toggle('active', isCaptureActive);
+                primaryModeButton.setAttribute('aria-pressed', String(isCaptureActive));
+                advancedModes.open = !isCaptureActive || isAgentModeEnabled;
                 modeButtons.forEach((button) => {
                     const isActive = button.dataset.mode === selectedMode;
                     button.classList.toggle('active', isActive);
@@ -1001,7 +1050,7 @@
                 sendButton.removeAttribute('aria-busy');
                 refreshModeControls();
             }
-            uiQueryAll('#gemini-mode-rail button, #gemini-agent-mode-row button').forEach((button) => {
+            uiQueryAll('#gemini-primary-mode, #gemini-mode-rail button, #gemini-agent-mode-row button').forEach((button) => {
                 button.disabled = isLoading;
             });
         }

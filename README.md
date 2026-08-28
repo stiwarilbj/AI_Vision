@@ -4,11 +4,12 @@ AI Vision lets you ask Gemini about a selected screenshot, the current tab, or s
 
 [Actual active Chrome Web Store extension listing](https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en) · [Get a Gemini API key](https://aistudio.google.com/app/apikey)
 
-## Version 2.2.1
+## Version 2.2.2
 
-- Capture mode analyzes a selected visible area.
+- Capture is the normal first screen: one clear button starts a selected-area question.
 - The Tab mode reads the current HTTP or HTTPS page.
 - All Tabs compares supported pages in the starting Chrome window after optional permission is granted.
+- The Tab, All Tabs, and Agent Mode stay tucked under **More modes and tools** until you need them.
 - Gemini requests, key storage, model discovery, and settings persistence run in the service worker.
 - The visible panel is isolated in a closed Shadow DOM and shows only masked key status.
 - Agent Mode is powered by the Google ADK runtime bundled in the extension; no terminal, Node.js install, companion process, or download is needed.
@@ -47,11 +48,12 @@ npm run package
 1. Install the extension from the Chrome Web Store, or load this folder as an unpacked extension from `chrome://extensions` with Developer mode enabled.
 2. Create a Gemini API key in [Google AI Studio](https://aistudio.google.com/app/apikey).
 3. Open AI Vision, choose Settings, paste the key, and press **Save key**.
-4. Choose a response style. Available Gemini models are discovered from Google's API when a key is present.
 
-Agent Mode is ready immediately after the same key is saved: enable Agent Mode
-in the panel and send a task. The packaged extension already contains the ADK
-runtime, so unpacked installs do not require terminal setup.
+That is the only setup. Capture is ready immediately after the key is saved;
+response style, model, The Tab, All Tabs, and Agent Mode are optional controls
+you can open later. The packaged extension already contains the ADK runtime, so
+unpacked installs do not require terminal setup, Node.js, downloads, or another
+mode-specific configuration.
 
 The extension key is stored only by the service worker in `chrome.storage.local`; the content panel receives only `hasApiKey` and a masked suffix. Ordinary Capture, The Tab, and All Tabs answers go from the service worker directly to Google's API over HTTPS. No developer-operated proxy, analytics, or external data collection is used.
 
@@ -59,9 +61,9 @@ The extension key is stored only by the service worker in `chrome.storage.local`
 
 Open AI Vision from the toolbar icon or right-click menu:
 
-- **Capture:** drag over a visible area, then ask a question or use Summarize, Explain, or Answer.
-- **The Tab:** ask about readable content in the current page.
-- **All Tabs:** ask across up to 20 supported pages in the Chrome window where AI Vision was opened. The first use opens a separate permission page; access is optional and the feature fails closed when it is denied.
+- **Capture:** the normal mode. Click Capture, drag over a visible area, then ask a question or use Summarize, Explain, or Answer.
+- **The Tab:** open **More modes and tools** when you want to ask about readable content in the current page.
+- **All Tabs:** open **More modes and tools** when you want to ask across up to 20 supported pages in the Chrome window where AI Vision was opened. The first use opens a separate permission page; access is optional and the feature fails closed when it is denied.
 
 ## Agent Mode
 

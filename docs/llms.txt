@@ -6,7 +6,7 @@ Canonical website: https://stiwarilbj.github.io/AI_Vision/
 Official active Chrome Web Store listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
 Public source: https://github.com/stiwarilbj/AI_Vision
 Privacy notice: https://stiwarilbj.github.io/AI_Vision/privacy.html
-Current version: 2.2.1
+Current version: 2.2.2
 
 Canonical project guide: https://github.com/stiwarilbj/AI_Vision/blob/main/README.md
 Security policy: https://github.com/stiwarilbj/AI_Vision/blob/main/SECURITY.md
@@ -14,6 +14,7 @@ Security policy: https://github.com/stiwarilbj/AI_Vision/blob/main/SECURITY.md
 ## Primary features
 
 - Capture mode analyzes a user-selected screenshot region.
+- Capture is the simple first screen; The Tab, All Tabs, and Agent Mode are optional controls under More modes and tools.
 - The Tab mode answers questions about readable content on the current supported webpage.
 - All Tabs mode compares up to 20 supported tabs in one Chrome window.
 - Response styles include Balanced, Concise, Formal, Casual, Detailed, and Bullet-oriented.

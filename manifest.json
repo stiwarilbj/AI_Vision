@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AI Vision - Gemini Screenshot & Browser Assistant",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "minimum_chrome_version": "102",
   "description": "Ask Gemini about screenshots, The Tab, or All Tabs—and use Agent Mode for safe browser tasks in one Chrome window.",
   "permissions": [

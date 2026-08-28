@@ -1,4 +1,4 @@
-# Chrome Web Store copy – version 2.2.1
+# Chrome Web Store copy – version 2.2.2
 
 Official active listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
 
@@ -26,6 +26,7 @@ What it does:
 - Lets you choose Balanced, Concise, Formal, Casual, Detailed, or Bullet-oriented responses
 - Discovers Gemini models that are available to the user's API key
 - Can open AI Vision without attaching a picture when you click instead of dragging in Capture mode
+- Keeps Capture as the simple first screen, with The Tab, All Tabs, and Agent Mode under More modes and tools
 
 Agent Mode:
 
@@ -43,15 +44,15 @@ Agent Mode:
 How to use:
 
 - Right-click on a page or click the extension icon to open AI Vision
-- Choose Capture, The Tab, or All Tabs using the mode control above the question box
+- Capture is ready as soon as AI Vision opens; use More modes and tools for The Tab, All Tabs, or Agent Mode
 - In Capture mode, drag to select the area you want to analyze; click once to open AI Vision without a picture
 - Type a question or use Summarize, Explain, or Answer for an AI-powered response
-- Choose a response style and an available Gemini model in Settings
+- Optionally expand preferences in Settings to choose a response style or available Gemini model
 - Your mode, Agent Mode, and response settings remain selected until you manually change them
 
 Getting started:
 
-You'll need a Google Gemini API key from Google AI Studio. Visit aistudio.google.com/app/apikey, create a key, then paste it into AI Vision's Settings menu. API availability, free-tier limits, model access, and pricing are controlled by Google.
+The only setup is a Google Gemini API key from Google AI Studio. Visit aistudio.google.com/app/apikey, create a key, then paste it into AI Vision's Settings menu. Capture needs no other setup; API availability, free-tier limits, model access, and pricing are controlled by Google.
 
 Privacy and control:
 
