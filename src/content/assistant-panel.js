@@ -1006,7 +1006,7 @@
             });
         }
 
-        function renderAgentProgress(step = 1, message = 'Understanding your task') {
+        function renderAgentProgress(step = 1, message = 'Understanding your task', planner = {}) {
             const contextLabel = selectedMode === 'all-tabs' ? 'Reading this Chrome window' : 'Reading The Tab';
             const steps = [
                 'Understanding your task',
@@ -1026,6 +1026,17 @@
             status.textContent = message;
             responseArea.appendChild(status);
 
+            if (typeof planner?.model === 'string' && planner.model) {
+                const plannerStatus = document.createElement('small');
+                plannerStatus.className = 'gemini-agent-model';
+                const requestNumber = Number.isInteger(planner.requestNumber) ? ` · request ${planner.requestNumber}` : '';
+                const nextModel = typeof planner.nextModel === 'string' && planner.nextModel
+                    ? ` · next ${planner.nextModel}`
+                    : '';
+                plannerStatus.textContent = `Planner: ${planner.model}${requestNumber}${nextModel}`;
+                responseArea.appendChild(plannerStatus);
+            }
+
             const list = document.createElement('ol');
             list.className = 'gemini-progress-list';
             steps.forEach((stepLabel, index) => {
@@ -1037,6 +1048,30 @@
                 list.appendChild(item);
             });
             responseArea.appendChild(list);
+
+            if (activeAgentTaskId) {
+                const cancelButton = document.createElement('button');
+                cancelButton.type = 'button';
+                cancelButton.className = 'gemini-secondary-button gemini-agent-cancel-button';
+                cancelButton.textContent = 'Stop task';
+                cancelButton.setAttribute('aria-label', 'Stop Agent Mode task');
+                cancelButton.onclick = async () => {
+                    const taskId = activeAgentTaskId;
+                    if (!taskId) return;
+                    cancelButton.disabled = true;
+                    cancelButton.textContent = 'Stopping…';
+                    status.textContent = 'Stopping Agent Mode…';
+                    try {
+                        const result = await sendWorkerMessage({ action: 'cancelAgentTask', taskId });
+                        if (result?.error) throw new Error(result.error);
+                    } catch (error) {
+                        cancelButton.disabled = false;
+                        cancelButton.textContent = 'Stop task';
+                        status.textContent = error.message || 'The task could not be stopped.';
+                    }
+                };
+                responseArea.appendChild(cancelButton);
+            }
         }
 
         // Context collection and Gemini requests
@@ -1109,6 +1144,7 @@
                     }
                     activeAgentTaskId = taskResult.taskId;
                     if (uiHost) uiHost.dataset.agentTaskId = activeAgentTaskId;
+                    renderAgentProgress(1, 'Starting Agent Mode');
                     agentStarted = true;
                     return;
                 }
@@ -1229,8 +1265,16 @@
             const description = document.createElement('p');
             const action = proposal?.action?.action || 'browser action';
             const target = proposal?.preview?.label || proposal?.tabTitle || 'the selected page';
-            description.textContent = `AI Vision wants to ${action} ${target}. Review the page and choose whether to continue.`;
+            const actionLabel = String(action).replaceAll('_', ' ');
+            description.textContent = `AI Vision wants to ${actionLabel} ${target}. Review the page and choose whether to continue.`;
             responseArea.appendChild(description);
+
+            if (typeof proposal?.action?.reason === 'string' && proposal.action.reason) {
+                const reason = document.createElement('small');
+                reason.className = 'gemini-automation-status';
+                reason.textContent = `Planner rationale: ${proposal.action.reason}`;
+                responseArea.appendChild(reason);
+            }
 
             const actions = document.createElement('div');
             actions.className = 'gemini-approval-actions';
@@ -1278,7 +1322,11 @@
             if (request.action === 'agentModeProgress'
                 && request.taskId === activeAgentTaskId
                 && responseArea && popup) {
-                renderAgentProgress(request.step || 1, request.message || 'Working in this window');
+                renderAgentProgress(request.step || 1, request.message || 'Working in this window', {
+                    model: request.model,
+                    nextModel: request.nextModel,
+                    requestNumber: request.requestNumber
+                });
                 sendResponse({ status: 'received' });
                 return false;
             }

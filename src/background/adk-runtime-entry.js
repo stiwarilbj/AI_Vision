@@ -6,6 +6,7 @@
 import { LlmAgent } from '@google/adk/dist/web/agents/llm_agent.js';
 import { InMemoryRunner } from '@google/adk/dist/web/runner/in_memory_runner.js';
 import { Gemini } from '@google/adk/dist/web/models/google_llm.js';
+import { isFinalResponse } from '@google/adk/dist/web/events/event.js';
 
 const MAX_PROMPT_CHARS = 50000;
 const MAX_IMAGE_DATA_CHARS = 8000000;
@@ -41,7 +42,14 @@ const AGENT_INSTRUCTION = [
 ].join(' ');
 
 function collectEventText(event) {
+  if (!event?.content?.parts || event.partial || event.author === 'user') return '';
+  try {
+    if (!isFinalResponse(event)) return '';
+  } catch (_) {
+    return '';
+  }
   return (event?.content?.parts || [])
+    .filter((part) => !part?.thought)
     .map((part) => typeof part?.text === 'string' ? part.text : '')
     .filter(Boolean)
     .join('');

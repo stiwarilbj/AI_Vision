@@ -253,6 +253,8 @@ test('the content panel never exposes the key to normal page DOM or performs Gem
   assert.doesNotMatch(PANEL_CODE, /document\.body\.appendChild/);
   assert.match(PANEL_CODE, /request\.action === 'agentModeComplete'/);
   assert.match(PANEL_CODE, /request\.taskId === activeAgentTaskId/);
+  assert.match(PANEL_CODE, /Stop Agent Mode task/);
+  assert.match(PANEL_CODE, /Planner rationale:/);
 });
 
 test('The Tab context reads only the source tab and redacts URL query strings', async () => {
@@ -309,6 +311,16 @@ test('strict action parsing rejects malformed, out-of-range, and unsafe actions'
   assert.throws(() => exports.parseAgentDecision('{"action":"open_tab","url":"https://example.com/login"}'));
 });
 
+test('strict action parsing validates field types and action-specific fields', () => {
+  const { exports } = createServiceWorkerHarness();
+  assert.throws(() => exports.parseAgentDecision('{"action":"click","tabIndex":"0","elementIndex":0,"targetSignature":"button||Go"}'));
+  assert.throws(() => exports.parseAgentDecision('{"action":"type","tabIndex":0,"elementIndex":0,"targetSignature":"input|text|Name","text":42}'));
+  assert.throws(() => exports.parseAgentDecision('{"action":"scroll","tabIndex":0,"direction":"sideways"}'));
+  assert.throws(() => exports.parseAgentDecision('{"action":"wait","tabIndex":0}'));
+  assert.throws(() => exports.parseAgentDecision('{"action":"done","summary":"finished","tabIndex":0}'));
+  assert.throws(() => exports.parseAgentDecision('{"action":"activate_tab","tabIndex":0,"url":"https://example.com"}'));
+});
+
 test('Agent Mode runs the bundled Google ADK runtime and records its rotating model', async () => {
   const harness = createServiceWorkerHarness({
     adkResponses: [{ action: 'done', summary: 'ADK completed the task' }]
@@ -345,6 +357,38 @@ test('bundled Agent Mode rotates through all five models and persists the next r
     'gemini-3-flash-preview'
   ]);
   assert.equal(JSON.stringify(harness.localValues.aiVisionAdkRotation), JSON.stringify({ nextIndex: 2, requestCount: 7 }));
+});
+
+test('transient ADK errors retry on the next rotation model', async () => {
+  const firstFailure = Object.assign(new Error('temporary 503 from Gemini'), { status: 503 });
+  const harness = createServiceWorkerHarness({
+    adkResponses: [() => { throw firstFailure; }, { action: 'done', summary: 'Recovered on retry' }]
+  });
+  const result = await harness.exports.callAdkAgent({ prompt: 'retry this planner step', temperature: 0.4 });
+  assert.deepEqual(harness.calls.adkCalls.map((request) => request.model), [
+    'gemini-3.5-flash',
+    'gemini-3-flash-preview'
+  ]);
+  assert.equal(result.model, 'gemini-3-flash-preview');
+  assert.equal(result.requestNumber, 2);
+  assert.equal(JSON.stringify(harness.localValues.aiVisionAdkRotation), JSON.stringify({ nextIndex: 2, requestCount: 2 }));
+});
+
+test('direct fallback keeps the same ADK rotation slot when the bundle is unavailable', async () => {
+  const harness = createServiceWorkerHarness({
+    adkAvailable: false,
+    storageValues: { geminiModel: 'user-selected-model' },
+    fetchResponses: [
+      responseForJson({ models: [{ name: 'models/gemini-3.5-flash', supportedGenerationMethods: ['generateContent'] }] }),
+      responseForJson({ candidates: [{ content: { parts: [{ text: JSON.stringify({ action: 'done', summary: 'Safe fallback completed' }) }] } }] })
+    ]
+  });
+  const started = await harness.dispatch({ action: 'startAgentTask', task: 'Complete safely', mode: 'tab' });
+  await waitForMessage(harness.calls, 'agentModeComplete');
+  assert.equal(harness.calls.fetchRequests.some(({ url }) => String(url).includes('/models/gemini-3.5-flash:generateContent')), true);
+  assert.equal(harness.calls.sentMessages.some(({ message }) => /safe Gemini fallback \(gemini-3\.5-flash\)/.test(message.message || '')), true);
+  assert.equal(harness.localValues.aiVisionAdkRotation.requestCount, 1);
+  assert.match(started.taskId, /^agent-/);
 });
 
 test('Agent Mode requires the extension API key and never places it in panel code', async () => {
@@ -567,6 +611,34 @@ test('cancellation aborts an in-extension ADK planning request', async () => {
   const messages = harness.calls.sentMessages.filter(({ message }) => message.action === 'agentModeComplete' && message.taskId === response.taskId);
   assert.equal(messages.length, 1);
   assert.equal(messages[0].message.summary, 'Task cancelled.');
+});
+
+test('stale Agent Mode progress is suppressed after its task is gone', async () => {
+  const harness = createServiceWorkerHarness();
+  await harness.exports.reportToTask(
+    { sourceTabId: 10 },
+    { action: 'agentModeProgress', taskId: 'agent-no-longer-active', step: 2, message: 'stale' }
+  );
+  assert.equal(harness.calls.sentMessages.some(({ message }) => message.taskId === 'agent-no-longer-active'), false);
+});
+
+test('the final execution boundary rejects a protected navigation even if approval is supplied', async () => {
+  const harness = createServiceWorkerHarness({
+    adkResponses: [({ abortSignal }) => new Promise((resolve, reject) => {
+      abortSignal.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })), { once: true });
+    })]
+  });
+  const started = await harness.dispatch({ action: 'startAgentTask', task: 'Keep working', mode: 'tab' });
+  const task = await harness.exports.loadTask(started.taskId);
+  const result = await harness.exports.executeAgentAction(
+    { action: 'navigate', tabIndex: 0, url: 'https://example.com/login' },
+    { tabs: [] },
+    task,
+    true
+  );
+  assert.equal(result.blocked, true);
+  assert.equal(harness.calls.tabNavigation.length, 0);
+  await harness.dispatch({ action: 'cancelAgentTask', taskId: started.taskId });
 });
 
 test('timeouts abort requests and retries recover transient errors', async () => {

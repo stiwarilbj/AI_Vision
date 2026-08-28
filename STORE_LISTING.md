@@ -1,4 +1,4 @@
-# Chrome Web Store copy – version 2.2.0
+# Chrome Web Store copy – version 2.2.1
 
 Official active listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
 

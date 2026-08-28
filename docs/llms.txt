@@ -6,7 +6,7 @@ Canonical website: https://stiwarilbj.github.io/AI_Vision/
 Official active Chrome Web Store listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
 Public source: https://github.com/stiwarilbj/AI_Vision
 Privacy notice: https://stiwarilbj.github.io/AI_Vision/privacy.html
-Current version: 2.2.0
+Current version: 2.2.1
 
 Canonical project guide: https://github.com/stiwarilbj/AI_Vision/blob/main/README.md
 Security policy: https://github.com/stiwarilbj/AI_Vision/blob/main/SECURITY.md

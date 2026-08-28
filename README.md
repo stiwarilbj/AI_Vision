@@ -4,7 +4,7 @@ AI Vision lets you ask Gemini about a selected screenshot, the current tab, or s
 
 [Actual active Chrome Web Store extension listing](https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en) · [Get a Gemini API key](https://aistudio.google.com/app/apikey)
 
-## Version 2.2.0
+## Version 2.2.1
 
 - Capture mode analyzes a selected visible area.
 - The Tab mode reads the current HTTP or HTTPS page.
