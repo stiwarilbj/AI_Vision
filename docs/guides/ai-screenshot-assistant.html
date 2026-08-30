@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How to Use an AI Screenshot Assistant in Chrome | AI Vision</title>
+  <meta name="description" content="Learn a practical, privacy-conscious workflow for asking Gemini about a screenshot, the current webpage, or multiple Chrome tabs with AI Vision.">
+  <meta name="author" content="AI Vision project">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html">
+  <link rel="icon" href="../assets/store-icon.png" sizes="128x128" type="image/png">
+  <link rel="manifest" href="../site.webmanifest">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="AI Vision">
+  <meta property="og:title" content="How to Use an AI Screenshot Assistant in Chrome">
+  <meta property="og:description" content="A practical workflow for asking Gemini about selected screenshots, webpages, and Chrome tabs with clear privacy boundaries.">
+  <meta property="og:url" content="https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html">
+  <meta property="og:image" content="https://stiwarilbj.github.io/AI_Vision/assets/marquee.png">
+  <meta property="og:image:width" content="1400">
+  <meta property="og:image:height" content="560">
+  <meta property="og:image:alt" content="AI Vision screenshot assistant for Chrome">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How to Use an AI Screenshot Assistant in Chrome">
+  <meta name="twitter:description" content="Ask Gemini about exactly the part of Chrome you choose, then follow up or compare supported tabs.">
+  <meta name="twitter:image" content="https://stiwarilbj.github.io/AI_Vision/assets/marquee.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html"
+    },
+    "headline": "How to Use an AI Screenshot Assistant in Chrome",
+    "description": "A practical, privacy-conscious workflow for asking Gemini about screenshots, webpages, and supported Chrome tabs with AI Vision.",
+    "image": "https://stiwarilbj.github.io/AI_Vision/assets/marquee.png",
+    "datePublished": "2026-08-30",
+    "dateModified": "2026-08-30",
+    "author": {
+      "@type": "Organization",
+      "name": "AI Vision project",
+      "url": "https://github.com/stiwarilbj/AI_Vision"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "AI Vision project",
+      "url": "https://github.com/stiwarilbj/AI_Vision",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://stiwarilbj.github.io/AI_Vision/assets/store-icon.png"
+      }
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "AI Vision", "item": "https://stiwarilbj.github.io/AI_Vision/"},
+      {"@type": "ListItem", "position": 2, "name": "AI screenshot assistant guide", "item": "https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html"}
+    ]
+  }
+  </script>
+  <style>
+    :root { color-scheme: light; --ink: #102a43; --muted: #526d82; --line: #cce9fa; --blue: #1689d4; --blue-dark: #08659f; --sky: #eaf7ff; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: radial-gradient(circle at 15% 0, #d5f0ff, transparent 30rem), #f7fcff; line-height: 1.7; }
+    a { color: var(--blue-dark); }
+    .wrap { width: min(900px, calc(100% - 40px)); margin: 0 auto; }
+    header { padding: 22px 0; border-bottom: 1px solid var(--line); background: rgba(247,252,255,.9); }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 850; text-decoration: none; }
+    .brand img { width: 34px; height: 34px; border-radius: 10px; }
+    .topbar nav { display: flex; flex-wrap: wrap; gap: 16px; font-size: 14px; font-weight: 750; }
+    main { margin: 58px auto 74px; padding: clamp(28px, 6vw, 66px); border: 1px solid var(--line); border-radius: 30px; background: #fff; box-shadow: 0 24px 70px rgba(39,126,181,.13); }
+    .eyebrow { color: var(--blue-dark); font-size: 13px; font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { margin: 12px 0 18px; font-size: clamp(38px, 6vw, 64px); line-height: 1.05; letter-spacing: -.05em; }
+    h2 { margin: 44px 0 12px; font-size: clamp(27px, 4vw, 38px); line-height: 1.15; letter-spacing: -.035em; }
+    h3 { margin: 28px 0 8px; font-size: 21px; }
+    .lede, .muted { color: var(--muted); }
+    .lede { font-size: 20px; }
+    .updated { color: var(--muted); font-size: 14px; }
+    ol { padding-left: 24px; }
+    li + li { margin-top: 10px; }
+    blockquote { margin: 18px 0; padding: 16px 20px; border-left: 4px solid #77c8f2; background: var(--sky); color: #214b67; }
+    .note { padding: 20px 22px; border: 1px solid #bde3f8; border-radius: 18px; background: linear-gradient(135deg, #e0f4ff, #f8fdff); }
+    .cta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 44px; padding-top: 28px; border-top: 1px solid var(--line); }
+    .button { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 18px; border-radius: 13px; background: linear-gradient(135deg, var(--blue), #39a9e8); color: #fff; font-weight: 800; text-decoration: none; }
+    footer { padding: 0 0 44px; color: var(--muted); font-size: 14px; }
+    @media (max-width: 640px) { .topbar { align-items: flex-start; flex-direction: column; } .wrap { width: min(100% - 28px, 900px); } main { margin-top: 28px; padding: 26px 22px; border-radius: 22px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap topbar">
+      <a class="brand" href="../"><img src="../assets/store-icon.png" alt="AI Vision icon"><span>AI Vision</span></a>
+      <nav aria-label="Guide navigation"><a href="../#features">Features</a><a href="../#faq">FAQ</a><a href="../privacy.html">Privacy</a></nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="eyebrow">Practical guide</div>
+    <h1>How to use an AI screenshot assistant in Chrome</h1>
+    <p class="lede">Sometimes the useful context is one chart, error message, image, or paragraph—not your entire screen. AI Vision lets you send exactly the part of Chrome you choose to Gemini, then keeps follow-up questions in the same open panel.</p>
+    <p class="updated">Updated <time datetime="2026-08-30">August 30, 2026</time> · AI Vision 2.3.0</p>
+
+    <h2>Start with the smallest useful context</h2>
+    <p>Install <a href="https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&amp;hl=en">AI Vision from the Chrome Web Store</a>, create a Gemini API key in <a href="https://aistudio.google.com/app/apikey">Google AI Studio</a>, and save the key in Settings. The extension is ready for a first Capture question; The Tab, All Tabs, and Agent Mode remain optional.</p>
+    <ol>
+      <li>Press <strong>Alt + Shift + V</strong>, click the toolbar icon, or open the AI Vision item from the right-click menu.</li>
+      <li>In Capture mode, drag over the detail you want to understand. Clicking without dragging opens the panel without an image.</li>
+      <li>Choose <strong>Summarize</strong>, <strong>Explain</strong>, or <strong>Answer</strong>, or write a question in your own words.</li>
+      <li>Use <strong>Copy</strong>, <strong>Follow up</strong>, or <strong>Try again</strong> after the answer. Up to three recent turns stay in the open panel and are discarded when it closes or the mode changes.</li>
+    </ol>
+
+    <h2>Three workflows that save time</h2>
+
+    <h3>1. Explain a chart, diagram, or error</h3>
+    <p>Capture only the visual detail that needs interpretation. A focused image gives Gemini a clear question and avoids sharing unrelated page content.</p>
+    <blockquote>“Explain this chart in plain English. Name the biggest trend, one surprising detail, and one question I should investigate next.”</blockquote>
+    <p>For a browser error, include the message and the nearby controls, then ask for likely causes and safe checks. Treat the response as an explanation, not as permission to run a command or change an account.</p>
+
+    <h3>2. Summarize the page you are reading</h3>
+    <p>Choose <strong>The Tab</strong> when the answer depends on readable content in the current HTTP or HTTPS page. Try a prompt that states the audience and the format you want:</p>
+    <blockquote>“Summarize this article for a busy product manager in five bullets. Separate facts, claims, and open questions.”</blockquote>
+    <p>Response styles—Balanced, Concise, Formal, Casual, Detailed, and Bullet-oriented—let you reuse a preferred format without rewriting the instruction every time.</p>
+
+    <h3>3. Compare research across Chrome tabs</h3>
+    <p>Open <strong>All Tabs</strong> when your research is spread across supported pages in one Chrome window. Grant the optional permission when prompted, then ask Gemini to compare sources rather than summarizing each one separately:</p>
+    <blockquote>“Compare the pricing and limitations mentioned in these tabs. Use a table, cite the tab title for each claim, and call out missing information.”</blockquote>
+    <p>All Tabs is intentionally bounded to the starting window and up to 20 supported pages. It does not read Chrome's saved browsing-history database.</p>
+
+    <h2>When to use Agent Mode</h2>
+    <p>Enable Agent Mode only when you want a bounded browser workflow, such as opening a result, scrolling through a page, or preparing a reversible research step. Capture and The Tab stay in their source tab. All Tabs stays in the starting window.</p>
+    <div class="note"><strong>Review before anything consequential.</strong> Reading, waiting, scrolling, and switching to an existing in-scope tab can proceed automatically. Clicks, typing, navigation, new tabs, history movement, and reloads pause for approval. Passwords, payments, sign-ins, uploads, publishing, deletion, legal acceptance, and similar sensitive actions remain blocked.</div>
+
+    <h2>Privacy boundaries to keep in mind</h2>
+    <p>AI Vision sends the prompt and the screenshot or page context needed for the request directly to Google's Gemini API using the key you provide. The key is stored locally by the extension's service worker; the visible panel receives only masked status. AI Vision has no developer-operated analytics, advertising, tracking, or proxy server. See the <a href="../privacy.html">full privacy notice</a> for the complete data-handling description.</p>
+
+    <h2>Make the first question specific</h2>
+    <p>A useful prompt names the task, audience, and output format. For example: “Extract the three product requirements visible here, preserve the exact numbers, and flag anything unreadable.” Specific prompts make the answer easier to check and make follow-up questions more productive.</p>
+
+    <div class="cta"><a class="button" href="https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&amp;hl=en">Add AI Vision to Chrome</a><a href="../">Back to AI Vision</a></div>
+  </main>
+
+  <footer><div class="wrap">AI Vision is an independent project and is not affiliated with Google. Gemini and Chrome are trademarks of Google LLC.</div></footer>
+</body>
+</html>

@@ -1,6 +1,6 @@
 {
   "name": "ai-vision-chrome-extension",
-  "version": "2.2.2",
+  "version": "2.3.0",
   "private": true,
   "description": "AI Vision Chrome extension with a bundled Google ADK browser agent",
   "engines": {
@@ -8,11 +8,12 @@
   },
   "scripts": {
     "build:adk": "node scripts/build-adk-runtime.js",
-    "check": "npm run build:adk && node --check src/background/service-worker.js && node --check src/content/capture-utils.js && node --check src/content/assistant-panel.js && node --check permission.js && node scripts/check-version.js && node scripts/lint.js && node scripts/check-package.js && node --test",
-    "lint": "npm run build:adk && node --check src/background/service-worker.js && node --check src/content/capture-utils.js && node --check src/content/assistant-panel.js && node --check permission.js && node scripts/check-version.js && node scripts/lint.js",
+    "check": "npm run build:adk && node --check src/background/service-worker.js && node --check src/content/capture-utils.js && node --check src/content/assistant-panel.js && node --check permission.js && node scripts/check-version.js && node scripts/check-seo.js && node scripts/lint.js && node scripts/check-package.js && node --test",
+    "lint": "npm run build:adk && node --check src/background/service-worker.js && node --check src/content/capture-utils.js && node --check src/content/assistant-panel.js && node --check permission.js && node scripts/check-version.js && node scripts/check-seo.js && node scripts/lint.js",
     "package:check": "npm run build:adk && node scripts/check-package.js",
     "package": "npm run build:adk && node scripts/check-package.js && node scripts/package-extension.js",
-    "version:check": "node scripts/check-version.js"
+    "version:check": "node scripts/check-version.js",
+    "seo:check": "node scripts/check-seo.js"
   },
   "devDependencies": {
     "@google/adk": "2.0.0",

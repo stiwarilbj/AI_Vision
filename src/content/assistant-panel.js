@@ -8,6 +8,11 @@
     const DEFAULT_RESPONSE_STYLE = "balanced";
     const STORE_URL = "https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en";
     const GITHUB_URL = "https://github.com/stiwarilbj/AI_Vision";
+    const launchOptions = (() => {
+        const value = globalThis.__aiVisionLaunchOptions;
+        try { delete globalThis.__aiVisionLaunchOptions; } catch (_) { globalThis.__aiVisionLaunchOptions = null; }
+        return value && typeof value === 'object' ? value : {};
+    })();
     let selectedModel = DEFAULT_MODEL;
     let responseTemperature = 1;
     let selectedMode = DEFAULT_MODE;
@@ -21,6 +26,24 @@
         { value: "all-tabs", label: "All Tabs" }
     ];
 
+    const QUICK_ACTIONS = {
+        capture: [
+            { text: 'Summarize', icon: 'list', query: 'Summarize the captured content.' },
+            { text: 'Explain', icon: 'explain', query: 'Explain the captured content and what it means.' },
+            { text: 'Extract text', icon: 'answer', query: 'Extract the visible text accurately and preserve its reading order.' }
+        ],
+        tab: [
+            { text: 'Summarize', icon: 'list', query: 'Summarize this page with the key points.' },
+            { text: 'Key points', icon: 'explain', query: 'Give me the most important points from this page as a scannable list.' },
+            { text: 'Next steps', icon: 'answer', query: 'Turn this page into practical next steps or a checklist.' }
+        ],
+        'all-tabs': [
+            { text: 'Compare', icon: 'list', query: 'Compare the relevant tabs and highlight the important differences.' },
+            { text: 'Find themes', icon: 'explain', query: 'Find the common themes, agreements, and contradictions across these tabs.' },
+            { text: 'Make brief', icon: 'answer', query: 'Create one concise brief from the useful information across these tabs.' }
+        ]
+    };
+
     const RESPONSE_STYLES = [
         { value: "balanced", label: "Balanced" },
         { value: "concise", label: "Concise" },
@@ -29,15 +52,6 @@
         { value: "detailed", label: "Detailed" },
         { value: "bullets", label: "Bullet-oriented" }
     ];
-
-    const RESPONSE_STYLE_INSTRUCTIONS = {
-        balanced: "Use a balanced, clear tone with enough detail to be useful.",
-        concise: "Be concise and lead with the direct answer.",
-        formal: "Use a polished, formal, professional tone.",
-        casual: "Use a friendly, conversational, casual tone.",
-        detailed: "Give a thorough answer with useful context and clearly separated sections when helpful.",
-        bullets: "Organize the answer as short, scannable bullet points whenever possible."
-    };
 
     let uiHost = null;
     let uiShadowRoot = null;
@@ -117,14 +131,19 @@
         isAgentModeEnabled = result?.geminiAgentMode === true;
         hasApiKey = result?.hasApiKey === true;
         apiKeyMasked = result?.apiKeyMasked || '';
+        availableModels = [selectedModel];
+    }
+
+    async function refreshAvailableModels() {
         try {
             const modelResult = await sendWorkerMessage({ action: 'getAvailableModels' });
             if (Array.isArray(modelResult?.models)) availableModels = modelResult.models;
         } catch (_) {
-            availableModels = [];
+            return availableModels;
         }
         if (availableModels.length && !availableModels.includes(selectedModel)) selectedModel = availableModels[0];
         if (!availableModels.length) availableModels = [selectedModel];
+        return availableModels;
     }
 
     // Gemini request configuration
@@ -134,11 +153,6 @@
             return false;
         }
         return true;
-    }
-
-    function buildStyledPrompt(queryText) {
-        const styleInstruction = RESPONSE_STYLE_INSTRUCTIONS[selectedResponseStyle] || RESPONSE_STYLE_INSTRUCTIONS.balanced;
-        return `${queryText}\n\nAnswer the request directly. Do not say \"the image says\" or \"the page says\" when you can refer to the subject itself. Use clear English and preserve necessary technical terms. ${styleInstruction}`;
     }
 
     function stripLightMarkdown(text) {
@@ -165,7 +179,9 @@
             spark: '<path d="m12 3 1.3 4.2L17.5 9l-4.2 1.8L12 15l-1.3-4.2L6.5 9l4.2-1.8Z"></path><path d="m18.5 15 .7 2.3 2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7Z"></path>',
             star: '<path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z"></path>',
             code: '<path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 6l-4 12"></path>',
-            key: '<circle cx="8" cy="15" r="4"></circle><path d="m11 12 8-8M16 7l2 2M14 9l2 2"></path>'
+            key: '<circle cx="8" cy="15" r="4"></circle><path d="m11 12 8-8M16 7l2 2M14 9l2 2"></path>',
+            copy: '<rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"></path>',
+            retry: '<path d="M20 11a8 8 0 1 0-2.3 5.7"></path><path d="M20 5v6h-6"></path>'
         };
         return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${icons[name] || ''}</svg>`;
     }
@@ -212,8 +228,19 @@
         let popup, queryInput, responseArea, sendButton;
         let activeAgentTaskId = null;
         let activeRequestId = null;
+        let conversationHistory = [];
+        let lastRequestHistory = [];
+        let lastSubmittedQuery = '';
+        let lastResponseText = '';
         let panelGeneration = 0;
         let refreshModeControls = () => {};
+
+        function resetConversation() {
+            conversationHistory = [];
+            lastRequestHistory = [];
+            lastSubmittedQuery = '';
+            lastResponseText = '';
+        }
 
         // Capture selection
         function startCaptureSelection() {
@@ -377,9 +404,7 @@
 
         // Assistant panel construction and mode controls
         async function openAssistantPanel() {
-            const generation = ++panelGeneration;
-            await loadSettings();
-            if (generation !== panelGeneration) return;
+            panelGeneration += 1;
             ensureUiRoot();
             
             const existingPopup = uiQuery('#gemini-popup');
@@ -452,6 +477,7 @@
             primaryModeButton.innerHTML = `${iconSvg('vision')}<span class="gemini-primary-mode-copy"><strong>Capture</strong><small>Ask about an area of this page</small></span><span class="gemini-primary-mode-arrow" aria-hidden="true">→</span>`;
             primaryModeButton.setAttribute('aria-label', 'Capture an area of this page');
             primaryModeButton.onclick = () => {
+                if (selectedMode !== 'capture' || !capturedImageData) resetConversation();
                 selectedMode = 'capture';
                 void saveSettings().catch((error) => showUserError(error.message));
                 if (!capturedImageData) {
@@ -481,6 +507,7 @@
                 button.textContent = mode.label;
                 button.setAttribute('role', 'tab');
                 button.onclick = () => {
+                    if (selectedMode !== mode.value) resetConversation();
                     selectedMode = mode.value;
                     void saveSettings().catch((error) => showUserError(error.message));
                     if (selectedMode === 'capture' && !capturedImageData) {
@@ -511,6 +538,7 @@
             agentModeToggle.setAttribute('role', 'switch');
             agentModeToggle.setAttribute('aria-label', 'Agent Mode');
             agentModeToggle.onclick = () => {
+                resetConversation();
                 isAgentModeEnabled = !isAgentModeEnabled;
                 void saveSettings().catch((error) => showUserError(error.message));
                 renderSelectedMode();
@@ -545,7 +573,7 @@
 
             const shortcutNote = document.createElement('p');
             shortcutNote.className = 'gemini-help-shortcut';
-            shortcutNote.textContent = 'Press Control + E to close AI Vision.';
+            shortcutNote.textContent = 'Press Alt + Shift + V to open Capture. Press Escape or Control + E to close AI Vision.';
 
             const supportCard = document.createElement('section');
             supportCard.className = 'gemini-support-card';
@@ -607,7 +635,10 @@
                 instructionsPanel.classList.remove('show');
                 instructionsButton.classList.remove('active');
                 instructionsButton.setAttribute('aria-expanded', 'false');
-                if (willShow) setTimeout(() => apiKeyInput.focus(), 0);
+                if (willShow) {
+                    setTimeout(() => apiKeyInput.focus(), 0);
+                    void refreshAvailableModels().then(() => renderModelOptions()).catch(() => {});
+                }
             };
 
             function closeUtilityPanels() {
@@ -707,13 +738,17 @@
             modelSelect.id = 'gemini-model-select';
             modelSelect.setAttribute('aria-label', 'Gemini model');
             
-            availableModels.forEach((model) => {
-                const option = document.createElement('option');
-                option.value = model;
-                option.textContent = model;
-                option.selected = model === selectedModel;
-                modelSelect.appendChild(option);
-            });
+            function renderModelOptions() {
+                if (!modelSelect?.isConnected && !popup) return;
+                modelSelect.replaceChildren(...availableModels.map((model) => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+                    option.selected = model === selectedModel;
+                    return option;
+                }));
+            }
+            renderModelOptions();
             
             modelGroup.appendChild(modelLabel);
             modelGroup.appendChild(modelSelect);
@@ -825,18 +860,8 @@
                     apiKeyStatus.classList.add('valid');
                     clearKeyButton.disabled = false;
                     try {
-                        const modelResult = await sendWorkerMessage({ action: 'getAvailableModels' });
-                        if (Array.isArray(modelResult?.models) && modelResult.models.length) {
-                            availableModels = modelResult.models;
-                            if (!availableModels.includes(selectedModel)) selectedModel = availableModels[0];
-                            modelSelect.replaceChildren(...availableModels.map((model) => {
-                                const option = document.createElement('option');
-                                option.value = model;
-                                option.textContent = model;
-                                option.selected = model === selectedModel;
-                                return option;
-                            }));
-                        }
+                        await refreshAvailableModels();
+                        renderModelOptions();
                     } catch (_) {
                         // The key is saved even if model discovery is temporarily unavailable.
                     }
@@ -919,21 +944,19 @@
             composer.appendChild(sendButton);
             content.appendChild(composer);
             
-            if (capturedImageData !== null) {
-                presetsDiv = document.createElement('div');
-                presetsDiv.id = 'gemini-popup-presets';
-                const presets = [
-                    { text: "Summarize", icon: "list", query: "Summarize the captured content." },
-                    { text: "Explain", icon: "explain", query: "Explain the captured content and what it means." },
-                    { text: "Answer", icon: "answer", query: "Answer the question or request shown in the captured content." }
-                ];
-                presets.forEach(preset => {
+            presetsDiv = document.createElement('div');
+            presetsDiv.id = 'gemini-popup-presets';
+            content.appendChild(presetsDiv);
+
+            function renderQuickActions() {
+                const presets = QUICK_ACTIONS[selectedMode] || QUICK_ACTIONS.capture;
+                presetsDiv.replaceChildren(...presets.map((preset) => {
                     const button = document.createElement('button');
+                    button.type = 'button';
                     button.innerHTML = `${iconSvg(preset.icon)}<span>${preset.text}</span>`;
                     button.onclick = () => submitUserRequest(preset.query);
-                    presetsDiv.appendChild(button);
-                });
-                content.appendChild(presetsDiv);
+                    return button;
+                }));
             }
             
             responseArea = document.createElement('div');
@@ -981,9 +1004,7 @@
                         : 'Reads supported pages across this Chrome window';
                 }
 
-                if (presetsDiv) {
-                    presetsDiv.hidden = selectedMode !== 'capture';
-                }
+                renderQuickActions();
 
                 if (!sendButton.disabled) {
                     const label = isAgentModeEnabled ? 'Start task' : 'Send';
@@ -1014,7 +1035,13 @@
             });
             enablePanelDragging(popup, header);
             renderSelectedMode();
+            const launchQuery = typeof launchOptions.query === 'string' ? launchOptions.query.trim() : '';
+            const shouldAutoSubmit = launchOptions.autoSubmit === true && launchQuery !== '';
+            launchOptions.query = '';
+            launchOptions.autoSubmit = false;
+            if (launchQuery) queryInput.value = launchQuery;
             queryInput.focus();
+            if (shouldAutoSubmit) setTimeout(() => { if (popup) void submitUserRequest(); }, 0);
         }
 
         function closeAssistantPanel() {
@@ -1050,9 +1077,71 @@
                 sendButton.removeAttribute('aria-busy');
                 refreshModeControls();
             }
-            uiQueryAll('#gemini-primary-mode, #gemini-mode-rail button, #gemini-agent-mode-row button').forEach((button) => {
+            uiQueryAll('#gemini-primary-mode, #gemini-mode-rail button, #gemini-agent-mode-row button, #gemini-popup-presets button, .gemini-answer-actions button').forEach((button) => {
                 button.disabled = isLoading;
             });
+        }
+
+        async function copyAnswerText(text) {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(text);
+                return;
+            }
+            const fallback = document.createElement('textarea');
+            fallback.value = text;
+            fallback.setAttribute('readonly', '');
+            fallback.style.position = 'fixed';
+            fallback.style.opacity = '0';
+            uiShadowRoot.appendChild(fallback);
+            fallback.select();
+            const copied = document.execCommand?.('copy');
+            fallback.remove();
+            if (!copied) throw new Error('Copy is unavailable in this page.');
+        }
+
+        function renderAnswer(text) {
+            lastResponseText = text;
+            responseArea.textContent = '';
+            responseArea.classList.remove('error', 'automation');
+
+            const answerText = document.createElement('div');
+            answerText.className = 'gemini-answer-text';
+            answerText.textContent = text;
+
+            const actions = document.createElement('div');
+            actions.className = 'gemini-answer-actions';
+            const actionDefinitions = [
+                ['copy', 'Copy', async (button) => {
+                    const original = button.innerHTML;
+                    try {
+                        await copyAnswerText(lastResponseText);
+                        button.textContent = 'Copied';
+                        setTimeout(() => { if (button.isConnected) button.innerHTML = original; }, 1200);
+                    } catch (error) {
+                        showUserError(error.message || 'The answer could not be copied.');
+                    }
+                }],
+                ['answer', 'Follow up', () => {
+                    queryInput.value = '';
+                    queryInput.placeholder = 'Ask a follow-up about this answer';
+                    queryInput.focus();
+                }],
+                ['retry', 'Try again', () => {
+                    conversationHistory = lastRequestHistory.map((message) => ({ ...message }));
+                    queryInput.value = lastSubmittedQuery;
+                    void submitUserRequest();
+                }]
+            ];
+            actionDefinitions.forEach(([icon, label, handler]) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.innerHTML = `${iconSvg(icon)}<span>${label}</span>`;
+                button.onclick = () => handler(button);
+                actions.appendChild(button);
+            });
+
+            responseArea.appendChild(answerText);
+            responseArea.appendChild(actions);
         }
 
         function renderAgentProgress(step = 1, message = 'Understanding your task', planner = {}) {
@@ -1158,6 +1247,7 @@
 
             const requestMode = selectedMode;
             const shouldRunAgent = isAgentModeEnabled;
+            const requestHistory = conversationHistory.slice(-6).map((message) => ({ ...message }));
             let agentStarted = false;
             const requestGeneration = panelGeneration;
             setRequestInProgress(true, shouldRunAgent ? 'Working' : 'Sending');
@@ -1212,15 +1302,25 @@
                 const result = await sendWorkerMessage({
                     action: 'askGemini',
                     requestId,
-                    query: buildStyledPrompt(queryText),
+                    query: queryText,
                     mode: requestMode,
                     captureImageData: requestMode === 'capture' ? capturedImageData : null,
                     tabImageData: tabImage,
                     model: selectedModel,
                     temperature: responseTemperature,
-                    responseStyle: selectedResponseStyle
+                    responseStyle: selectedResponseStyle,
+                    conversationHistory: requestHistory
                 });
-                responseArea.textContent = stripLightMarkdown(result?.text || 'Gemini returned an empty response.');
+                const responseText = stripLightMarkdown(result?.text || 'Gemini returned an empty response.');
+                lastRequestHistory = requestHistory;
+                lastSubmittedQuery = queryText;
+                conversationHistory = [
+                    ...requestHistory,
+                    { role: 'user', text: queryText },
+                    { role: 'model', text: responseText }
+                ].slice(-6);
+                queryInput.value = '';
+                renderAnswer(responseText);
             } catch (error) {
                 if (popup && responseArea) {
                     responseArea.classList.remove('automation');
@@ -1240,6 +1340,7 @@
             let dragPointerMoveHandler, dragPointerUpHandler;
             handle.onpointerdown = function(event) {
                 if (event.button !== 0) return;
+                if (event.target.closest?.('button, a, input, textarea, select, summary')) return;
                 event.preventDefault();
                 handle.setPointerCapture?.(event.pointerId);
                 let shiftX = event.clientX - element.getBoundingClientRect().left;
@@ -1436,6 +1537,8 @@
         (async () => {
             try {
                 await loadSettings();
+                if (MODES.some((mode) => mode.value === launchOptions.mode)) selectedMode = launchOptions.mode;
+                if (launchOptions.autoSubmit === true) isAgentModeEnabled = false;
                 openSelectedMode();
             } catch (error) {
                 console.error('Error during initialization:', error);

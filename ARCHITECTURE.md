@@ -52,6 +52,10 @@ The panel can send:
 - `startAgentTask`, `approveAgentAction`, `rejectAgentAction`, and `cancelAgentTask`;
 - `cancelGeminiRequest` for normal-request aborts.
 
+Normal `askGemini` messages may include up to three alternating user/model turns from the currently open panel. The worker validates roles and caps each message and the total history before passing it to Gemini. This context is panel-local rather than persisted.
+
+Toolbar and context-menu launches inject bounded launch options before the packaged panel. The toolbar and **Alt + Shift + V** open Capture; right-click commands can open The Tab with a fixed page-summary prompt or a capped copy of the user-selected text. Model discovery is lazy and does not block panel startup.
+
 The worker checks the sender, source tab, mode scope, URL scheme, image size, request size, and task ID. Messages from a different extension are ignored.
 
 ## Context and model boundary

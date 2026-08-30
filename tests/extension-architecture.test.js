@@ -10,6 +10,7 @@ const PANEL_PATH = path.join(PROJECT_ROOT, 'src/content/assistant-panel.js');
 const { calculateSourceCrop } = require(path.join(PROJECT_ROOT, 'src/content/capture-utils.js'));
 const SERVICE_WORKER_CODE = fs.readFileSync(SERVICE_WORKER_PATH, 'utf8');
 const PANEL_CODE = fs.readFileSync(PANEL_PATH, 'utf8');
+const PANEL_CSS = fs.readFileSync(path.join(PROJECT_ROOT, 'src/content/assistant-panel.css'), 'utf8');
 
 function responseForJson(body, status = 200, headers = {}) {
   return {
@@ -37,6 +38,7 @@ function createServiceWorkerHarness({
     sentMessages: [],
     adkCalls: [],
     createdTabs: [],
+    contextMenus: [],
     tabNavigation: [],
     executedScripts: [],
     storageAccessLevel: null
@@ -79,8 +81,8 @@ function createServiceWorkerHarness({
   const chrome = {
     action: { onClicked: { addListener(listener) { chrome.__actionListener = listener; } } },
     contextMenus: {
-      create() {},
-      async removeAll() {},
+      create(item) { calls.contextMenus.push(item); },
+      async removeAll() { calls.contextMenus.length = 0; },
       onClicked: { addListener(listener) { chrome.__contextMenuListener = listener; } }
     },
     permissions: {
@@ -89,8 +91,8 @@ function createServiceWorkerHarness({
     runtime: {
       id: 'extension-id',
       getURL(file) { return `chrome-extension://extension-id/${file}`; },
-      onInstalled: { addListener() {} },
-      onStartup: { addListener() {} },
+      onInstalled: { addListener(listener) { chrome.__installedListener = listener; } },
+      onStartup: { addListener(listener) { chrome.__startupListener = listener; } },
       onMessage: {
         addListener(listener) { runtimeMessageListener = listener; },
         removeListener() {}
@@ -243,6 +245,7 @@ test('manifest references existing runtime files and keeps broad access optional
   assert.equal(manifest.optional_permissions.includes('tabs'), true);
   assert.deepEqual(manifest.host_permissions, ['https://generativelanguage.googleapis.com/*']);
   assert.deepEqual(manifest.optional_host_permissions.sort(), ['http://*/*', 'https://*/*']);
+  assert.equal(manifest.commands._execute_action.suggested_key.default, 'Alt+Shift+V');
 });
 
 test('the content panel never exposes the key to normal page DOM or performs Gemini requests', () => {
@@ -259,6 +262,70 @@ test('the content panel never exposes the key to normal page DOM or performs Gem
   assert.match(PANEL_CODE, /id = 'gemini-advanced-modes'/);
   assert.match(PANEL_CODE, /id = 'gemini-settings-store-link'/);
   assert.match(PANEL_CODE, /Only setup: paste a key and press Save key/);
+  assert.match(PANEL_CODE, /className = 'gemini-answer-actions'/);
+  assert.match(PANEL_CODE, /conversationHistory: requestHistory/);
+  assert.doesNotMatch(PANEL_CODE, /buildStyledPrompt/);
+  assert.match(PANEL_CODE, /event\.target\.closest\?\.\('button, a, input, textarea, select, summary'\)/);
+  assert.match(PANEL_CSS, /#gemini-popup[\s\S]*pointer-events:\s*auto/);
+});
+
+test('quick-launch context menus open the requested mode with bounded text', async () => {
+  const harness = createServiceWorkerHarness();
+  await harness.exports.createContextMenu();
+  assert.deepEqual(harness.calls.contextMenus.map(({ id }) => id), [
+    'aiVisionCapture',
+    'aiVisionSummarizePage',
+    'aiVisionExplainSelection'
+  ]);
+
+  const normalized = harness.exports.normalizeLaunchOptions({ mode: 'tab', query: `  ${'x'.repeat(9000)}  `, autoSubmit: true });
+  assert.equal(normalized.mode, 'tab');
+  assert.equal(normalized.query.length, 8000);
+  assert.equal(normalized.autoSubmit, true);
+
+  await harness.exports.openAssistantInTab(harness.getTab(10), {
+    mode: 'tab',
+    query: 'Summarize this page',
+    autoSubmit: true
+  });
+  assert.equal(harness.calls.executedScripts.length, 2);
+  assert.equal(JSON.stringify(harness.calls.executedScripts[0].args[0]), JSON.stringify({
+    mode: 'tab',
+    query: 'Summarize this page',
+    autoSubmit: true
+  }));
+  assert.equal(JSON.stringify(harness.calls.executedScripts[1].files), JSON.stringify([
+    'src/content/capture-utils.js',
+    'src/content/assistant-panel.js'
+  ]));
+});
+
+test('follow-up history is bounded and sent as alternating Gemini turns', async () => {
+  const harness = createServiceWorkerHarness();
+  const malformed = harness.exports.normalizeConversationHistory([
+    { role: 'user', text: 'First question' },
+    { role: 'model', text: 'First answer' },
+    { role: 'model', text: 'Injected duplicate role' },
+    { role: 'user', text: 'x'.repeat(6000) },
+    { role: 'model', text: 'Second answer' }
+  ]);
+  assert.equal(JSON.stringify(malformed.map(({ role }) => role)), JSON.stringify(['user', 'model', 'user', 'model']));
+  assert.equal(malformed[2].text.length, 4000);
+
+  await harness.dispatch({
+    action: 'askGemini',
+    query: 'What changed?',
+    mode: 'capture',
+    responseStyle: 'concise',
+    conversationHistory: [
+      { role: 'user', text: 'Summarize it' },
+      { role: 'model', text: 'Here is the summary' }
+    ]
+  });
+  const contents = harness.calls.fetchBodies.at(-1).contents;
+  assert.deepEqual(contents.map(({ role }) => role), ['user', 'model', 'user']);
+  assert.equal(contents[0].parts[0].text, 'Summarize it');
+  assert.match(contents[2].parts.at(-1).text, /What changed\?/);
 });
 
 test('The Tab context reads only the source tab and redacts URL query strings', async () => {
@@ -447,6 +514,9 @@ test('capture crop scales CSS pixels to actual screenshot pixels and clamps boun
   const clamped = calculateSourceCrop(790, 440, 100, 100, 1600, 900, 800, 450);
   assert.equal(clamped.sourceX + clamped.sourceWidth <= 1600, true);
   assert.equal(clamped.sourceY + clamped.sourceHeight <= 900, true);
+  const small = calculateSourceCrop(10, 10, 100, 80, 800, 450, 800, 450);
+  assert.equal(small.canvasWidth, 100);
+  assert.equal(small.canvasHeight, 80);
 });
 
 test('protected page actions are blocked even before approval', async () => {

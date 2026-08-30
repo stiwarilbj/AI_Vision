@@ -1,4 +1,4 @@
-# Chrome Web Store copy – version 2.2.2
+# Chrome Web Store copy – version 2.3.0
 
 Official active listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
 
@@ -27,6 +27,10 @@ What it does:
 - Discovers Gemini models that are available to the user's API key
 - Can open AI Vision without attaching a picture when you click instead of dragging in Capture mode
 - Keeps Capture as the simple first screen, with The Tab, All Tabs, and Agent Mode under More modes and tools
+- Opens Capture with Alt + Shift + V and adds one-click right-click actions to summarize a page or explain selected text
+- Adds context-aware quick actions in every mode plus Copy, Follow up, and Try again actions on answers
+- Keeps up to three question-and-answer turns in the open panel for natural follow-ups without persisting the conversation
+- Opens faster by loading model discovery only when Settings is opened and avoids upscaling small captures
 
 Agent Mode:
 
@@ -43,10 +47,11 @@ Agent Mode:
 
 How to use:
 
-- Right-click on a page or click the extension icon to open AI Vision
+- Press Alt + Shift + V, right-click on a page, or click the extension icon to open AI Vision
 - Capture is ready as soon as AI Vision opens; use More modes and tools for The Tab, All Tabs, or Agent Mode
 - In Capture mode, drag to select the area you want to analyze; click once to open AI Vision without a picture
-- Type a question or use Summarize, Explain, or Answer for an AI-powered response
+- Type a question or use the three quick actions tailored to Capture, The Tab, or All Tabs
+- Copy an answer, ask a contextual follow-up, or retry the previous request from the answer action bar
 - Optionally expand preferences in Settings to choose a response style or available Gemini model
 - Your mode, Agent Mode, and response settings remain selected until you manually change them
 

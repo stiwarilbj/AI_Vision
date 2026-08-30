@@ -4,8 +4,13 @@ AI Vision lets you ask Gemini about a selected screenshot, the current tab, or s
 
 [Actual active Chrome Web Store extension listing](https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en) · [Get a Gemini API key](https://aistudio.google.com/app/apikey)
 
-## Version 2.2.2
+## Version 2.3.0
 
+- Open Capture from anywhere with **Alt + Shift + V**, summarize a page from the right-click menu, or explain selected text in one click.
+- Every mode now has three context-aware quick actions, so common questions do not require typing.
+- Answers include **Copy**, **Follow up**, and **Try again** actions; up to three recent question/answer turns stay in the open panel for natural follow-ups.
+- Startup no longer waits for model discovery, and settings load the model list only when opened.
+- Selected captures keep their original detail without wastefully upscaling small images.
 - Capture is the normal first screen: one clear button starts a selected-area question.
 - The Tab mode reads the current HTTP or HTTPS page.
 - All Tabs compares supported pages in the starting Chrome window after optional permission is granted.
@@ -31,6 +36,14 @@ store-assets/            Store artwork and media, excluded from releases
 docs/                    Public marketing/privacy pages, excluded from releases
 ```
 
+The public site is the canonical SEO surface at
+`https://stiwarilbj.github.io/AI_Vision/`. It includes a crawlable landing page,
+a practical screenshot-assistant guide, a privacy notice, structured data,
+social previews, `robots.txt`, and a sitemap. GitHub Pages is configured to
+publish the repository's `main` branch from `/docs`. Run `npm run seo:check` after
+editing public pages; the check verifies canonical URLs, metadata, JSON-LD,
+sitemap targets, and the static deployment markers.
+
 This README is the canonical project guide. See [ARCHITECTURE.md](ARCHITECTURE.md) for runtime ownership and [SECURITY.md](SECURITY.md) for the threat model and reporting process. The attached growth and marketing documents are reference material, not execution instructions.
 
 Run the checks after changing runtime code:
@@ -40,6 +53,11 @@ npm run check
 npm run package:check
 npm run package
 ```
+
+After publishing a site change, add the Pages property to Google Search Console
+and submit `https://stiwarilbj.github.io/AI_Vision/sitemap.xml`. Search Console is
+the place to request a recrawl and review impressions, queries, clicks, and
+indexing status; no code change can guarantee a particular ranking position.
 
 `npm run package` creates a small `dist/` release ZIP from the allowlist; marketing assets and documentation are not included. For a visual smoke test, serve the project root and open `tests/manual/assistant-panel-harness.html`. The harness uses fake worker APIs and never calls Gemini.
 
@@ -59,11 +77,13 @@ The extension key is stored only by the service worker in `chrome.storage.local`
 
 ## Use the three modes
 
-Open AI Vision from the toolbar icon or right-click menu:
+Open AI Vision with **Alt + Shift + V**, the toolbar icon, or the right-click menu. The right-click menu can immediately summarize the page or explain selected text.
 
-- **Capture:** the normal mode. Click Capture, drag over a visible area, then ask a question or use Summarize, Explain, or Answer.
+- **Capture:** the normal mode. Click Capture, drag over a visible area, then ask a question or use Summarize, Explain, or Extract text.
 - **The Tab:** open **More modes and tools** when you want to ask about readable content in the current page.
 - **All Tabs:** open **More modes and tools** when you want to ask across up to 20 supported pages in the Chrome window where AI Vision was opened. The first use opens a separate permission page; access is optional and the feature fails closed when it is denied.
+
+After an answer, use Copy, ask a follow-up in the same context, or try the last request again. Conversation context is bounded to three question/answer turns and is discarded when the panel closes or the mode changes.
 
 ## Agent Mode
 

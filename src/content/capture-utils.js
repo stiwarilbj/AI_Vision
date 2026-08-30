@@ -10,7 +10,9 @@
         const sourceY = Math.max(0, Math.min(safeImageHeight - 1, Math.round(Math.max(0, Number(cropY) || 0) * scaleY)));
         const sourceWidth = Math.max(1, Math.min(safeImageWidth - sourceX, Math.round(Math.max(1, Number(cropWidth) || 1) * scaleX)));
         const sourceHeight = Math.max(1, Math.min(safeImageHeight - sourceY, Math.round(Math.max(1, Number(cropHeight) || 1) * scaleY)));
-        const outputScale = Math.min(2, Math.max(1, Math.min(1600 / sourceWidth, 1200 / sourceHeight)));
+        // Keep source detail, but never manufacture pixels. Avoiding the old
+        // 2x upscale makes small captures materially faster to encode and send.
+        const outputScale = Math.min(1, 1600 / sourceWidth, 1200 / sourceHeight);
         return {
             sourceX,
             sourceY,

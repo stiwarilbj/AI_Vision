@@ -76,7 +76,15 @@
             return { tabs: [{ title: document.title, url: location.href, text: document.body.innerText }] };
           }
           if (request.action === 'ensureAllTabsAccess') return { granted: true };
-          if (request.action === 'askGemini') return { requestId: request.requestId, text: 'Local test response.' };
+          if (request.action === 'askGemini') {
+            const turnCount = Array.isArray(request.conversationHistory) ? request.conversationHistory.length / 2 : 0;
+            return {
+              requestId: request.requestId,
+              text: turnCount > 0
+                ? `Local follow-up response with ${turnCount} earlier turn${turnCount === 1 ? '' : 's'}.`
+                : 'Local test response.'
+            };
+          }
           if (request.action === 'startAgentTask') {
             const taskId = 'local-test-task';
             setTimeout(() => runtimeListeners.forEach((listener) => listener({ action: 'agentModeComplete', taskId, summary: 'Local test task completed.' }, {}, () => {})), 0);
