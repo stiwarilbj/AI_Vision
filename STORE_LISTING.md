@@ -1,75 +1,63 @@
-# Chrome Web Store copy – version 2.3.0
+# Chrome Web Store copy – version 2.3.1
 
 Official active listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
 
 ## Title from package
 
-AI Vision - Gemini Screenshot & Browser Assistant
+AI Vision: Gemini Screenshot, Webpage & Multi-Tab AI Assistant for Chrome
 
 ## Summary from package
 
-Ask Gemini about screenshots, The Tab, or All Tabs—and use Agent Mode for safe browser tasks in one Chrome window.
+Ask Gemini about screenshots, webpages, articles, products, research, and up to 20 tabs—then run safe approval-based browser tasks.
+
+## Category
+
+Workflow & Planning
 
 ## Detailed description
 
-AI Vision: Your Gemini Screenshot & Browser Assistant
+Turn the page you see into an answer you can use.
 
-Capture part of a webpage, ask questions about the page you are viewing, or analyze supported tabs across one Chrome window using Google's Gemini AI.
+AI Vision is a Gemini-powered Chrome extension for visual questions, webpage reading, and focused browser workflows. Capture a region, ask about the page in front of you, or compare supported tabs without copying content into another app.
 
-What it does:
+Choose the workflow that fits:
 
-- Lets you screenshot any visible part of a website
-- Sends your selected image and question from the service worker directly to the Gemini API for analysis
-- Reads supported content from the current tab when you choose The Tab mode
-- Summarizes, compares, and answers questions across up to 20 tabs in the same Chrome window with All Tabs mode
-- Provides summaries, explanations, and direct answers about images, articles, documents, products, research, and other webpage content
-- Lets you choose Balanced, Concise, Formal, Casual, Detailed, or Bullet-oriented responses
-- Discovers Gemini models that are available to the user's API key
-- Can open AI Vision without attaching a picture when you click instead of dragging in Capture mode
-- Keeps Capture as the simple first screen, with The Tab, All Tabs, and Agent Mode under More modes and tools
-- Opens Capture with Alt + Shift + V and adds one-click right-click actions to summarize a page or explain selected text
-- Adds context-aware quick actions in every mode plus Copy, Follow up, and Try again actions on answers
-- Keeps up to three question-and-answer turns in the open panel for natural follow-ups without persisting the conversation
-- Opens faster by loading model discovery only when Settings is opened and avoids upscaling small captures
+- **Capture:** drag over a chart, image, paragraph, product detail, or error and ask Gemini about exactly what matters. Click without dragging when you want a text-only question.
+- **The Tab:** summarize, explain, or question readable content from the current supported webpage.
+- **All Tabs:** compare and synthesize up to 20 supported pages in the Chrome window where the task began.
 
-Agent Mode:
+For everyday productivity, AI Vision can:
 
-- Turn Agent Mode on or off directly below the mode selector in Capture, The Tab, or All Tabs
-- In Capture mode, Agent Mode uses the selected screenshot and acts only in The Tab where the capture started
-- In The Tab mode, Agent Mode can read, navigate, click, type, and scroll only in that tab
-- In All Tabs mode, Agent Mode can search, switch tabs, navigate, click, type, and scroll across supported tabs in the starting Chrome window
-- The Google ADK browser runtime is bundled in the extension, so every planning step rotates through five configured Gemini models without a terminal, Node.js install, companion process, or download
-- Opening a new tab, going back or forward, and reloading are supported only after approval; new tabs stay in the starting window
-- All Tabs Agent Mode stops if the source tab moves to another window
-- Reading, waiting, and scrolling can proceed automatically; every click, text entry, and model-generated navigation requires explicit approval
-- Sensitive actions such as passwords, credentials, payments, purchases, deletions, uploads, posts, sign-ins, permissions, and acceptance of legal terms are permanently blocked
-- Every task stops after a 12-step safety limit so you can review what happened
+- Explain screenshots, charts, diagrams, interfaces, and error messages in plain language
+- Summarize articles, documents, product pages, and research sources
+- Compare claims, prices, requirements, or limitations across open tabs
+- Keep a short follow-up conversation in the open panel, with Copy, Follow up, and Try again actions
+- Use quick prompts such as Summarize, Explain, and Answer, plus Balanced, Concise, Formal, Casual, Detailed, or Bullet-oriented response styles
+- Open from the toolbar, the right-click menu, or **Alt + Shift + V**
 
-How to use:
+### Optional Agent Mode
 
-- Press Alt + Shift + V, right-click on a page, or click the extension icon to open AI Vision
-- Capture is ready as soon as AI Vision opens; use More modes and tools for The Tab, All Tabs, or Agent Mode
-- In Capture mode, drag to select the area you want to analyze; click once to open AI Vision without a picture
-- Type a question or use the three quick actions tailored to Capture, The Tab, or All Tabs
-- Copy an answer, ask a contextual follow-up, or retry the previous request from the answer action bar
-- Optionally expand preferences in Settings to choose a response style or available Gemini model
-- Your mode, Agent Mode, and response settings remain selected until you manually change them
+Enable Agent Mode when you want a bounded browser workflow instead of an explanation. Capture and The Tab stay in the source tab. All Tabs can search, switch, navigate, click, type, or scroll only inside the starting Chrome window.
 
-Getting started:
+Reading, waiting, and scrolling can proceed automatically. Clicks, text entry, navigation, new tabs, history movement, and reloads pause for your approval. Passwords, credentials, payments, purchases, deletions, uploads, posts, sign-ins, permission changes, legal acceptance, and other sensitive actions are permanently blocked. Every task stops after 12 steps so you can review what happened.
 
-The only setup is a Google Gemini API key from Google AI Studio. Visit aistudio.google.com/app/apikey, create a key, then paste it into AI Vision's Settings menu. Capture needs no other setup; API availability, free-tier limits, model access, and pricing are controlled by Google.
+The Google ADK browser runtime is bundled with the extension. Each planning step uses the configured Gemini rotation inside the service worker—no terminal, Node.js installation, companion process, or download is required.
 
-Privacy and control:
+### Get started in under two minutes
 
-- AI Vision runs only when you open it or start a task
-- Your API key is stored by the service worker with preferences locally in your Chrome profile; the panel receives only masked key status
-- Requests go directly from the extension to Google's Gemini API over HTTPS
-- AI Vision has no developer-operated analytics, advertising, tracking, or proxy server
-- Chrome internal pages, the Chrome Web Store, and other restricted pages cannot be analyzed
+1. Install AI Vision from the Chrome Web Store.
+2. Create a Gemini API key at [Google AI Studio](https://aistudio.google.com/app/apikey), open Settings, and press **Save key**.
+3. Open a page, press **Alt + Shift + V**, choose Capture, The Tab, or All Tabs, and ask a question.
 
-Source and support:
+Google controls API availability, model access, free-tier limits, and pricing. All Tabs asks for its optional permission only when you choose that mode.
 
-The source is publicly available at github.com/stiwarilbj/AI_Vision. If AI Vision saves you time, please leave an honest rating on the Chrome Web Store. Ratings are never required or rewarded.
+### Privacy and control
+
+AI Vision runs when you open it or start a task. Your Gemini API key and preferences stay in local Chrome extension storage; the visible panel receives only masked key status. Prompts and the screenshot or page context needed for a request go directly to Google's Gemini API over HTTPS.
+
+There is no developer-operated analytics, advertising, tracking, or proxy server. Chrome internal pages, the Chrome Web Store, and other restricted pages cannot be analyzed. See the linked privacy notice for the complete data-handling details.
+
+The source is publicly available at [github.com/stiwarilbj/AI_Vision](https://github.com/stiwarilbj/AI_Vision). If AI Vision saves you time, an honest Chrome Web Store rating helps other people find it. Ratings are never required or rewarded.
 
 AI Vision is an independent project and is not affiliated with or endorsed by Google. Gemini and Chrome are trademarks of Google LLC.
 

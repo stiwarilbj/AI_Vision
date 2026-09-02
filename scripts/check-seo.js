@@ -87,7 +87,16 @@ function checkPage(relativePath, expectedCanonical, requiredTypes) {
 const version = manifest.version;
 assert(packageJson.version === version, 'package and manifest versions must match');
 const index = checkPage('docs/index.html', siteUrl, ['WebSite', 'SoftwareApplication', 'FAQPage']);
-const guide = checkPage('docs/guides/ai-screenshot-assistant.html', `${siteUrl}guides/ai-screenshot-assistant.html`, ['Article', 'BreadcrumbList']);
+const guidePaths = [
+  'ai-screenshot-assistant.html',
+  'summarize-webpage-with-gemini.html',
+  'compare-chrome-tabs-with-gemini.html'
+];
+const guides = guidePaths.map((guidePath) => checkPage(
+  `docs/guides/${guidePath}`,
+  `${siteUrl}guides/${guidePath}`,
+  ['Article', 'BreadcrumbList']
+));
 checkPage('docs/privacy.html', `${siteUrl}privacy.html`, []);
 
 const robots = read('docs/robots.txt');
@@ -96,7 +105,7 @@ assert(robots.includes(`Sitemap: ${siteUrl}sitemap.xml`), 'robots.txt sitemap UR
 
 const sitemap = read('docs/sitemap.xml');
 const sitemapUrls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/gi)].map((match) => match[1]);
-assert(sitemapUrls.length >= 3, 'sitemap.xml should contain the public landing page, guide, and privacy page');
+assert(sitemapUrls.length >= 5, 'sitemap.xml should contain the landing page, three guides, and privacy page');
 for (const url of sitemapUrls) {
   assert(url.startsWith(siteUrl), `sitemap URL is outside the canonical site: ${url}`);
   const relative = url.slice(siteUrl.length);
@@ -110,6 +119,8 @@ assert(fs.existsSync(path.join(docsRoot, '.nojekyll')), 'docs/.nojekyll is requi
 
 const llms = read('docs/llms.txt');
 assert(llms.includes(`Current version: ${version}`), 'llms.txt version is stale');
-assert(llms.includes(`${siteUrl}guides/ai-screenshot-assistant.html`), 'llms.txt must link to the usage guide');
+for (const guidePath of guidePaths) {
+  assert(llms.includes(`${siteUrl}guides/${guidePath}`), `llms.txt must link to ${guidePath}`);
+}
 
-console.log(`SEO checks OK: ${[index, guide].length + 1} HTML pages, ${sitemapUrls.length} sitemap URLs, JSON-LD and deployment metadata verified.`);
+console.log(`SEO checks OK: ${[index, ...guides].length + 1} HTML pages, ${sitemapUrls.length} sitemap URLs, JSON-LD and deployment metadata verified.`);

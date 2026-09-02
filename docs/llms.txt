@@ -1,4 +1,4 @@
-# AI Vision – Gemini Screenshot & Browser Assistant
+# AI Vision: Gemini Screenshot, Webpage & Multi-Tab AI Assistant for Chrome
 
 > AI Vision is a Chrome extension for asking Google's Gemini API about a selected screenshot, The Tab, or supported tabs in one Chrome window. Its optional Agent Mode can perform constrained browser actions within the user-selected scope.
 
@@ -6,9 +6,11 @@ Canonical website: https://stiwarilbj.github.io/AI_Vision/
 Official active Chrome Web Store listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
 Public source: https://github.com/stiwarilbj/AI_Vision
 Privacy notice: https://stiwarilbj.github.io/AI_Vision/privacy.html
-Usage guide: https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html
-Current version: 2.3.0
-Last updated: 2026-08-30
+Screenshot guide: https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html
+Webpage summary guide: https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html
+Tab comparison guide: https://stiwarilbj.github.io/AI_Vision/guides/compare-chrome-tabs-with-gemini.html
+Current version: 2.3.1
+Last updated: 2026-09-02
 
 Canonical project guide: https://github.com/stiwarilbj/AI_Vision/blob/main/README.md
 Security policy: https://github.com/stiwarilbj/AI_Vision/blob/main/SECURITY.md
@@ -21,7 +23,9 @@ Security policy: https://github.com/stiwarilbj/AI_Vision/blob/main/SECURITY.md
 - All Tabs mode compares up to 20 supported tabs in one Chrome window.
 - Response styles include Balanced, Concise, Formal, Casual, Detailed, and Bullet-oriented.
 - Agent Mode can be enabled in Capture, The Tab, or All Tabs. Its bundled Google ADK browser runtime rotates one planning request at a time through gemini-3.5-flash, gemini-3-flash-preview, gemini-2.5-flash, gemini-3.1-flash-lite, and gemini-2.5-flash-lite, then repeats. No terminal or companion process is needed.
-- A practical usage guide covers screenshot prompts, page summaries, tab comparisons, Agent Mode boundaries, and setup: https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html
+- Practical guides cover screenshot prompts, webpage summaries, tab comparisons, Agent Mode boundaries, and setup: https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html
+- Webpage summary workflow: https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html
+- Multi-tab comparison workflow: https://stiwarilbj.github.io/AI_Vision/guides/compare-chrome-tabs-with-gemini.html
 - Reading, waiting, scrolling, and activating an existing in-scope tab can run automatically. Every click, type, direct navigation, new tab, history move, and reload requires approval. Capture and The Tab remain scoped to one tab; All Tabs is optional-permission gated and remains inside the starting Chrome window, subject to permanent safety blocks and a 12-step limit.
 
 ## Data handling

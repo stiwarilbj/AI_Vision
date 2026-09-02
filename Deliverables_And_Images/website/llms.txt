@@ -1,25 +1,37 @@
-# AI Vision – Gemini Screenshot & Browser Assistant
+# AI Vision: Gemini Screenshot, Webpage & Multi-Tab AI Assistant for Chrome
 
 > AI Vision is a Chrome extension for asking Google's Gemini API about a selected screenshot, The Tab, or supported tabs in one Chrome window. Its optional Agent Mode can perform constrained browser actions within the user-selected scope.
 
-Canonical website: https://gitchubst.github.io/AI_Vision/
-Chrome Web Store: https://chromewebstore.google.com/detail/ai-vision-screenshot-ask/ghmmlbclopoakmjjbkkmoefjldgjimgk
-Public source: https://github.com/gitchubst/AI_Vision
-Privacy notice: https://gitchubst.github.io/AI_Vision/privacy.html
-Current version: 2.0
+Canonical website: https://stiwarilbj.github.io/AI_Vision/
+Official active Chrome Web Store listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
+Public source: https://github.com/stiwarilbj/AI_Vision
+Privacy notice: https://stiwarilbj.github.io/AI_Vision/privacy.html
+Screenshot guide: https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html
+Webpage summary guide: https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html
+Tab comparison guide: https://stiwarilbj.github.io/AI_Vision/guides/compare-chrome-tabs-with-gemini.html
+Current version: 2.3.1
+Last updated: 2026-09-02
+
+Canonical project guide: https://github.com/stiwarilbj/AI_Vision/blob/main/README.md
+Security policy: https://github.com/stiwarilbj/AI_Vision/blob/main/SECURITY.md
 
 ## Primary features
 
 - Capture mode analyzes a user-selected screenshot region.
+- Capture is the simple first screen; The Tab, All Tabs, and Agent Mode are optional controls under More modes and tools.
 - The Tab mode answers questions about readable content on the current supported webpage.
 - All Tabs mode compares up to 20 supported tabs in one Chrome window.
 - Response styles include Balanced, Concise, Formal, Casual, Detailed, and Bullet-oriented.
-- Agent Mode can be enabled in Capture, The Tab, or All Tabs. Capture and The Tab remain scoped to one tab; All Tabs can search, switch, navigate, and act inside the starting Chrome window, subject to safety blocks and a 12-step limit.
+- Agent Mode can be enabled in Capture, The Tab, or All Tabs. Its bundled Google ADK browser runtime rotates one planning request at a time through gemini-3.5-flash, gemini-3-flash-preview, gemini-2.5-flash, gemini-3.1-flash-lite, and gemini-2.5-flash-lite, then repeats. No terminal or companion process is needed.
+- Practical guides cover screenshot prompts, webpage summaries, tab comparisons, Agent Mode boundaries, and setup: https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html
+- Webpage summary workflow: https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html
+- Multi-tab comparison workflow: https://stiwarilbj.github.io/AI_Vision/guides/compare-chrome-tabs-with-gemini.html
+- Reading, waiting, scrolling, and activating an existing in-scope tab can run automatically. Every click, type, direct navigation, new tab, history move, and reload requires approval. Capture and The Tab remain scoped to one tab; All Tabs is optional-permission gated and remains inside the starting Chrome window, subject to permanent safety blocks and a 12-step limit.
 
 ## Data handling
 
-- The user supplies a Gemini API key, which is stored locally with preferences in Chrome storage.
-- User-requested prompts and necessary webpage or screenshot context go directly to Google's Gemini API over HTTPS.
+- The user supplies a Gemini API key, which is stored by the service worker with preferences in trusted local Chrome storage. The panel receives only masked key status inside a closed Shadow DOM.
+- Ordinary and Agent Mode requests go directly to Google's Gemini API over HTTPS from the service worker. The bundled ADK runtime uses the key saved in the extension settings.
 - AI Vision has no developer-operated analytics, advertising, tracking, or proxy server.
 - The repository is publicly visible but does not currently contain an open-source license.
 

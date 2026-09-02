@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How to Summarize a Webpage with Gemini in Chrome | AI Vision</title>
+  <meta name="description" content="Learn how to summarize an article, product page, or research source with Gemini in Chrome using AI Vision, with prompts, limits, and privacy tips.">
+  <meta name="author" content="AI Vision project">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html">
+  <link rel="icon" href="../assets/store-icon.png" sizes="128x128" type="image/png">
+  <link rel="manifest" href="../site.webmanifest">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="AI Vision">
+  <meta property="og:title" content="How to Summarize a Webpage with Gemini in Chrome">
+  <meta property="og:description" content="A focused workflow for turning a readable Chrome page into a checked, useful Gemini summary.">
+  <meta property="og:url" content="https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html">
+  <meta property="og:image" content="https://stiwarilbj.github.io/AI_Vision/assets/the-tab-mode.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="800">
+  <meta property="og:image:alt" content="AI Vision The Tab mode summarizing a webpage in Chrome">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Summarize a webpage with Gemini in Chrome">
+  <meta name="twitter:description" content="Prompts and practical checks for page summaries with AI Vision.">
+  <meta name="twitter:image" content="https://stiwarilbj.github.io/AI_Vision/assets/the-tab-mode.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "mainEntityOfPage": {"@type": "WebPage", "@id": "https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html"},
+    "headline": "How to Summarize a Webpage with Gemini in Chrome",
+    "description": "A focused workflow for summarizing readable articles, product pages, and research sources with AI Vision.",
+    "image": "https://stiwarilbj.github.io/AI_Vision/assets/the-tab-mode.png",
+    "datePublished": "2026-09-02",
+    "dateModified": "2026-09-02",
+    "author": {"@type": "Organization", "name": "AI Vision project", "url": "https://github.com/stiwarilbj/AI_Vision"},
+    "publisher": {"@type": "Organization", "name": "AI Vision project", "url": "https://github.com/stiwarilbj/AI_Vision", "logo": {"@type": "ImageObject", "url": "https://stiwarilbj.github.io/AI_Vision/assets/store-icon.png"}}
+  }
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+    {"@type":"ListItem","position":1,"name":"AI Vision","item":"https://stiwarilbj.github.io/AI_Vision/"},
+    {"@type":"ListItem","position":2,"name":"Summarize a webpage with Gemini","item":"https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html"}
+  ]}
+  </script>
+  <style>
+    :root { color-scheme: light; --ink:#102a43; --muted:#526d82; --line:#cce9fa; --blue:#1689d4; --blue-dark:#08659f; --sky:#eaf7ff; font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:radial-gradient(circle at 15% 0,#d5f0ff,transparent 30rem),#f7fcff; line-height:1.7; }
+    a { color:var(--blue-dark); }
+    .wrap { width:min(900px,calc(100% - 40px)); margin:0 auto; }
+    header { padding:22px 0; border-bottom:1px solid var(--line); background:rgba(247,252,255,.9); }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:18px; }
+    .brand { display:inline-flex; align-items:center; gap:10px; color:var(--ink); font-weight:850; text-decoration:none; }
+    .brand img { width:34px; height:34px; border-radius:10px; }
+    .topbar nav { display:flex; flex-wrap:wrap; gap:16px; font-size:14px; font-weight:750; }
+    main { margin:58px auto 74px; padding:clamp(28px,6vw,66px); border:1px solid var(--line); border-radius:30px; background:#fff; box-shadow:0 24px 70px rgba(39,126,181,.13); }
+    .eyebrow { color:var(--blue-dark); font-size:13px; font-weight:850; letter-spacing:.13em; text-transform:uppercase; }
+    h1 { margin:12px 0 18px; font-size:clamp(38px,6vw,64px); line-height:1.05; letter-spacing:-.05em; }
+    h2 { margin:44px 0 12px; font-size:clamp(27px,4vw,38px); line-height:1.15; letter-spacing:-.035em; }
+    h3 { margin:28px 0 8px; font-size:21px; }
+    .lede,.muted { color:var(--muted); }
+    .lede { font-size:20px; }
+    .updated { color:var(--muted); font-size:14px; }
+    .workflow-shot { display:block; width:100%; margin:26px 0 12px; border:1px solid var(--line); border-radius:18px; }
+    figcaption { color:var(--muted); font-size:13px; }
+    ol { padding-left:24px; }
+    li + li { margin-top:10px; }
+    blockquote { margin:18px 0; padding:16px 20px; border-left:4px solid #77c8f2; background:var(--sky); color:#214b67; }
+    .note { padding:20px 22px; border:1px solid #bde3f8; border-radius:18px; background:linear-gradient(135deg,#e0f4ff,#f8fdff); }
+    details { padding:18px 0; border-top:1px solid var(--line); }
+    details:last-of-type { border-bottom:1px solid var(--line); }
+    summary { cursor:pointer; font-weight:800; }
+    .cta { display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin-top:44px; padding-top:28px; border-top:1px solid var(--line); }
+    .button { display:inline-flex; align-items:center; justify-content:center; min-height:46px; padding:0 18px; border-radius:13px; background:linear-gradient(135deg,var(--blue),#39a9e8); color:#fff; font-weight:800; text-decoration:none; }
+    footer { padding:0 0 44px; color:var(--muted); font-size:14px; }
+    @media (max-width:640px) { .topbar { align-items:flex-start; flex-direction:column; } .wrap { width:min(100% - 28px,900px); } main { margin-top:28px; padding:26px 22px; border-radius:22px; } }
+  </style>
+</head>
+<body>
+  <header><div class="wrap topbar"><a class="brand" href="../"><img src="../assets/store-icon.png" alt="AI Vision icon"><span>AI Vision</span></a><nav aria-label="Guide navigation"><a href="../#features">Features</a><a href="ai-screenshot-assistant.html">Screenshot guide</a><a href="compare-chrome-tabs-with-gemini.html">Tab comparison</a><a href="../privacy.html">Privacy</a></nav></div></header>
+  <main>
+    <div class="eyebrow">Webpage workflow</div>
+    <h1>How to summarize a webpage with Gemini in Chrome</h1>
+    <p class="lede">AI Vision's The Tab mode turns readable content in the page you are viewing into a concise brief. You choose the page, the audience, and the format; Gemini supplies a first pass you can check and refine.</p>
+    <p class="updated">Updated <time datetime="2026-09-02">September 2, 2026</time> · AI Vision 2.3.1</p>
+
+    <figure><img class="workflow-shot" src="../assets/the-tab-mode.png" alt="AI Vision The Tab mode showing a Gemini summary of an article in Chrome" width="1280" height="800" loading="eager"><figcaption>The Tab keeps the page scope visible while you ask for a summary or a follow-up.</figcaption></figure>
+
+    <h2>Set up a focused page summary</h2>
+    <p>Install <a href="https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&amp;hl=en">AI Vision from the Chrome Web Store</a> and add your Gemini API key in Settings. Then:</p>
+    <ol>
+      <li>Open the article, product page, or research source you want to understand in a supported HTTP or HTTPS tab.</li>
+      <li>Open AI Vision from the toolbar, the right-click menu, or <strong>Alt + Shift + V</strong>.</li>
+      <li>Open <strong>More modes and tools</strong>, choose <strong>The Tab</strong>, and select <strong>Summarize</strong>.</li>
+      <li>Tell Gemini who the summary is for and how you want it structured. Use <strong>Copy</strong> or ask a follow-up when the answer arrives.</li>
+    </ol>
+
+    <h2>Prompt patterns that produce useful summaries</h2>
+    <p>A short instruction becomes more reliable when it names the audience, length, and evidence you need. Try one of these starting points:</p>
+    <blockquote>“Summarize this article for a busy product manager in five bullets. Separate facts, claims, and open questions.”</blockquote>
+    <blockquote>“Create a 120-word brief. Include the problem, proposed solution, evidence, and one limitation. Say when a detail is not stated.”</blockquote>
+    <blockquote>“Extract the product's price, refund policy, and three differentiators into a table. Preserve exact numbers and quote no more than one short phrase.”</blockquote>
+    <p>Use the response-style setting—Concise, Detailed, Formal, Casual, Balanced, or Bullet-oriented—to keep your preferred format consistent across pages. A follow-up such as “What would change this conclusion?” is often more useful than asking for a longer first answer.</p>
+
+    <h2>Check the summary before you reuse it</h2>
+    <p>Gemini is a reading aid, not a source of record. Compare names, dates, prices, and quoted numbers with the page. Ask AI Vision to flag uncertainty, then open the relevant section yourself. For research, keep the page title and URL beside the copied answer so another reader can verify it.</p>
+    <div class="note"><strong>Helpful boundary:</strong> The Tab reads supported, rendered webpage content. It cannot analyze Chrome internal pages, the Chrome Web Store, or other restricted pages, and a paywall, login wall, dynamic widget, or image-only page may leave important context unavailable.</div>
+
+    <h2>Privacy and setup notes</h2>
+    <p>The prompt and page context needed for the request go directly to Google's Gemini API using the key you provide. The key is stored locally by the extension's service worker. AI Vision has no developer-operated analytics, advertising, tracking, or proxy server; see the <a href="../privacy.html">privacy notice</a> for details. Model availability, pricing, and free-tier limits are controlled by Google.</p>
+
+    <h2>Common questions</h2>
+    <details><summary>Can I summarize a page without selecting text?</summary><p>Yes. Choose The Tab and use Summarize; AI Vision reads the supported page context instead of requiring a capture.</p></details>
+    <details><summary>Can I ask a follow-up about the same page?</summary><p>Yes. Follow-ups use the open panel's recent context until you close it or change mode. Ask for a different audience, format, or missing detail.</p></details>
+    <details><summary>Why is part of my page missing?</summary><p>Restricted pages, login or paywall content, lazy-loaded sections, and content inside some embedded frames may not be readable. Scroll the page into view or use Capture for a visible region.</p></details>
+    <details><summary>How is this different from a generic AI chat tab?</summary><p>AI Vision starts from the page already in front of you and keeps Capture as the simple first screen. The Tab and All Tabs are optional scopes, and browser actions require approval.</p></details>
+
+    <div class="cta"><a class="button" href="https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&amp;hl=en">Add AI Vision to Chrome</a><a href="compare-chrome-tabs-with-gemini.html">Next: compare Chrome tabs</a><a href="../">Back to AI Vision</a></div>
+  </main>
+  <footer><div class="wrap">AI Vision is an independent project and is not affiliated with Google. Gemini and Chrome are trademarks of Google LLC.</div></footer>
+</body>
+</html>

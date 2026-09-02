@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "AI Vision - Gemini Screenshot & Browser Assistant",
-  "version": "2.3.0",
+  "name": "AI Vision: Gemini Screenshot, Webpage & Multi-Tab AI Assistant for Chrome",
+  "short_name": "AI Vision",
+  "version": "2.3.1",
   "minimum_chrome_version": "102",
-  "description": "Ask Gemini about screenshots, The Tab, or All Tabs—and use Agent Mode for safe browser tasks in one Chrome window.",
+  "description": "Ask Gemini about screenshots, webpages, articles, products, research, and up to 20 tabs—then run safe approval-based browser tasks.",
   "permissions": [
     "activeTab",
     "scripting",
@@ -24,7 +25,7 @@
     "service_worker": "src/background/service-worker.js"
   },
   "action": {
-    "default_title": "AI Vision - Ask Gemini about this page",
+    "default_title": "AI Vision - Ask Gemini about this screenshot or webpage",
     "default_icon": {
       "16": "extension-assets/icons/icon-16.png",
       "32": "extension-assets/icons/icon-32.png",

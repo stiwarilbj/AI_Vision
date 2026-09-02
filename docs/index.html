@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI Vision: Gemini Screenshot &amp; Browser Assistant for Chrome</title>
-  <meta name="description" content="Use Gemini as a Chrome screenshot assistant: capture a region, ask about the current page, compare tabs, or run a constrained browser task.">
+  <title>AI Vision: Gemini Screenshot &amp; Multi-Tab Assistant for Chrome</title>
+  <meta name="description" content="Capture a screenshot, ask Gemini about a webpage, compare up to 20 Chrome tabs, or run a safe browser task with AI Vision.">
   <meta name="author" content="AI Vision project">
   <meta name="robots" content="index,follow,max-image-preview:large">
   <link rel="canonical" href="https://stiwarilbj.github.io/AI_Vision/">
@@ -12,8 +12,8 @@
   <link rel="manifest" href="site.webmanifest">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="AI Vision">
-  <meta property="og:title" content="AI Vision: Gemini Screenshot &amp; Browser Assistant">
-  <meta property="og:description" content="Capture a region, ask about the page in front of you, compare Chrome tabs, or run a constrained browser task with Gemini.">
+  <meta property="og:title" content="AI Vision: Gemini Screenshot &amp; Multi-Tab Assistant">
+  <meta property="og:description" content="Capture a region, ask Gemini about a webpage, compare up to 20 Chrome tabs, or run a safe browser task.">
   <meta property="og:url" content="https://stiwarilbj.github.io/AI_Vision/">
   <meta property="og:image" content="https://stiwarilbj.github.io/AI_Vision/assets/marquee.png">
   <meta property="og:image:width" content="1400">
@@ -21,8 +21,8 @@
   <meta property="og:image:alt" content="AI Vision Gemini browser assistant for Chrome">
   <meta property="og:locale" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="AI Vision: Gemini Screenshot &amp; Browser Assistant">
-  <meta name="twitter:description" content="Capture, ask, compare tabs, and run constrained browser tasks with Gemini in Chrome.">
+  <meta name="twitter:title" content="AI Vision: Gemini Screenshot &amp; Multi-Tab Assistant">
+  <meta name="twitter:description" content="Capture screenshots, ask Gemini about webpages, compare tabs, and run approval-based browser tasks in Chrome.">
   <meta name="twitter:image" content="https://stiwarilbj.github.io/AI_Vision/assets/marquee.png">
   <meta name="theme-color" content="#eaf7ff">
   <script type="application/ld+json">
@@ -39,12 +39,12 @@
       {
         "@type": "SoftwareApplication",
         "@id": "https://stiwarilbj.github.io/AI_Vision/#software",
-        "name": "AI Vision – Gemini Screenshot & Browser Assistant",
-        "description": "A Chrome extension for asking Gemini about screenshots, the current webpage, or supported tabs, with optional Agent Mode for constrained browser tasks.",
+        "name": "AI Vision: Gemini Screenshot, Webpage & Multi-Tab AI Assistant for Chrome",
+        "description": "A Chrome extension for asking Gemini about screenshots, webpages, and supported tabs, with optional approval-based browser tasks.",
         "url": "https://stiwarilbj.github.io/AI_Vision/",
         "applicationCategory": "BrowserApplication",
         "operatingSystem": "Google Chrome",
-        "softwareVersion": "2.3.0",
+        "softwareVersion": "2.3.1",
         "image": "https://stiwarilbj.github.io/AI_Vision/assets/marquee.png",
         "screenshot": [
           "https://stiwarilbj.github.io/AI_Vision/assets/settings.png",
@@ -63,8 +63,9 @@
           "Ask Gemini about a selected screenshot",
           "Ask questions about the current webpage",
           "Compare supported tabs in one Chrome window",
+          "Summarize articles, products, and research pages",
           "Choose formal, casual, concise, detailed, balanced, or bullet-oriented responses",
-          "Run constrained browser tasks inside the starting Chrome window"
+          "Run approval-based browser tasks inside the starting Chrome window"
         ]
       }
     ]
@@ -229,7 +230,7 @@
         <div class="nav-links">
           <a href="#how-it-works">How it works</a>
           <a href="#features">Features</a>
-          <a href="guides/ai-screenshot-assistant.html">Guide</a>
+          <a href="guides/ai-screenshot-assistant.html">Guides</a>
           <a href="#privacy">Privacy</a>
           <a href="https://github.com/stiwarilbj/AI_Vision">GitHub</a>
           <a class="button" href="https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&amp;hl=en">Add to Chrome</a>
@@ -242,13 +243,13 @@
     <div class="wrap hero">
       <div>
         <div class="eyebrow">AI screenshot assistant for Chrome</div>
-        <h1>Ask Gemini about any screenshot or webpage in Chrome.</h1>
+        <h1>Ask Gemini about screenshots, webpages, or up to 20 tabs in Chrome.</h1>
         <p>Capture a chart, image, paragraph, or error with one simple action. Open More modes and tools only when you want to ask about The Tab, compare All Tabs, or run a constrained Agent Mode task.</p>
         <div class="hero-actions">
           <a class="button" href="https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&amp;hl=en">Get AI Vision</a>
           <a class="button secondary" href="#how-it-works">See how it works</a>
         </div>
-        <div class="trust">Version 2.3.0 · One-click page and selection actions · Conversational follow-ups · <time datetime="2026-08-30">Updated August 30, 2026</time></div>
+        <div class="trust">Version 2.3.1 · One-click page and selection actions · Conversational follow-ups · <time datetime="2026-09-02">Updated September 2, 2026</time></div>
       </div>
       <div class="product-shot">
         <img src="assets/settings.png" alt="AI Vision screenshot assistant panel with Gemini settings in Chrome" width="1280" height="800" fetchpriority="high" decoding="async">
@@ -268,8 +269,13 @@
           <article class="card"><span class="number">3</span><h3>Review the result</h3><p>Copy the answer, try the request again, or enable Agent Mode for a bounded browser workflow with approval checkpoints.</p></article>
         </div>
         <div class="guide-callout">
-          <div><h3>New to Gemini browser assistants?</h3><p>Follow the practical screenshot-and-tabs guide for setup, prompt examples, and the privacy boundaries that matter.</p></div>
-          <a class="button secondary" href="guides/ai-screenshot-assistant.html">Read the guide</a>
+          <div><h3>New to Gemini browser assistants?</h3><p>Follow the practical guides for setup, screenshot prompts, webpage summaries, tab comparisons, and the privacy boundaries that matter.</p></div>
+          <a class="button secondary" href="guides/ai-screenshot-assistant.html">Explore the guides</a>
+        </div>
+        <div class="grid" style="margin-top:18px">
+          <article class="card"><span class="number">A</span><h3>Summarize a webpage</h3><p>Turn a long article or product page into a useful brief with <a href="guides/summarize-webpage-with-gemini.html">a repeatable Gemini workflow</a>.</p></article>
+          <article class="card"><span class="number">B</span><h3>Compare Chrome tabs</h3><p>Learn how to compare sources, prices, or research notes across <a href="guides/compare-chrome-tabs-with-gemini.html">up to 20 supported tabs</a>.</p></article>
+          <article class="card"><span class="number">C</span><h3>Ask about a screenshot</h3><p>Use focused captures and prompt patterns from the <a href="guides/ai-screenshot-assistant.html">screenshot assistant guide</a>.</p></article>
         </div>
       </div>
     </section>
@@ -337,7 +343,7 @@
   </main>
 
   <footer>
-    <div class="wrap footer-row"><span>AI Vision is an independent project and is not affiliated with Google.</span><div class="footer-links"><a href="privacy.html">Privacy</a><a href="guides/ai-screenshot-assistant.html">Usage guide</a><a href="https://github.com/stiwarilbj/AI_Vision">GitHub source</a><a href="https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&amp;hl=en">Rate AI Vision</a></div></div>
+    <div class="wrap footer-row"><span>AI Vision is an independent project and is not affiliated with Google.</span><div class="footer-links"><a href="privacy.html">Privacy</a><a href="guides/ai-screenshot-assistant.html">Screenshot guide</a><a href="guides/summarize-webpage-with-gemini.html">Webpage summary guide</a><a href="guides/compare-chrome-tabs-with-gemini.html">Tab comparison guide</a><a href="https://github.com/stiwarilbj/AI_Vision">GitHub source</a><a href="https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&amp;hl=en">Rate AI Vision</a></div></div>
   </footer>
 </body>
 </html>

@@ -4,7 +4,7 @@ AI Vision lets you ask Gemini about a selected screenshot, the current tab, or s
 
 [Actual active Chrome Web Store extension listing](https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en) · [Get a Gemini API key](https://aistudio.google.com/app/apikey)
 
-## Version 2.3.0
+## Version 2.3.1
 
 - Open Capture from anywhere with **Alt + Shift + V**, summarize a page from the right-click menu, or explain selected text in one click.
 - Every mode now has three context-aware quick actions, so common questions do not require typing.
@@ -38,8 +38,8 @@ docs/                    Public marketing/privacy pages, excluded from releases
 
 The public site is the canonical SEO surface at
 `https://stiwarilbj.github.io/AI_Vision/`. It includes a crawlable landing page,
-a practical screenshot-assistant guide, a privacy notice, structured data,
-social previews, `robots.txt`, and a sitemap. GitHub Pages is configured to
+practical screenshot, webpage-summary, and tab-comparison guides, a privacy
+notice, structured data, social previews, `robots.txt`, and a sitemap. GitHub Pages is configured to
 publish the repository's `main` branch from `/docs`. Run `npm run seo:check` after
 editing public pages; the check verifies canonical URLs, metadata, JSON-LD,
 sitemap targets, and the static deployment markers.
