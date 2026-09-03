@@ -4,7 +4,7 @@ AI Vision lets you ask Gemini about a selected screenshot, the current tab, or s
 
 [Actual active Chrome Web Store extension listing](https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en) · [Get a Gemini API key](https://aistudio.google.com/app/apikey)
 
-## Version 2.3.1
+## Version 2.5
 
 - Open Capture from anywhere with **Alt + Shift + V**, summarize a page from the right-click menu, or explain selected text in one click.
 - Every mode now has three context-aware quick actions, so common questions do not require typing.

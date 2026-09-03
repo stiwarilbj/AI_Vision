@@ -1,6 +1,6 @@
 {
   "name": "ai-vision-chrome-extension",
-  "version": "2.3.1",
+  "version": "2.5",
   "private": true,
   "description": "AI Vision Chrome extension with a bundled Google ADK browser agent",
   "engines": {

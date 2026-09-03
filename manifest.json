@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "AI Vision: Gemini Screenshot, Webpage & Multi-Tab AI Assistant for Chrome",
   "short_name": "AI Vision",
-  "version": "2.3.1",
+  "version": "2.5",
   "minimum_chrome_version": "102",
   "description": "Ask Gemini about screenshots, webpages, articles, products, research, and up to 20 tabs—then run safe approval-based browser tasks.",
   "permissions": [

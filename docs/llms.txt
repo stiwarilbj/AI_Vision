@@ -9,7 +9,7 @@ Privacy notice: https://stiwarilbj.github.io/AI_Vision/privacy.html
 Screenshot guide: https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html
 Webpage summary guide: https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html
 Tab comparison guide: https://stiwarilbj.github.io/AI_Vision/guides/compare-chrome-tabs-with-gemini.html
-Current version: 2.3.1
+Current version: 2.5
 Last updated: 2026-09-02
 
 Canonical project guide: https://github.com/stiwarilbj/AI_Vision/blob/main/README.md

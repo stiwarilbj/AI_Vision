@@ -14,8 +14,8 @@ function listingField(heading) {
 if (packageJson.version !== manifest.version) {
   throw new Error(`Version mismatch: package.json=${packageJson.version}, manifest.json=${manifest.version}`);
 }
-if (!/^\d+\.\d+\.\d+$/.test(manifest.version)) {
-  throw new Error(`Manifest version must be semver-like x.y.z: ${manifest.version}`);
+if (!/^\d+(\.\d+){1,3}$/.test(manifest.version)) {
+  throw new Error(`Manifest version must use one to four numeric components: ${manifest.version}`);
 }
 
 const manifestNameLength = [...manifest.name].length;
