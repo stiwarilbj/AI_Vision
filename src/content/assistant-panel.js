@@ -97,15 +97,15 @@
     }
 
     // Persisted settings. The API key is only sent when the user presses Save.
+    // The active mode and Agent toggle are intentionally session-only so a new
+    // panel always opens in the safe, screenshot-first Capture workspace.
     async function saveSettings(extra = {}) {
         const response = await sendWorkerMessage({
             action: 'saveSettings',
             ...extra,
             geminiModel: selectedModel,
             geminiTemperature: responseTemperature,
-            geminiMode: selectedMode,
-            geminiResponseStyle: selectedResponseStyle,
-            geminiAgentMode: isAgentModeEnabled
+            geminiResponseStyle: selectedResponseStyle
         });
         if (response) {
             hasApiKey = response.hasApiKey === true;
@@ -122,13 +122,13 @@
         responseTemperature = validateTemperature(result?.geminiTemperature)
             ? Number(result.geminiTemperature)
             : 1;
-        selectedMode = MODES.some((mode) => mode.value === result?.geminiMode)
-            ? result.geminiMode
-            : DEFAULT_MODE;
+        // Ignore stored mode/Agent values on a fresh launch. Explicit launch
+        // options (used by context-menu shortcuts) are applied after loading.
+        selectedMode = DEFAULT_MODE;
         selectedResponseStyle = RESPONSE_STYLES.some((style) => style.value === result?.geminiResponseStyle)
             ? result.geminiResponseStyle
             : DEFAULT_RESPONSE_STYLE;
-        isAgentModeEnabled = result?.geminiAgentMode === true;
+        isAgentModeEnabled = false;
         hasApiKey = result?.hasApiKey === true;
         apiKeyMasked = result?.apiKeyMasked || '';
         availableModels = [selectedModel];
@@ -169,7 +169,12 @@
             help: '<circle cx="12" cy="12" r="9"></circle><path d="M9.6 9a2.5 2.5 0 1 1 3.2 2.4c-.8.3-1.3.9-1.3 1.6v.3"></path><path d="M12 17h.01"></path>',
             settings: '<path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"></path><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"></path>',
             close: '<path d="m7 7 10 10M17 7 7 17"></path>',
+            arrowLeft: '<path d="m15 18-6-6 6-6"></path><path d="M9 12h11"></path>',
             send: '<path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path>',
+            capture: '<path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"></path><path d="M12 8v8M8 12h8"></path>',
+            tab: '<rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 9h18"></path>',
+            tabs: '<rect x="7" y="3" width="14" height="14" rx="2"></rect><path d="M17 17v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"></path>',
+            agent: '<rect x="5" y="7" width="14" height="11" rx="3"></rect><path d="M9 11h.01M15 11h.01M9 15h6M12 7V4M9 4h6M2 11v3M22 11v3"></path>',
             list: '<path d="M9 6h11M9 12h11M9 18h11"></path><path d="M4 6h.01M4 12h.01M4 18h.01"></path>',
             explain: '<circle cx="12" cy="12" r="9"></circle><path d="M9.6 9a2.5 2.5 0 1 1 3.2 2.4c-.8.3-1.3.9-1.3 1.6v.3"></path><path d="M12 17h.01"></path>',
             answer: '<path d="M21 12a8 8 0 0 1-8 8H7l-4 2 1.5-4A8 8 0 1 1 21 12Z"></path>',
@@ -224,6 +229,7 @@
         uiShadowRoot = null;
 
         let overlay, selectionRectDiv, startX, startY, isSelecting = false;
+        let capturePopupDisplay = null;
         let capturedImageData = null;
         let popup, queryInput, responseArea, sendButton;
         let activeAgentTaskId = null;
@@ -245,6 +251,10 @@
         // Capture selection
         function startCaptureSelection() {
             ensureUiRoot();
+            if (popup) {
+                capturePopupDisplay = popup.style.display;
+                popup.style.display = 'none';
+            }
             overlay = document.createElement('div');
             overlay.id = 'gemini-screenshot-overlay';
             selectionRectDiv = document.createElement('div');
@@ -310,9 +320,7 @@
             if (overlay) overlay.style.display = 'none';
 
             if (rect.width <= 5 || rect.height <= 5) {
-                capturedImageData = null;
-                openAssistantPanel();
-                removeCaptureSelection();
+                restorePanelAfterCapture();
                 return;
             }
 
@@ -322,25 +330,22 @@
                     options: { format: "jpeg", quality: 90 }
                 });
                 if (dataUrl && typeof dataUrl === 'object' && dataUrl.error) {
-                    showUserError(`Failed to capture screen: ${dataUrl.error}`);
-                    removeCaptureSelection();
+                    restorePanelAfterCapture(`Failed to capture screen: ${dataUrl.error}`);
                 } else if (dataUrl && typeof dataUrl === 'string') {
                     cropCapturedImage(dataUrl, rect.x, rect.y, rect.width, rect.height, (croppedDataUrl) => {
                         if (croppedDataUrl) {
                             capturedImageData = croppedDataUrl.split(',')[1];
+                            removeCaptureSelection();
                             openAssistantPanel();
                         } else {
-                            showUserError("Failed to crop image.");
+                            restorePanelAfterCapture("Failed to crop image.");
                         }
-                        removeCaptureSelection();
                     });
                 } else {
-                    showUserError("Failed to capture screen. Please try again.");
-                    removeCaptureSelection();
+                    restorePanelAfterCapture("Failed to capture screen. Please try again.");
                 }
             } catch (error) {
-                showUserError(`Capture failed: ${error.message}. Ensure extension is loaded & try reloading page.`);
-                removeCaptureSelection();
+                restorePanelAfterCapture(`Capture failed: ${error.message}. Ensure extension is loaded & try reloading page.`);
             }
         }
 
@@ -375,9 +380,8 @@
                 callback(result.length <= 8000000 ? result : null);
             };
             img.onerror = () => {
-                showUserError("Failed to process image. Page content might be restricted or image failed to load.");
                 callback(null);
-            }
+            };
             img.src = dataUrl;
         }
 
@@ -396,10 +400,25 @@
             }
         }
 
+        function restorePanelAfterCapture(message = '') {
+            const hadPanel = Boolean(popup);
+            removeCaptureSelection();
+            if (popup) {
+                popup.style.display = capturePopupDisplay || '';
+                capturePopupDisplay = null;
+                refreshModeControls();
+                if (message) showUserError(message);
+            } else if (hadPanel) {
+                openAssistantPanel();
+                if (message) setTimeout(() => showUserError(message), 0);
+            }
+        }
+
         function cancelSelection() {
             if (isSelecting) {
                 isSelecting = false;
             }
+            restorePanelAfterCapture();
         }
 
         // Assistant panel construction and mode controls
@@ -440,6 +459,7 @@
             instructionsButton.className = 'gemini-header-action';
             instructionsButton.innerHTML = `${iconSvg('help')}<span>Help</span>`;
             instructionsButton.title = 'Instructions';
+            instructionsButton.setAttribute('aria-label', 'Open instructions');
             instructionsButton.setAttribute('aria-expanded', 'false');
             
             const settingsButton = document.createElement('button');
@@ -447,6 +467,7 @@
             settingsButton.className = 'gemini-header-action';
             settingsButton.innerHTML = `${iconSvg('settings')}<span>Settings</span>`;
             settingsButton.title = 'Settings';
+            settingsButton.setAttribute('aria-label', 'Open settings');
             settingsButton.setAttribute('aria-expanded', 'false');
             
             const closeButton = document.createElement('button');
@@ -468,92 +489,143 @@
 
             let presetsDiv = null;
             let textOnlyMessage = null;
+            let captureFrame = null;
+            let capturePreview = null;
+            let workspaceTitle = null;
+            let workspaceDescription = null;
+            let workspaceBackButton = null;
+            let captureStatus = null;
             const modeButtons = [];
+
+            const workspace = document.createElement('main');
+            workspace.id = 'gemini-workspace';
+
+            const workspaceHeading = document.createElement('div');
+            workspaceHeading.className = 'gemini-workspace-heading';
+            workspaceTitle = document.createElement('h1');
+            workspaceTitle.id = 'gemini-workspace-title';
+            workspaceDescription = document.createElement('p');
+            workspaceDescription.id = 'gemini-workspace-description';
+            workspaceBackButton = document.createElement('button');
+            workspaceBackButton.type = 'button';
+            workspaceBackButton.className = 'gemini-back-to-capture';
+            workspaceBackButton.innerHTML = `${iconSvg('arrowLeft')}<span>Back to Capture</span>`;
+            workspaceBackButton.onclick = () => {
+                if (selectedMode !== 'capture') resetConversation();
+                selectedMode = 'capture';
+                closeUtilityPanels();
+                renderSelectedMode();
+            };
+            workspaceHeading.appendChild(workspaceBackButton);
+            workspaceHeading.appendChild(workspaceTitle);
+            workspaceHeading.appendChild(workspaceDescription);
+            workspace.appendChild(workspaceHeading);
+
+            captureFrame = document.createElement('section');
+            captureFrame.id = 'gemini-capture-frame';
+            captureFrame.setAttribute('aria-label', 'Screenshot capture');
+            capturePreview = document.createElement('div');
+            capturePreview.className = 'gemini-capture-preview';
+            captureStatus = document.createElement('span');
+            captureStatus.className = 'gemini-capture-status';
 
             const primaryModeButton = document.createElement('button');
             primaryModeButton.id = 'gemini-primary-mode';
             primaryModeButton.type = 'button';
             primaryModeButton.className = 'gemini-primary-mode-button';
-            primaryModeButton.innerHTML = `${iconSvg('vision')}<span class="gemini-primary-mode-copy"><strong>Capture</strong><small>Ask about an area of this page</small></span><span class="gemini-primary-mode-arrow" aria-hidden="true">→</span>`;
+            primaryModeButton.innerHTML = `${iconSvg('capture')}<span class="gemini-primary-mode-copy"><strong>Capture area</strong><small>Select any part of this page</small></span>`;
             primaryModeButton.setAttribute('aria-label', 'Capture an area of this page');
             primaryModeButton.onclick = () => {
-                if (selectedMode !== 'capture' || !capturedImageData) resetConversation();
-                selectedMode = 'capture';
-                void saveSettings().catch((error) => showUserError(error.message));
-                if (!capturedImageData) {
-                    closeAssistantPanel();
-                    startCaptureSelection();
-                    return;
+                if (selectedMode !== 'capture') {
+                    resetConversation();
+                    selectedMode = 'capture';
+                    renderSelectedMode();
                 }
-                closeUtilityPanels();
-                renderSelectedMode();
+                startCaptureSelection();
             };
-            content.appendChild(primaryModeButton);
+            captureFrame.appendChild(capturePreview);
+            captureFrame.appendChild(primaryModeButton);
+            captureFrame.appendChild(captureStatus);
+            workspace.appendChild(captureFrame);
 
-            const advancedModes = document.createElement('details');
-            advancedModes.id = 'gemini-advanced-modes';
-            const advancedModesSummary = document.createElement('summary');
-            advancedModesSummary.textContent = 'More modes and tools';
-            advancedModes.appendChild(advancedModesSummary);
-
+            const betaRail = document.createElement('aside');
+            betaRail.id = 'gemini-beta-rail';
+            betaRail.setAttribute('aria-label', 'Beta tools');
+            const betaTitle = document.createElement('h2');
+            betaTitle.textContent = 'Beta tools';
+            betaRail.appendChild(betaTitle);
             const modeRail = document.createElement('div');
             modeRail.id = 'gemini-mode-rail';
             modeRail.setAttribute('role', 'tablist');
-            modeRail.setAttribute('aria-label', 'AI Vision mode');
+            modeRail.setAttribute('aria-label', 'Beta tools');
             MODES.filter((mode) => mode.value !== 'capture').forEach((mode) => {
                 const button = document.createElement('button');
                 button.type = 'button';
+                button.className = 'gemini-beta-tool';
                 button.dataset.mode = mode.value;
-                button.textContent = mode.label;
                 button.setAttribute('role', 'tab');
+                button.setAttribute('aria-label', `${mode.label} Beta`);
+                const icon = document.createElement('span');
+                icon.className = 'gemini-beta-tool-icon';
+                icon.innerHTML = iconSvg(mode.value === 'tab' ? 'tab' : 'tabs');
+                const copy = document.createElement('span');
+                copy.className = 'gemini-beta-tool-copy';
+                copy.innerHTML = `<strong>${mode.label}</strong><small>Beta</small>`;
+                button.appendChild(icon);
+                button.appendChild(copy);
                 button.onclick = () => {
                     if (selectedMode !== mode.value) resetConversation();
                     selectedMode = mode.value;
-                    void saveSettings().catch((error) => showUserError(error.message));
-                    if (selectedMode === 'capture' && !capturedImageData) {
-                        closeAssistantPanel();
-                        startCaptureSelection();
-                        return;
-                    }
                     closeUtilityPanels();
                     renderSelectedMode();
                 };
                 modeButtons.push(button);
                 modeRail.appendChild(button);
             });
-            advancedModes.appendChild(modeRail);
+            betaRail.appendChild(modeRail);
 
             const agentModeRow = document.createElement('div');
             agentModeRow.id = 'gemini-agent-mode-row';
             const agentModeCopy = document.createElement('div');
             agentModeCopy.className = 'gemini-agent-mode-copy';
-            const agentModeLabel = document.createElement('span');
+            const agentModeIcon = document.createElement('span');
+            agentModeIcon.className = 'gemini-beta-tool-icon';
+            agentModeIcon.innerHTML = iconSvg('agent');
+            const agentModeText = document.createElement('span');
+            agentModeText.className = 'gemini-beta-tool-copy';
+            const agentModeLabel = document.createElement('strong');
             agentModeLabel.textContent = 'Agent Mode';
+            const agentModeBeta = document.createElement('small');
+            agentModeBeta.textContent = 'Beta';
             const agentModeDescription = document.createElement('small');
-            agentModeCopy.appendChild(agentModeLabel);
-            agentModeCopy.appendChild(agentModeDescription);
+            agentModeDescription.className = 'gemini-agent-description';
+            agentModeText.appendChild(agentModeLabel);
+            agentModeText.appendChild(agentModeBeta);
+            agentModeCopy.appendChild(agentModeIcon);
+            agentModeCopy.appendChild(agentModeText);
             const agentModeToggle = document.createElement('button');
             agentModeToggle.type = 'button';
             agentModeToggle.className = 'gemini-switch';
             agentModeToggle.setAttribute('role', 'switch');
-            agentModeToggle.setAttribute('aria-label', 'Agent Mode');
+            agentModeToggle.setAttribute('aria-label', 'Agent Mode Beta');
             agentModeToggle.onclick = () => {
                 resetConversation();
                 isAgentModeEnabled = !isAgentModeEnabled;
-                void saveSettings().catch((error) => showUserError(error.message));
                 renderSelectedMode();
             };
             agentModeRow.appendChild(agentModeCopy);
+            agentModeRow.appendChild(agentModeDescription);
             agentModeRow.appendChild(agentModeToggle);
-            advancedModes.appendChild(agentModeRow);
-            content.appendChild(advancedModes);
+            betaRail.appendChild(agentModeRow);
+            content.appendChild(workspace);
+            content.appendChild(betaRail);
             
             const instructionsPanel = document.createElement('div');
             instructionsPanel.id = 'gemini-instructions-panel';
 
             const helpIntro = document.createElement('p');
             helpIntro.className = 'gemini-help-intro';
-            helpIntro.textContent = 'Capture is the simple default. Open More modes and tools when you want to read a tab, compare tabs, or use Agent Mode.';
+            helpIntro.textContent = 'Capture is the simple default. Beta tools stay available in the side rail when you want to read a tab, compare tabs, or use Agent Mode.';
 
             const helpList = document.createElement('ul');
             helpList.className = 'gemini-help-list';
@@ -916,7 +988,7 @@
             
             textOnlyMessage = document.createElement('div');
             textOnlyMessage.className = 'gemini-mode-note';
-            content.appendChild(textOnlyMessage);
+            workspace.appendChild(textOnlyMessage);
 
             const composer = document.createElement('div');
             composer.id = 'gemini-popup-composer';
@@ -942,11 +1014,11 @@
 
             composer.appendChild(queryInput);
             composer.appendChild(sendButton);
-            content.appendChild(composer);
+            workspace.appendChild(composer);
             
             presetsDiv = document.createElement('div');
             presetsDiv.id = 'gemini-popup-presets';
-            content.appendChild(presetsDiv);
+            workspace.appendChild(presetsDiv);
 
             function renderQuickActions() {
                 const presets = QUICK_ACTIONS[selectedMode] || QUICK_ACTIONS.capture;
@@ -954,6 +1026,9 @@
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.innerHTML = `${iconSvg(preset.icon)}<span>${preset.text}</span>`;
+                    const unavailable = selectedMode === 'capture' && !capturedImageData;
+                    button.disabled = unavailable;
+                    if (unavailable) button.title = 'Capture an area first';
                     button.onclick = () => submitUserRequest(preset.query);
                     return button;
                 }));
@@ -964,14 +1039,64 @@
             responseArea.setAttribute('role', 'status');
             responseArea.setAttribute('aria-live', 'polite');
             responseArea.setAttribute('aria-atomic', 'true');
-            responseArea.textContent = 'Put in a question';
-            content.appendChild(responseArea);
+            responseArea.textContent = 'Your answer will appear here';
+            workspace.appendChild(responseArea);
+
+            function renderCaptureFrame() {
+                const isCaptureActive = selectedMode === 'capture';
+                captureFrame.classList.toggle('context', !isCaptureActive);
+                capturePreview.replaceChildren();
+                if (isCaptureActive) {
+                    const previewIcon = document.createElement('span');
+                    previewIcon.className = 'gemini-capture-preview-icon';
+                    previewIcon.innerHTML = iconSvg(capturedImageData ? 'vision' : 'capture');
+                    capturePreview.appendChild(previewIcon);
+                    if (capturedImageData) {
+                        const image = document.createElement('img');
+                        image.alt = 'Selected screenshot preview';
+                        image.src = `data:image/jpeg;base64,${capturedImageData}`;
+                        capturePreview.appendChild(image);
+                    }
+                    primaryModeButton.hidden = false;
+                    primaryModeButton.innerHTML = `${iconSvg(capturedImageData ? 'retry' : 'capture')}<span class="gemini-primary-mode-copy"><strong>${capturedImageData ? 'Retake' : 'Capture area'}</strong><small>${capturedImageData ? 'Select a different part of this page' : 'Select any part of this page'}</small></span>`;
+                    primaryModeButton.setAttribute('aria-label', capturedImageData ? 'Retake the screenshot' : 'Capture an area of this page');
+                    captureStatus.textContent = capturedImageData ? 'Screenshot ready' : 'No screenshot selected';
+                } else {
+                    const contextIcon = document.createElement('span');
+                    contextIcon.className = 'gemini-context-icon';
+                    contextIcon.innerHTML = iconSvg(selectedMode === 'tab' ? 'tab' : 'tabs');
+                    const contextCopy = document.createElement('div');
+                    contextCopy.className = 'gemini-context-copy';
+                    const contextTitle = document.createElement('strong');
+                    contextTitle.textContent = selectedMode === 'tab' ? 'The Tab' : 'All Tabs';
+                    const contextDescription = document.createElement('span');
+                    contextDescription.textContent = selectedMode === 'tab'
+                        ? 'Read this page and ask Gemini follow-ups.'
+                        : 'Compare supported pages in this Chrome window.';
+                    contextCopy.appendChild(contextTitle);
+                    contextCopy.appendChild(contextDescription);
+                    capturePreview.appendChild(contextIcon);
+                    capturePreview.appendChild(contextCopy);
+                    primaryModeButton.hidden = true;
+                    captureStatus.textContent = selectedMode === 'tab'
+                        ? 'Beta · page context stays in this tab'
+                        : 'Beta · access stays in this Chrome window';
+                }
+            }
 
             function renderSelectedMode() {
                 const isCaptureActive = selectedMode === 'capture';
-                primaryModeButton.classList.toggle('active', isCaptureActive);
-                primaryModeButton.setAttribute('aria-pressed', String(isCaptureActive));
-                advancedModes.open = !isCaptureActive || isAgentModeEnabled;
+                workspaceTitle.textContent = isCaptureActive
+                    ? 'Ask about a screenshot'
+                    : selectedMode === 'tab'
+                        ? 'Ask about this webpage'
+                        : 'Compare your open tabs';
+                workspaceDescription.textContent = isCaptureActive
+                    ? 'Select any area of this page, then ask Gemini.'
+                    : selectedMode === 'tab'
+                        ? 'Read the current page without leaving your workflow.'
+                        : 'Find useful differences across supported pages in this window.';
+                workspaceBackButton.hidden = isCaptureActive;
                 modeButtons.forEach((button) => {
                     const isActive = button.dataset.mode === selectedMode;
                     button.classList.toggle('active', isActive);
@@ -981,35 +1106,37 @@
 
                 agentModeToggle.classList.toggle('active', isAgentModeEnabled);
                 agentModeToggle.setAttribute('aria-checked', String(isAgentModeEnabled));
+                agentModeToggle.textContent = '';
 
                 if (selectedMode === 'capture') {
-                    queryInput.placeholder = 'Ask about what you captured';
+                    queryInput.placeholder = capturedImageData ? 'Ask about this screenshot' : 'What would you like to know?';
                     agentModeDescription.textContent = 'Can use the capture and act in The Tab';
                     textOnlyMessage.textContent = isAgentModeEnabled
                         ? 'Agent Mode can use the capture and act only in The Tab'
                         : capturedImageData
                             ? 'Using the area you captured'
-                            : 'No capture selected — your question will be text only';
+                            : 'Capture an area for image-aware answers';
                 } else if (selectedMode === 'tab') {
-                    queryInput.placeholder = 'Ask about The Tab';
+                    queryInput.placeholder = 'Ask about this webpage';
                     agentModeDescription.textContent = 'Can read, navigate, and act in The Tab';
                     textOnlyMessage.textContent = isAgentModeEnabled
                         ? 'Agent Mode can read and act only in The Tab'
-                        : 'Reads the page and sees The Tab';
+                        : 'Beta · reads supported content from this tab';
                 } else {
-                    queryInput.placeholder = 'Ask across this Chrome window';
+                    queryInput.placeholder = 'Ask across your Chrome tabs';
                     agentModeDescription.textContent = 'Can search, switch tabs, and act in this window';
                     textOnlyMessage.textContent = isAgentModeEnabled
                         ? 'Agent Mode can search and act only in this Chrome window'
-                        : 'Reads supported pages across this Chrome window';
+                        : 'Beta · reads supported pages in this Chrome window';
                 }
 
+                renderCaptureFrame();
                 renderQuickActions();
 
                 if (!sendButton.disabled) {
                     const label = isAgentModeEnabled ? 'Start task' : 'Send';
                     const icon = isAgentModeEnabled ? 'spark' : 'send';
-                    sendButton.innerHTML = `${iconSvg(icon)}<span>${label}</span>`;
+                    sendButton.innerHTML = `${iconSvg(icon)}<span>${isAgentModeEnabled ? label : 'Ask Gemini'}</span>`;
                 }
             }
             refreshModeControls = renderSelectedMode;
@@ -1020,7 +1147,8 @@
             uiShadowRoot.appendChild(popup);
             popup.addEventListener('keydown', (event) => {
                 if (event.key !== 'Tab') return;
-                const focusable = Array.from(popup.querySelectorAll('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]'));
+                const focusable = Array.from(popup.querySelectorAll('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]'))
+                    .filter((element) => !element.hidden && element.getClientRects().length > 0);
                 if (!focusable.length) return;
                 const first = focusable[0];
                 const last = focusable[focusable.length - 1];
@@ -1059,6 +1187,7 @@
                 popup = null;
             }
             if (overlay) removeCaptureSelection();
+            capturePopupDisplay = null;
             if (uiHost) uiHost.remove();
             uiHost = null;
             uiShadowRoot = null;
@@ -1075,11 +1204,11 @@
                 sendButton.setAttribute('aria-busy', 'true');
             } else {
                 sendButton.removeAttribute('aria-busy');
-                refreshModeControls();
             }
             uiQueryAll('#gemini-primary-mode, #gemini-mode-rail button, #gemini-agent-mode-row button, #gemini-popup-presets button, .gemini-answer-actions button').forEach((button) => {
                 button.disabled = isLoading;
             });
+            if (!isLoading) refreshModeControls();
         }
 
         async function copyAnswerText(text) {
@@ -1515,7 +1644,8 @@
             if ((e.ctrlKey && e.key.toLowerCase() === 'e') || e.key === 'Escape') {
                 e.preventDefault();
                 if (uiQuery('#gemini-screenshot-overlay')) {
-                    removeCaptureSelection();
+                    restorePanelAfterCapture();
+                    return;
                 }
                 if (uiQuery('#gemini-popup')) {
                     closeAssistantPanel();
@@ -1526,18 +1656,17 @@
         document.addEventListener('keydown', keydownListener);
 
         function openSelectedMode() {
-            if (selectedMode === 'capture') {
-                startCaptureSelection();
-            } else {
-                capturedImageData = null;
-                openAssistantPanel();
-            }
+            openAssistantPanel();
         }
 
         (async () => {
             try {
                 await loadSettings();
-                if (MODES.some((mode) => mode.value === launchOptions.mode)) selectedMode = launchOptions.mode;
+                const launchState = globalThis.aiVisionCaptureUtils?.resolvePanelLaunchState
+                    ? globalThis.aiVisionCaptureUtils.resolvePanelLaunchState(launchOptions)
+                    : { mode: DEFAULT_MODE, agentMode: false };
+                selectedMode = launchState.mode;
+                isAgentModeEnabled = launchState.agentMode;
                 if (launchOptions.autoSubmit === true) isAgentModeEnabled = false;
                 openSelectedMode();
             } catch (error) {

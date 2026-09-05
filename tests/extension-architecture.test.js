@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 const SERVICE_WORKER_PATH = path.join(PROJECT_ROOT, 'src/background/service-worker.js');
 const PANEL_PATH = path.join(PROJECT_ROOT, 'src/content/assistant-panel.js');
-const { calculateSourceCrop } = require(path.join(PROJECT_ROOT, 'src/content/capture-utils.js'));
+const { calculateSourceCrop, resolvePanelLaunchState } = require(path.join(PROJECT_ROOT, 'src/content/capture-utils.js'));
 const SERVICE_WORKER_CODE = fs.readFileSync(SERVICE_WORKER_PATH, 'utf8');
 const PANEL_CODE = fs.readFileSync(PANEL_PATH, 'utf8');
 const PANEL_CSS = fs.readFileSync(path.join(PROJECT_ROOT, 'src/content/assistant-panel.css'), 'utf8');
@@ -259,7 +259,16 @@ test('the content panel never exposes the key to normal page DOM or performs Gem
   assert.match(PANEL_CODE, /Stop Agent Mode task/);
   assert.match(PANEL_CODE, /Planner rationale:/);
   assert.match(PANEL_CODE, /id = 'gemini-primary-mode'/);
-  assert.match(PANEL_CODE, /id = 'gemini-advanced-modes'/);
+  assert.match(PANEL_CODE, /id = 'gemini-beta-rail'/);
+  assert.match(PANEL_CODE, /id = 'gemini-capture-frame'/);
+  assert.match(PANEL_CODE, /Retake the screenshot/);
+  assert.match(PANEL_CODE, /isAgentModeEnabled = false/);
+  assert.match(PANEL_CODE, /Beta tools/);
+  assert.match(PANEL_CODE, /aria-label', 'Open instructions'/);
+  assert.match(PANEL_CODE, /aria-label', 'Open settings'/);
+  assert.match(PANEL_CODE, /setAttribute\('aria-selected',/);
+  assert.match(PANEL_CODE, /setAttribute\('role', 'switch'\)/);
+  assert.match(PANEL_CSS, /max-width:\s*420px/);
   assert.match(PANEL_CODE, /id = 'gemini-settings-store-link'/);
   assert.match(PANEL_CODE, /Only setup: paste a key and press Save key/);
   assert.match(PANEL_CODE, /className = 'gemini-answer-actions'/);
@@ -267,6 +276,13 @@ test('the content panel never exposes the key to normal page DOM or performs Gem
   assert.doesNotMatch(PANEL_CODE, /buildStyledPrompt/);
   assert.match(PANEL_CODE, /event\.target\.closest\?\.\('button, a, input, textarea, select, summary'\)/);
   assert.match(PANEL_CSS, /#gemini-popup[\s\S]*pointer-events:\s*auto/);
+});
+
+test('panel launch state defaults to Capture and resets Agent Mode', () => {
+  assert.deepEqual(resolvePanelLaunchState({}), { mode: 'capture', agentMode: false });
+  assert.deepEqual(resolvePanelLaunchState({ mode: 'tab', agentMode: true }), { mode: 'tab', agentMode: false });
+  assert.deepEqual(resolvePanelLaunchState({ mode: 'all-tabs' }), { mode: 'all-tabs', agentMode: false });
+  assert.deepEqual(resolvePanelLaunchState({ mode: 'unknown' }), { mode: 'capture', agentMode: false });
 });
 
 test('quick-launch context menus open the requested mode with bounded text', async () => {

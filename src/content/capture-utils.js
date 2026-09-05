@@ -23,6 +23,12 @@
         };
     }
 
-    global.aiVisionCaptureUtils = { calculateSourceCrop };
-    if (typeof module !== 'undefined' && module.exports) module.exports = { calculateSourceCrop };
+    function resolvePanelLaunchState(options = {}) {
+        const requestedMode = options && typeof options.mode === 'string' ? options.mode : '';
+        const mode = ['capture', 'tab', 'all-tabs'].includes(requestedMode) ? requestedMode : 'capture';
+        return { mode, agentMode: false };
+    }
+
+    global.aiVisionCaptureUtils = { calculateSourceCrop, resolvePanelLaunchState };
+    if (typeof module !== 'undefined' && module.exports) module.exports = { calculateSourceCrop, resolvePanelLaunchState };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

@@ -22,7 +22,7 @@
       geminiTemperature: 1,
       geminiMode: 'tab',
       geminiResponseStyle: 'balanced',
-      geminiAgentMode: false,
+      geminiAgentMode: true,
       hasApiKey: true,
       apiKeyMasked: '••••-key'
     };
@@ -49,7 +49,7 @@
           removeListener(listener) { runtimeListeners.delete(listener); }
         },
         async sendMessage(request) {
-          if (request.action === 'captureVisibleTab') return 'data:image/jpeg;base64,dGVzdA==';
+          if (request.action === 'captureVisibleTab') return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
           if (request.action === 'getSettings') return window.__aiVisionTestSettings;
           if (request.action === 'getAvailableModels') return { models: ['gemini-3.5-flash'] };
           if (request.action === 'saveSettings') {
