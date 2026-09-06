@@ -1,25 +1,25 @@
 :root {
-  --site-ink: #123b3a;
-  --site-muted: #66807a;
-  --site-line: #d9e8df;
-  --site-teal: #2f8f83;
-  --site-teal-dark: #1f7168;
-  --site-cream: #fff9f2;
-  --site-mint: #e7f3ee;
-  --site-apricot: #f6a36b;
+  --site-ink: #143b5b;
+  --site-muted: #5d7690;
+  --site-line: #c9e4f7;
+  --site-blue: #5aaee5;
+  --site-blue-dark: #2b78ae;
+  --site-baby: #f2f9ff;
+  --site-sky: #e5f3ff;
+  --site-accent: #8bcff5;
   font-family: "Avenir Next", Nunito, Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
 }
 
 body {
   color: var(--site-ink) !important;
-  background: radial-gradient(circle at 8% 0, #fbe2cc 0, transparent 26rem), var(--site-cream) !important;
+  background: radial-gradient(circle at 8% 0, #d7efff 0, transparent 26rem), var(--site-baby) !important;
 }
 
-a { color: var(--site-teal-dark) !important; }
+a { color: var(--site-blue-dark) !important; }
 
 header {
   border-color: var(--site-line) !important;
-  background: rgba(255, 249, 242, .9) !important;
+  background: rgba(242, 249, 255, .9) !important;
 }
 
 .brand { color: var(--site-ink) !important; }
@@ -31,24 +31,24 @@ main {
   box-shadow: 0 24px 70px rgba(18, 59, 58, .11) !important;
 }
 
-.eyebrow { color: var(--site-teal-dark) !important; }
+.eyebrow { color: var(--site-blue-dark) !important; }
 .lede, .muted, .updated, figcaption, footer { color: var(--site-muted) !important; }
 
 blockquote, .note {
-  border-color: #c8e4d7 !important;
-  background: var(--site-mint) !important;
+  border-color: #b9dcf3 !important;
+  background: var(--site-sky) !important;
   color: var(--site-ink) !important;
 }
 
 .button {
-  background: var(--site-teal) !important;
-  border-color: var(--site-teal-dark) !important;
+  background: var(--site-blue) !important;
+  border-color: var(--site-blue-dark) !important;
 }
 
-.button:hover { background: var(--site-teal-dark) !important; }
+.button:hover { background: var(--site-blue-dark) !important; }
 
 .cta { border-color: var(--site-line) !important; }
 
 details { border-color: var(--site-line) !important; }
 
-code { color: var(--site-teal-dark); background: #f4faf6; border-radius: 5px; padding: 1px 4px; }
+code { color: var(--site-blue-dark); background: #eff8ff; border-radius: 5px; padding: 1px 4px; }
