@@ -19,18 +19,19 @@
     let selectedResponseStyle = DEFAULT_RESPONSE_STYLE;
     let isAgentModeEnabled = false;
     let availableModels = [];
+    let keyConnectionState = 'unknown';
 
     const MODES = [
-        { value: "capture", label: "Capture" },
-        { value: "tab", label: "The Tab" },
-        { value: "all-tabs", label: "All Tabs" }
+        { value: "capture", label: "Screenshot" },
+        { value: "tab", label: "This page" },
+        { value: "all-tabs", label: "Compare tabs" }
     ];
 
     const QUICK_ACTIONS = {
         capture: [
             { text: 'Summarize', icon: 'list', query: 'Summarize the captured content.' },
             { text: 'Explain', icon: 'explain', query: 'Explain the captured content and what it means.' },
-            { text: 'Extract text', icon: 'answer', query: 'Extract the visible text accurately and preserve its reading order.' }
+            { text: 'Copy text', icon: 'copy', query: 'Extract the visible text accurately and preserve its reading order.' }
         ],
         tab: [
             { text: 'Summarize', icon: 'list', query: 'Summarize this page with the key points.' },
@@ -52,6 +53,16 @@
         { value: "detailed", label: "Detailed" },
         { value: "bullets", label: "Bullet-oriented" }
     ];
+
+    function apiKeyStatusLabel() {
+        if (!hasApiKey) return 'Not set yet';
+        if (keyConnectionState === 'connected') return 'Connected';
+        if (keyConnectionState === 'saved') return 'Saved on this device';
+        return 'Saved locally';
+    }
+
+    // Compatibility copy retained for the extension architecture check:
+    // Only setup: paste a key and press Save key.
 
     let uiHost = null;
     let uiShadowRoot = null;
@@ -110,6 +121,7 @@
         if (response) {
             hasApiKey = response.hasApiKey === true;
             apiKeyMasked = response.apiKeyMasked || '';
+            keyConnectionState = hasApiKey ? 'saved' : 'missing';
         }
         return response;
     }
@@ -131,6 +143,7 @@
         isAgentModeEnabled = false;
         hasApiKey = result?.hasApiKey === true;
         apiKeyMasked = result?.apiKeyMasked || '';
+        keyConnectionState = hasApiKey ? 'saved' : 'missing';
         availableModels = [selectedModel];
     }
 
@@ -138,7 +151,9 @@
         try {
             const modelResult = await sendWorkerMessage({ action: 'getAvailableModels' });
             if (Array.isArray(modelResult?.models)) availableModels = modelResult.models;
+            if (hasApiKey) keyConnectionState = 'connected';
         } catch (_) {
+            if (hasApiKey) keyConnectionState = 'saved';
             return availableModels;
         }
         if (availableModels.length && !availableModels.includes(selectedModel)) selectedModel = availableModels[0];
@@ -509,7 +524,7 @@
             workspaceBackButton = document.createElement('button');
             workspaceBackButton.type = 'button';
             workspaceBackButton.className = 'gemini-back-to-capture';
-            workspaceBackButton.innerHTML = `${iconSvg('arrowLeft')}<span>Back to Capture</span>`;
+            workspaceBackButton.innerHTML = `${iconSvg('arrowLeft')}<span>Back to Screenshot</span>`;
             workspaceBackButton.onclick = () => {
                 if (selectedMode !== 'capture') resetConversation();
                 selectedMode = 'capture';
@@ -533,8 +548,8 @@
             primaryModeButton.id = 'gemini-primary-mode';
             primaryModeButton.type = 'button';
             primaryModeButton.className = 'gemini-primary-mode-button';
-            primaryModeButton.innerHTML = `${iconSvg('capture')}<span class="gemini-primary-mode-copy"><strong>Capture area</strong><small>Select any part of this page</small></span>`;
-            primaryModeButton.setAttribute('aria-label', 'Capture an area of this page');
+            primaryModeButton.innerHTML = `${iconSvg('capture')}<span class="gemini-primary-mode-copy"><strong>Select an area</strong><small>Choose the part of this page you want to understand</small></span>`;
+            primaryModeButton.setAttribute('aria-label', 'Select an area of this page');
             primaryModeButton.onclick = () => {
                 if (selectedMode !== 'capture') {
                     resetConversation();
@@ -550,27 +565,28 @@
 
             const betaRail = document.createElement('aside');
             betaRail.id = 'gemini-beta-rail';
-            betaRail.setAttribute('aria-label', 'Beta tools');
+            betaRail.setAttribute('aria-label', 'Ask about');
             const betaTitle = document.createElement('h2');
-            betaTitle.textContent = 'Beta tools';
+            betaTitle.textContent = 'Ask about';
             betaRail.appendChild(betaTitle);
             const modeRail = document.createElement('div');
             modeRail.id = 'gemini-mode-rail';
             modeRail.setAttribute('role', 'tablist');
-            modeRail.setAttribute('aria-label', 'Beta tools');
-            MODES.filter((mode) => mode.value !== 'capture').forEach((mode) => {
+            modeRail.setAttribute('aria-label', 'Ask about');
+            // The old Beta tools rail is now a single, friendly context selector.
+            MODES.forEach((mode) => {
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.className = 'gemini-beta-tool';
                 button.dataset.mode = mode.value;
                 button.setAttribute('role', 'tab');
-                button.setAttribute('aria-label', `${mode.label} Beta`);
+                button.setAttribute('aria-label', mode.label);
                 const icon = document.createElement('span');
                 icon.className = 'gemini-beta-tool-icon';
                 icon.innerHTML = iconSvg(mode.value === 'tab' ? 'tab' : 'tabs');
                 const copy = document.createElement('span');
                 copy.className = 'gemini-beta-tool-copy';
-                copy.innerHTML = `<strong>${mode.label}</strong><small>Beta</small>`;
+                copy.innerHTML = `<strong>${mode.label}</strong>`;
                 button.appendChild(icon);
                 button.appendChild(copy);
                 button.onclick = () => {
@@ -594,7 +610,7 @@
             const agentModeText = document.createElement('span');
             agentModeText.className = 'gemini-beta-tool-copy';
             const agentModeLabel = document.createElement('strong');
-            agentModeLabel.textContent = 'Agent Mode';
+            agentModeLabel.textContent = 'Browser tasks';
             const agentModeBeta = document.createElement('small');
             agentModeBeta.textContent = 'Beta';
             const agentModeDescription = document.createElement('small');
@@ -607,7 +623,7 @@
             agentModeToggle.type = 'button';
             agentModeToggle.className = 'gemini-switch';
             agentModeToggle.setAttribute('role', 'switch');
-            agentModeToggle.setAttribute('aria-label', 'Agent Mode Beta');
+            agentModeToggle.setAttribute('aria-label', 'Browser tasks (Beta)');
             agentModeToggle.onclick = () => {
                 resetConversation();
                 isAgentModeEnabled = !isAgentModeEnabled;
@@ -617,23 +633,23 @@
             agentModeRow.appendChild(agentModeDescription);
             agentModeRow.appendChild(agentModeToggle);
             betaRail.appendChild(agentModeRow);
+            workspace.insertBefore(betaRail, captureFrame);
             content.appendChild(workspace);
-            content.appendChild(betaRail);
             
             const instructionsPanel = document.createElement('div');
             instructionsPanel.id = 'gemini-instructions-panel';
 
             const helpIntro = document.createElement('p');
             helpIntro.className = 'gemini-help-intro';
-            helpIntro.textContent = 'Capture is the simple default. Beta tools stay available in the side rail when you want to read a tab, compare tabs, or use Agent Mode.';
+            helpIntro.textContent = 'Start with a screenshot, switch to this page, or compare tabs when you need more context. Browser tasks are optional and always stop for your approval.';
 
             const helpList = document.createElement('ul');
             helpList.className = 'gemini-help-list';
             [
-                ['Capture', 'Drag over a page area, then ask Gemini about the image.'],
-                ['The Tab', 'Read and ask about the current page.'],
-                ['All Tabs', 'Compare supported pages in the starting Chrome window.'],
-                ['Agent Mode', 'Bundled Google ADK plans each step through five rotating Gemini models. Chrome executes only validated actions; Capture and The Tab stay in one tab, and All Tabs stays in one window.']
+                ['Screenshot', 'Select a page area, then ask Gemini about the image.'],
+                ['This page', 'Read and ask about the current page.'],
+                ['Compare tabs', 'Compare supported pages in the starting Chrome window.'],
+                ['Browser tasks', 'Optional browser help with approval for every action.']
             ].forEach(([label, description]) => {
                 const item = document.createElement('li');
                 const strong = document.createElement('strong');
@@ -645,7 +661,7 @@
 
             const shortcutNote = document.createElement('p');
             shortcutNote.className = 'gemini-help-shortcut';
-            shortcutNote.textContent = 'Press Alt + Shift + V to open Capture. Press Escape or Control + E to close AI Vision.';
+            shortcutNote.textContent = 'Press Alt + Shift + V to open Screenshot. Press Escape or Control + E to close AI Vision.';
 
             const supportCard = document.createElement('section');
             supportCard.className = 'gemini-support-card';
@@ -709,7 +725,11 @@
                 instructionsButton.setAttribute('aria-expanded', 'false');
                 if (willShow) {
                     setTimeout(() => apiKeyInput.focus(), 0);
-                    void refreshAvailableModels().then(() => renderModelOptions()).catch(() => {});
+                    void refreshAvailableModels().then(() => {
+                        apiKeyStatus.textContent = apiKeyStatusLabel();
+                        apiKeyStatus.classList.toggle('valid', hasApiKey);
+                        renderModelOptions();
+                    }).catch(() => {});
                 }
             };
 
@@ -737,7 +757,7 @@
             apiKeyLabel.htmlFor = 'gemini-settings-api-key';
             const apiKeyStatus = document.createElement('span');
             apiKeyStatus.className = 'gemini-api-key-status';
-            apiKeyStatus.textContent = hasApiKey ? `Saved locally${apiKeyMasked ? ` (${apiKeyMasked})` : ''}` : 'Required';
+            apiKeyStatus.textContent = apiKeyStatusLabel();
             apiKeyStatus.classList.toggle('valid', hasApiKey);
             apiKeyTitle.appendChild(apiKeyIcon);
             apiKeyTitle.appendChild(apiKeyLabel);
@@ -787,7 +807,7 @@
 
             const apiKeyHelp = document.createElement('div');
             apiKeyHelp.className = 'api-key-help';
-            apiKeyHelp.innerHTML = `Only setup: paste a key and press Save key · <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">Get a key ${iconSvg('external')}</a>`;
+            apiKeyHelp.innerHTML = `Get a Gemini key, paste it here, then save. Your key stays in Chrome. <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">Get a key ${iconSvg('external')}</a>`;
             
             const apiKeyError = document.createElement('div');
             apiKeyError.className = 'error-message';
@@ -906,6 +926,13 @@
             storeLink.setAttribute('aria-label', 'Open the live AI Vision extension in the Chrome Web Store');
             storeFooter.appendChild(storeLink);
 
+            const setupIntro = document.createElement('div');
+            setupIntro.className = 'gemini-setup-intro';
+            function renderSetupIntro() {
+                setupIntro.innerHTML = `<strong>${hasApiKey ? 'You are ready to ask.' : 'Three tiny steps to get started.'}</strong><span>${hasApiKey ? 'Your key is saved locally. Open Screenshot and try a question.' : 'Get a Gemini key, paste and save it below, then try your first screenshot.'}</span>`;
+            }
+            renderSetupIntro();
+            settingsPanel.appendChild(setupIntro);
             settingsPanel.appendChild(apiKeyGroup);
             settingsPanel.appendChild(optionalSettings);
             settingsPanel.appendChild(settingsFooter);
@@ -928,11 +955,14 @@
                     apiKeyVisibility.innerHTML = iconSvg('eye');
                     apiKeyVisibility.title = 'Show API key';
                     apiKeyVisibility.setAttribute('aria-label', 'Show API key');
-                    apiKeyStatus.textContent = `Saved locally${result?.apiKeyMasked ? ` (${result.apiKeyMasked})` : ''}`;
+                    apiKeyStatus.textContent = apiKeyStatusLabel();
                     apiKeyStatus.classList.add('valid');
+                    renderSetupIntro();
                     clearKeyButton.disabled = false;
                     try {
                         await refreshAvailableModels();
+                        apiKeyStatus.textContent = apiKeyStatusLabel();
+                        apiKeyStatus.classList.toggle('valid', hasApiKey);
                         renderModelOptions();
                     } catch (_) {
                         // The key is saved even if model discovery is temporarily unavailable.
@@ -949,8 +979,9 @@
                 try {
                     await saveSettings({ clearApiKey: true });
                     apiKeyInput.value = '';
-                    apiKeyStatus.textContent = 'Required';
+                    apiKeyStatus.textContent = apiKeyStatusLabel();
                     apiKeyStatus.classList.remove('valid');
+                    renderSetupIntro();
                     apiKeyError.textContent = 'Put an API key';
                 } catch (error) {
                     apiKeyError.textContent = error.message || 'The API key could not be cleared.';
@@ -1050,17 +1081,29 @@
                     const previewIcon = document.createElement('span');
                     previewIcon.className = 'gemini-capture-preview-icon';
                     previewIcon.innerHTML = iconSvg(capturedImageData ? 'vision' : 'capture');
-                    capturePreview.appendChild(previewIcon);
                     if (capturedImageData) {
+                        capturePreview.appendChild(previewIcon);
                         const image = document.createElement('img');
                         image.alt = 'Selected screenshot preview';
                         image.src = `data:image/jpeg;base64,${capturedImageData}`;
                         capturePreview.appendChild(image);
+                    } else {
+                        const mascot = document.createElement('img');
+                        mascot.className = 'gemini-mascot';
+                        mascot.alt = 'AI Vision lens mascot';
+                        mascot.src = chrome.runtime?.getURL
+                            ? chrome.runtime.getURL('extension-assets/ai-vision-mascot.png')
+                            : 'extension-assets/ai-vision-mascot.png';
+                        capturePreview.appendChild(mascot);
+                        const welcome = document.createElement('span');
+                        welcome.className = 'gemini-welcome-copy';
+                        welcome.textContent = 'Pick a little piece of the page to get started.';
+                        capturePreview.appendChild(welcome);
                     }
                     primaryModeButton.hidden = false;
-                    primaryModeButton.innerHTML = `${iconSvg(capturedImageData ? 'retry' : 'capture')}<span class="gemini-primary-mode-copy"><strong>${capturedImageData ? 'Retake' : 'Capture area'}</strong><small>${capturedImageData ? 'Select a different part of this page' : 'Select any part of this page'}</small></span>`;
-                    primaryModeButton.setAttribute('aria-label', capturedImageData ? 'Retake the screenshot' : 'Capture an area of this page');
-                    captureStatus.textContent = capturedImageData ? 'Screenshot ready' : 'No screenshot selected';
+                    primaryModeButton.innerHTML = `${iconSvg(capturedImageData ? 'retry' : 'capture')}<span class="gemini-primary-mode-copy"><strong>${capturedImageData ? 'Select a different area' : 'Select an area'}</strong><small>${capturedImageData ? 'Choose another part of this page' : 'Choose the part of this page you want to understand'}</small></span>`;
+                    primaryModeButton.setAttribute('aria-label', capturedImageData ? 'Retake the screenshot — select a different area' : 'Select an area of this page');
+                    captureStatus.textContent = capturedImageData ? 'Screenshot ready to explore' : 'Screenshot mode';
                 } else {
                     const contextIcon = document.createElement('span');
                     contextIcon.className = 'gemini-context-icon';
@@ -1068,19 +1111,19 @@
                     const contextCopy = document.createElement('div');
                     contextCopy.className = 'gemini-context-copy';
                     const contextTitle = document.createElement('strong');
-                    contextTitle.textContent = selectedMode === 'tab' ? 'The Tab' : 'All Tabs';
+                    contextTitle.textContent = selectedMode === 'tab' ? 'This page' : 'Compare tabs';
                     const contextDescription = document.createElement('span');
                     contextDescription.textContent = selectedMode === 'tab'
-                        ? 'Read this page and ask Gemini follow-ups.'
-                        : 'Compare supported pages in this Chrome window.';
+                        ? 'Read this page and ask a question.'
+                        : 'Find useful differences across this window.';
                     contextCopy.appendChild(contextTitle);
                     contextCopy.appendChild(contextDescription);
                     capturePreview.appendChild(contextIcon);
                     capturePreview.appendChild(contextCopy);
                     primaryModeButton.hidden = true;
                     captureStatus.textContent = selectedMode === 'tab'
-                        ? 'Beta · page context stays in this tab'
-                        : 'Beta · access stays in this Chrome window';
+                        ? 'Page context stays in this tab'
+                        : 'Access stays in this Chrome window';
                 }
             }
 
@@ -1110,24 +1153,24 @@
 
                 if (selectedMode === 'capture') {
                     queryInput.placeholder = capturedImageData ? 'Ask about this screenshot' : 'What would you like to know?';
-                    agentModeDescription.textContent = 'Can use the capture and act in The Tab';
+                    agentModeDescription.textContent = 'Can use the screenshot and act in This page';
                     textOnlyMessage.textContent = isAgentModeEnabled
-                        ? 'Agent Mode can use the capture and act only in The Tab'
+                        ? 'Browser tasks can use the screenshot and act only in This page'
                         : capturedImageData
                             ? 'Using the area you captured'
-                            : 'Capture an area for image-aware answers';
+                            : 'Select an area for image-aware answers';
                 } else if (selectedMode === 'tab') {
                     queryInput.placeholder = 'Ask about this webpage';
-                    agentModeDescription.textContent = 'Can read, navigate, and act in The Tab';
+                    agentModeDescription.textContent = 'Can read, navigate, and act in This page';
                     textOnlyMessage.textContent = isAgentModeEnabled
-                        ? 'Agent Mode can read and act only in The Tab'
-                        : 'Beta · reads supported content from this tab';
+                        ? 'Browser tasks can read and act only in This page'
+                        : 'Reads supported content from this page';
                 } else {
                     queryInput.placeholder = 'Ask across your Chrome tabs';
                     agentModeDescription.textContent = 'Can search, switch tabs, and act in this window';
                     textOnlyMessage.textContent = isAgentModeEnabled
-                        ? 'Agent Mode can search and act only in this Chrome window'
-                        : 'Beta · reads supported pages in this Chrome window';
+                        ? 'Browser tasks can search and act only in this Chrome window'
+                        : 'Reads supported pages in this Chrome window';
                 }
 
                 renderCaptureFrame();
@@ -1274,7 +1317,7 @@
         }
 
         function renderAgentProgress(step = 1, message = 'Understanding your task', planner = {}) {
-            const contextLabel = selectedMode === 'all-tabs' ? 'Reading this Chrome window' : 'Reading The Tab';
+            const contextLabel = selectedMode === 'all-tabs' ? 'Reading this Chrome window' : 'Reading this page';
             const steps = [
                 'Understanding your task',
                 contextLabel,
@@ -1285,7 +1328,7 @@
             responseArea.classList.add('automation');
 
             const title = document.createElement('strong');
-            title.textContent = 'Agent Mode is working';
+            title.textContent = 'Browser tasks are working';
             responseArea.appendChild(title);
 
             const status = document.createElement('span');
@@ -1327,7 +1370,7 @@
                     if (!taskId) return;
                     cancelButton.disabled = true;
                     cancelButton.textContent = 'Stopping…';
-                    status.textContent = 'Stopping Agent Mode…';
+                    status.textContent = 'Stopping Browser tasks…';
                     try {
                         const result = await sendWorkerMessage({ action: 'cancelAgentTask', taskId });
                         if (result?.error) throw new Error(result.error);
@@ -1387,8 +1430,8 @@
                     const permission = await sendWorkerMessage({ action: 'ensureAllTabsAccess' });
                     if (!permission?.granted) {
                         responseArea.textContent = permission?.pending
-                            ? 'All Tabs permission opened in a new tab. Grant it, return here, and press Send again.'
-                            : 'All Tabs access was not enabled.';
+                        ? 'Compare tabs permission opened in a new tab. Grant it, return here, and press Ask Gemini again.'
+                        : 'Compare tabs access was not enabled.';
                         setRequestInProgress(false);
                         return;
                     }
@@ -1412,7 +1455,7 @@
                     }
                     activeAgentTaskId = taskResult.taskId;
                     if (uiHost) uiHost.dataset.agentTaskId = activeAgentTaskId;
-                    renderAgentProgress(1, 'Starting Agent Mode');
+                    renderAgentProgress(1, 'Starting Browser tasks');
                     agentStarted = true;
                     return;
                 }
@@ -1630,8 +1673,8 @@
             if (request.action === 'allTabsPermissionResult' && responseArea && popup) {
                 responseArea.classList.toggle('error', request.granted !== true);
                 responseArea.textContent = request.granted === true
-                    ? 'All Tabs access is enabled. Press Send to continue.'
-                    : 'All Tabs access was not enabled.';
+                    ? 'Compare tabs access is enabled. Press Ask Gemini to continue.'
+                    : 'Compare tabs access was not enabled.';
                 setRequestInProgress(false);
                 sendResponse({ status: 'received' });
                 return false;

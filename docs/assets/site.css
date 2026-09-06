@@ -1,0 +1,54 @@
+:root {
+  --site-ink: #123b3a;
+  --site-muted: #66807a;
+  --site-line: #d9e8df;
+  --site-teal: #2f8f83;
+  --site-teal-dark: #1f7168;
+  --site-cream: #fff9f2;
+  --site-mint: #e7f3ee;
+  --site-apricot: #f6a36b;
+  font-family: "Avenir Next", Nunito, Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+body {
+  color: var(--site-ink) !important;
+  background: radial-gradient(circle at 8% 0, #fbe2cc 0, transparent 26rem), var(--site-cream) !important;
+}
+
+a { color: var(--site-teal-dark) !important; }
+
+header {
+  border-color: var(--site-line) !important;
+  background: rgba(255, 249, 242, .9) !important;
+}
+
+.brand { color: var(--site-ink) !important; }
+.brand img { border-radius: 13px !important; }
+
+main {
+  border-color: var(--site-line) !important;
+  background: rgba(255, 255, 255, .94) !important;
+  box-shadow: 0 24px 70px rgba(18, 59, 58, .11) !important;
+}
+
+.eyebrow { color: var(--site-teal-dark) !important; }
+.lede, .muted, .updated, figcaption, footer { color: var(--site-muted) !important; }
+
+blockquote, .note {
+  border-color: #c8e4d7 !important;
+  background: var(--site-mint) !important;
+  color: var(--site-ink) !important;
+}
+
+.button {
+  background: var(--site-teal) !important;
+  border-color: var(--site-teal-dark) !important;
+}
+
+.button:hover { background: var(--site-teal-dark) !important; }
+
+.cta { border-color: var(--site-line) !important; }
+
+details { border-color: var(--site-line) !important; }
+
+code { color: var(--site-teal-dark); background: #f4faf6; border-radius: 5px; padding: 1px 4px; }

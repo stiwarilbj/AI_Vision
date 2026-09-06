@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AI Vision assistant panel harness</title>
-  <link rel="stylesheet" href="../../src/content/assistant-panel.css">
+  <link rel="stylesheet" href="../../src/content/assistant-panel.css?v=2.6-refresh">
   <style>
     body { min-height: 100vh; margin: 0; padding: 48px; box-sizing: border-box; font: 16px/1.5 system-ui, sans-serif; background: #f4f9ff; color: #16324f; }
     main { max-width: 680px; }
@@ -43,7 +43,7 @@
         }
       },
       runtime: {
-        getURL(file) { return `../../${file}`; },
+        getURL(file) { return `../../${file}?v=2.6-refresh`; },
         onMessage: {
           addListener(listener) { runtimeListeners.add(listener); },
           removeListener(listener) { runtimeListeners.delete(listener); }
@@ -95,7 +95,7 @@
       }
     };
   </script>
-  <script src="../../src/content/capture-utils.js"></script>
-  <script src="../../src/content/assistant-panel.js"></script>
+  <script src="../../src/content/capture-utils.js?v=2.6-refresh"></script>
+  <script src="../../src/content/assistant-panel.js?v=2.6-refresh"></script>
 </body>
 </html>

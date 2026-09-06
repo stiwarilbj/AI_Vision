@@ -5,8 +5,8 @@
   "start_url": "/AI_Vision/",
   "scope": "/AI_Vision/",
   "display": "standalone",
-  "background_color": "#f7fcff",
-  "theme_color": "#eaf7ff",
+  "background_color": "#fff9f2",
+  "theme_color": "#fff9f2",
   "icons": [
     {
       "src": "assets/store-icon.png",
