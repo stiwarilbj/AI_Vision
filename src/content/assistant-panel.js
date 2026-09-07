@@ -61,9 +61,6 @@
         return 'Saved locally';
     }
 
-    // Compatibility copy retained for the extension architecture check:
-    // Only setup: paste a key and press Save key.
-
     let uiHost = null;
     let uiShadowRoot = null;
 
@@ -181,6 +178,7 @@
     function iconSvg(name) {
         const icons = {
             vision: '<circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle>',
+            lens: '<rect x="3" y="3" width="18" height="18" rx="7"></rect><path d="M8 9v2M16 9v2M8 14q4 5 8 0"></path>',
             help: '<circle cx="12" cy="12" r="9"></circle><path d="M9.6 9a2.5 2.5 0 1 1 3.2 2.4c-.8.3-1.3.9-1.3 1.6v.3"></path><path d="M12 17h.01"></path>',
             settings: '<path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"></path><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"></path>',
             close: '<path d="m7 7 10 10M17 7 7 17"></path>',
@@ -261,6 +259,10 @@
             lastRequestHistory = [];
             lastSubmittedQuery = '';
             lastResponseText = '';
+            if (responseArea) {
+                responseArea.replaceChildren();
+                responseArea.classList.remove('error', 'automation');
+            }
         }
 
         // Capture selection
@@ -422,6 +424,8 @@
                 popup.style.display = capturePopupDisplay || '';
                 capturePopupDisplay = null;
                 refreshModeControls();
+                const composer = uiQuery('#gemini-popup-composer');
+                (composer?.hidden ? uiQuery('#gemini-primary-mode') : queryInput)?.focus();
                 if (message) showUserError(message);
             } else if (hadPanel) {
                 openAssistantPanel();
@@ -472,7 +476,7 @@
             const instructionsButton = document.createElement('button');
             instructionsButton.id = 'gemini-instructions-button';
             instructionsButton.className = 'gemini-header-action';
-            instructionsButton.innerHTML = `${iconSvg('help')}<span>Help</span>`;
+            instructionsButton.innerHTML = iconSvg('help');
             instructionsButton.title = 'Instructions';
             instructionsButton.setAttribute('aria-label', 'Open instructions');
             instructionsButton.setAttribute('aria-expanded', 'false');
@@ -480,7 +484,7 @@
             const settingsButton = document.createElement('button');
             settingsButton.id = 'gemini-settings-button';
             settingsButton.className = 'gemini-header-action';
-            settingsButton.innerHTML = `${iconSvg('settings')}<span>Settings</span>`;
+            settingsButton.innerHTML = iconSvg('settings');
             settingsButton.title = 'Settings';
             settingsButton.setAttribute('aria-label', 'Open settings');
             settingsButton.setAttribute('aria-expanded', 'false');
@@ -508,9 +512,7 @@
             let capturePreview = null;
             let workspaceTitle = null;
             let workspaceDescription = null;
-            let workspaceBackButton = null;
-            let captureStatus = null;
-            const modeButtons = [];
+            let textQuestionEnabled = false;
 
             const workspace = document.createElement('main');
             workspace.id = 'gemini-workspace';
@@ -521,17 +523,6 @@
             workspaceTitle.id = 'gemini-workspace-title';
             workspaceDescription = document.createElement('p');
             workspaceDescription.id = 'gemini-workspace-description';
-            workspaceBackButton = document.createElement('button');
-            workspaceBackButton.type = 'button';
-            workspaceBackButton.className = 'gemini-back-to-capture';
-            workspaceBackButton.innerHTML = `${iconSvg('arrowLeft')}<span>Back to Screenshot</span>`;
-            workspaceBackButton.onclick = () => {
-                if (selectedMode !== 'capture') resetConversation();
-                selectedMode = 'capture';
-                closeUtilityPanels();
-                renderSelectedMode();
-            };
-            workspaceHeading.appendChild(workspaceBackButton);
             workspaceHeading.appendChild(workspaceTitle);
             workspaceHeading.appendChild(workspaceDescription);
             workspace.appendChild(workspaceHeading);
@@ -541,14 +532,12 @@
             captureFrame.setAttribute('aria-label', 'Screenshot capture');
             capturePreview = document.createElement('div');
             capturePreview.className = 'gemini-capture-preview';
-            captureStatus = document.createElement('span');
-            captureStatus.className = 'gemini-capture-status';
 
             const primaryModeButton = document.createElement('button');
             primaryModeButton.id = 'gemini-primary-mode';
             primaryModeButton.type = 'button';
             primaryModeButton.className = 'gemini-primary-mode-button';
-            primaryModeButton.innerHTML = `${iconSvg('capture')}<span class="gemini-primary-mode-copy"><strong>Select an area</strong><small>Choose the part of this page you want to understand</small></span>`;
+            primaryModeButton.innerHTML = `${iconSvg('capture')}<span>Select an area</span>`;
             primaryModeButton.setAttribute('aria-label', 'Select an area of this page');
             primaryModeButton.onclick = () => {
                 if (selectedMode !== 'capture') {
@@ -560,45 +549,37 @@
             };
             captureFrame.appendChild(capturePreview);
             captureFrame.appendChild(primaryModeButton);
-            captureFrame.appendChild(captureStatus);
+            const textQuestionButton = document.createElement('button');
+            textQuestionButton.id = 'gemini-text-question';
+            textQuestionButton.type = 'button';
+            textQuestionButton.textContent = 'Or just ask a question';
+            textQuestionButton.onclick = () => {
+                textQuestionEnabled = true;
+                renderSelectedMode();
+                queryInput.focus();
+            };
+            captureFrame.appendChild(textQuestionButton);
             workspace.appendChild(captureFrame);
 
-            const betaRail = document.createElement('aside');
-            betaRail.id = 'gemini-beta-rail';
-            betaRail.setAttribute('aria-label', 'Ask about');
-            const betaTitle = document.createElement('h2');
-            betaTitle.textContent = 'Ask about';
-            betaRail.appendChild(betaTitle);
-            const modeRail = document.createElement('div');
+            const modeRail = document.createElement('label');
             modeRail.id = 'gemini-mode-rail';
-            modeRail.setAttribute('role', 'tablist');
-            modeRail.setAttribute('aria-label', 'Ask about');
-            // The old Beta tools rail is now a single, friendly context selector.
+            modeRail.textContent = 'Ask about';
+            const modeSelect = document.createElement('select');
+            modeSelect.id = 'gemini-mode-select';
+            modeSelect.setAttribute('aria-label', 'Ask about');
             MODES.forEach((mode) => {
-                const button = document.createElement('button');
-                button.type = 'button';
-                button.className = 'gemini-beta-tool';
-                button.dataset.mode = mode.value;
-                button.setAttribute('role', 'tab');
-                button.setAttribute('aria-label', mode.label);
-                const icon = document.createElement('span');
-                icon.className = 'gemini-beta-tool-icon';
-                icon.innerHTML = iconSvg(mode.value === 'tab' ? 'tab' : 'tabs');
-                const copy = document.createElement('span');
-                copy.className = 'gemini-beta-tool-copy';
-                copy.innerHTML = `<strong>${mode.label}</strong>`;
-                button.appendChild(icon);
-                button.appendChild(copy);
-                button.onclick = () => {
-                    if (selectedMode !== mode.value) resetConversation();
-                    selectedMode = mode.value;
-                    closeUtilityPanels();
-                    renderSelectedMode();
-                };
-                modeButtons.push(button);
-                modeRail.appendChild(button);
+                const option = document.createElement('option');
+                option.value = mode.value;
+                option.textContent = mode.label;
+                modeSelect.appendChild(option);
             });
-            betaRail.appendChild(modeRail);
+            modeSelect.onchange = () => {
+                resetConversation();
+                selectedMode = modeSelect.value;
+                renderSelectedMode();
+            };
+            modeRail.appendChild(modeSelect);
+            workspace.prepend(modeRail);
 
             const agentModeRow = document.createElement('div');
             agentModeRow.id = 'gemini-agent-mode-row';
@@ -632,8 +613,6 @@
             agentModeRow.appendChild(agentModeCopy);
             agentModeRow.appendChild(agentModeDescription);
             agentModeRow.appendChild(agentModeToggle);
-            betaRail.appendChild(agentModeRow);
-            workspace.insertBefore(betaRail, captureFrame);
             content.appendChild(workspace);
             
             const instructionsPanel = document.createElement('div');
@@ -663,12 +642,6 @@
             shortcutNote.className = 'gemini-help-shortcut';
             shortcutNote.textContent = 'Press Alt + Shift + V to open Screenshot. Press Escape or Control + E to close AI Vision.';
 
-            const supportCard = document.createElement('section');
-            supportCard.className = 'gemini-support-card';
-            const supportTitle = document.createElement('strong');
-            supportTitle.textContent = 'Help more people find AI Vision';
-            const supportText = document.createElement('p');
-            supportText.textContent = 'If AI Vision saved you time, a quick rating helps. The source is also available publicly on GitHub.';
             const supportActions = document.createElement('div');
             supportActions.className = 'gemini-support-actions';
 
@@ -688,13 +661,10 @@
 
             supportActions.appendChild(ratingLink);
             supportActions.appendChild(githubLink);
-            supportCard.appendChild(supportTitle);
-            supportCard.appendChild(supportText);
-            supportCard.appendChild(supportActions);
             instructionsPanel.appendChild(helpIntro);
-            instructionsPanel.appendChild(supportCard);
             instructionsPanel.appendChild(helpList);
             instructionsPanel.appendChild(shortcutNote);
+            instructionsPanel.appendChild(supportActions);
             content.appendChild(instructionsPanel);
             
             instructionsButton.onclick = () => {
@@ -811,9 +781,6 @@
             
             const apiKeyError = document.createElement('div');
             apiKeyError.className = 'error-message';
-            if (!hasApiKey) {
-                apiKeyError.textContent = 'Put an API key';
-            }
             
             apiKeyGroup.appendChild(apiKeyTitleRow);
             apiKeyGroup.appendChild(apiKeyField);
@@ -906,7 +873,7 @@
             const optionalSettings = document.createElement('details');
             optionalSettings.id = 'gemini-optional-settings';
             const optionalSettingsSummary = document.createElement('summary');
-            optionalSettingsSummary.textContent = 'Optional preferences';
+            optionalSettingsSummary.textContent = 'Model & response preferences';
             optionalSettings.appendChild(optionalSettingsSummary);
             optionalSettings.appendChild(compactSettingsGrid);
             optionalSettings.appendChild(tempGroup);
@@ -915,28 +882,27 @@
             settingsFooter.className = 'gemini-settings-footer';
             settingsFooter.innerHTML = `${iconSvg('spark')}<span>Preferences save when changed. API keys save only when you press Save key.</span>`;
 
-            const storeFooter = document.createElement('div');
-            storeFooter.id = 'gemini-settings-store-link';
-            storeFooter.className = 'gemini-settings-store-link';
-            const storeLink = document.createElement('a');
-            storeLink.href = STORE_URL;
-            storeLink.target = '_blank';
-            storeLink.rel = 'noreferrer';
-            storeLink.textContent = 'Get the live AI Vision extension from Chrome Web Store ↗';
-            storeLink.setAttribute('aria-label', 'Open the live AI Vision extension in the Chrome Web Store');
-            storeFooter.appendChild(storeLink);
-
             const setupIntro = document.createElement('div');
             setupIntro.className = 'gemini-setup-intro';
             function renderSetupIntro() {
-                setupIntro.innerHTML = `<strong>${hasApiKey ? 'You are ready to ask.' : 'Three tiny steps to get started.'}</strong><span>${hasApiKey ? 'Your key is saved locally. Open Screenshot and try a question.' : 'Get a Gemini key, paste and save it below, then try your first screenshot.'}</span>`;
+                setupIntro.innerHTML = `<strong>${hasApiKey ? 'Make yourself at home.' : 'A key, then you’re in.'}</strong><span>${hasApiKey ? 'Your key stays saved in this browser. Connection status is shown below.' : 'Get a Gemini key, paste it below, and save. Then try your first screenshot.'}</span>`;
             }
             renderSetupIntro();
             settingsPanel.appendChild(setupIntro);
             settingsPanel.appendChild(apiKeyGroup);
             settingsPanel.appendChild(optionalSettings);
+            settingsPanel.appendChild(agentModeRow);
             settingsPanel.appendChild(settingsFooter);
-            settingsPanel.appendChild(storeFooter);
+            const settingsDone = document.createElement('button');
+            settingsDone.type = 'button';
+            settingsDone.className = 'gemini-done-button';
+            settingsDone.textContent = 'Back to asking';
+            settingsDone.onclick = () => {
+                closeUtilityPanels();
+                renderSelectedMode();
+                (composer.hidden ? primaryModeButton : queryInput).focus();
+            };
+            settingsPanel.appendChild(settingsDone);
             content.appendChild(settingsPanel);
             
             saveKeyButton.onclick = async () => {
@@ -982,7 +948,7 @@
                     apiKeyStatus.textContent = apiKeyStatusLabel();
                     apiKeyStatus.classList.remove('valid');
                     renderSetupIntro();
-                    apiKeyError.textContent = 'Put an API key';
+                    apiKeyError.textContent = 'Key removed. Save a Gemini key to ask questions.';
                 } catch (error) {
                     apiKeyError.textContent = error.message || 'The API key could not be cleared.';
                     clearKeyButton.disabled = false;
@@ -1031,6 +997,7 @@
             queryInput.setAttribute('autocorrect', 'off');
             queryInput.setAttribute('autocapitalize', 'off');
             queryInput.setAttribute('spellcheck', 'false');
+            queryInput.setAttribute('aria-label', 'Your question');
             queryInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -1070,82 +1037,50 @@
             responseArea.setAttribute('role', 'status');
             responseArea.setAttribute('aria-live', 'polite');
             responseArea.setAttribute('aria-atomic', 'true');
-            responseArea.textContent = 'Your answer will appear here';
             workspace.appendChild(responseArea);
 
             function renderCaptureFrame() {
                 const isCaptureActive = selectedMode === 'capture';
-                captureFrame.classList.toggle('context', !isCaptureActive);
+                captureFrame.hidden = !isCaptureActive;
+                captureFrame.classList.toggle('has-capture', Boolean(capturedImageData));
+                captureFrame.classList.toggle('text-only', textQuestionEnabled || isAgentModeEnabled);
                 capturePreview.replaceChildren();
                 if (isCaptureActive) {
-                    const previewIcon = document.createElement('span');
-                    previewIcon.className = 'gemini-capture-preview-icon';
-                    previewIcon.innerHTML = iconSvg(capturedImageData ? 'vision' : 'capture');
                     if (capturedImageData) {
-                        capturePreview.appendChild(previewIcon);
                         const image = document.createElement('img');
                         image.alt = 'Selected screenshot preview';
                         image.src = `data:image/jpeg;base64,${capturedImageData}`;
                         capturePreview.appendChild(image);
                     } else {
-                        const mascot = document.createElement('img');
-                        mascot.className = 'gemini-mascot';
-                        mascot.alt = 'AI Vision lens mascot';
-                        mascot.src = chrome.runtime?.getURL
-                            ? chrome.runtime.getURL('extension-assets/ai-vision-mascot.png')
-                            : 'extension-assets/ai-vision-mascot.png';
+                        const mascot = document.createElement('span');
+                        mascot.className = 'gemini-lens';
+                        mascot.innerHTML = iconSvg('lens');
                         capturePreview.appendChild(mascot);
-                        const welcome = document.createElement('span');
-                        welcome.className = 'gemini-welcome-copy';
-                        welcome.textContent = 'Pick a little piece of the page to get started.';
-                        capturePreview.appendChild(welcome);
                     }
                     primaryModeButton.hidden = false;
-                    primaryModeButton.innerHTML = `${iconSvg(capturedImageData ? 'retry' : 'capture')}<span class="gemini-primary-mode-copy"><strong>${capturedImageData ? 'Select a different area' : 'Select an area'}</strong><small>${capturedImageData ? 'Choose another part of this page' : 'Choose the part of this page you want to understand'}</small></span>`;
+                    primaryModeButton.innerHTML = `${iconSvg(capturedImageData ? 'retry' : 'capture')}<span>${capturedImageData ? 'Retake' : 'Select an area'}</span>`;
                     primaryModeButton.setAttribute('aria-label', capturedImageData ? 'Retake the screenshot — select a different area' : 'Select an area of this page');
-                    captureStatus.textContent = capturedImageData ? 'Screenshot ready to explore' : 'Screenshot mode';
-                } else {
-                    const contextIcon = document.createElement('span');
-                    contextIcon.className = 'gemini-context-icon';
-                    contextIcon.innerHTML = iconSvg(selectedMode === 'tab' ? 'tab' : 'tabs');
-                    const contextCopy = document.createElement('div');
-                    contextCopy.className = 'gemini-context-copy';
-                    const contextTitle = document.createElement('strong');
-                    contextTitle.textContent = selectedMode === 'tab' ? 'This page' : 'Compare tabs';
-                    const contextDescription = document.createElement('span');
-                    contextDescription.textContent = selectedMode === 'tab'
-                        ? 'Read this page and ask a question.'
-                        : 'Find useful differences across this window.';
-                    contextCopy.appendChild(contextTitle);
-                    contextCopy.appendChild(contextDescription);
-                    capturePreview.appendChild(contextIcon);
-                    capturePreview.appendChild(contextCopy);
-                    primaryModeButton.hidden = true;
-                    captureStatus.textContent = selectedMode === 'tab'
-                        ? 'Page context stays in this tab'
-                        : 'Access stays in this Chrome window';
                 }
+                textQuestionButton.hidden = Boolean(capturedImageData) || textQuestionEnabled || isAgentModeEnabled;
             }
 
             function renderSelectedMode() {
                 const isCaptureActive = selectedMode === 'capture';
+                const readyToAsk = !isCaptureActive || Boolean(capturedImageData) || textQuestionEnabled || isAgentModeEnabled;
+                workspace.classList.toggle('ready', readyToAsk);
                 workspaceTitle.textContent = isCaptureActive
-                    ? 'Ask about a screenshot'
+                    ? capturedImageData ? 'Let’s take a closer look.' : readyToAsk ? 'What’s on your mind?' : 'What caught your eye?'
                     : selectedMode === 'tab'
-                        ? 'Ask about this webpage'
-                        : 'Compare your open tabs';
+                        ? 'Skip to the good part.'
+                        : 'Connect the tabs.';
                 workspaceDescription.textContent = isCaptureActive
-                    ? 'Select any area of this page, then ask Gemini.'
+                    ? capturedImageData ? 'Ask a question, or try a shortcut below.' : readyToAsk ? 'Ask Gemini a question. Add a screenshot if it helps.' : 'Select an area. Ask Gemini about it.'
                     : selectedMode === 'tab'
-                        ? 'Read the current page without leaving your workflow.'
-                        : 'Find useful differences across supported pages in this window.';
-                workspaceBackButton.hidden = isCaptureActive;
-                modeButtons.forEach((button) => {
-                    const isActive = button.dataset.mode === selectedMode;
-                    button.classList.toggle('active', isActive);
-                    button.setAttribute('aria-selected', String(isActive));
-                    button.tabIndex = isActive ? 0 : -1;
-                });
+                        ? 'Ask Gemini about the page you’re on.'
+                        : 'Find connections across supported pages in this window.';
+                modeSelect.value = selectedMode;
+                composer.hidden = !readyToAsk;
+                presetsDiv.hidden = !readyToAsk || (isCaptureActive && !capturedImageData) || isAgentModeEnabled;
 
                 agentModeToggle.classList.toggle('active', isAgentModeEnabled);
                 agentModeToggle.setAttribute('aria-checked', String(isAgentModeEnabled));
@@ -1172,6 +1107,8 @@
                         ? 'Browser tasks can search and act only in this Chrome window'
                         : 'Reads supported pages in this Chrome window';
                 }
+                textOnlyMessage.hidden = !isAgentModeEnabled;
+                if (isAgentModeEnabled) textOnlyMessage.textContent += ' · Approval required for every action.';
 
                 renderCaptureFrame();
                 renderQuickActions();
@@ -1190,8 +1127,8 @@
             uiShadowRoot.appendChild(popup);
             popup.addEventListener('keydown', (event) => {
                 if (event.key !== 'Tab') return;
-                const focusable = Array.from(popup.querySelectorAll('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]'))
-                    .filter((element) => !element.hidden && element.getClientRects().length > 0);
+                const focusable = Array.from(popup.querySelectorAll('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href], summary'))
+                    .filter((element) => element.tabIndex >= 0 && !element.hidden && element.getClientRects().length > 0);
                 if (!focusable.length) return;
                 const first = focusable[0];
                 const last = focusable[focusable.length - 1];
@@ -1210,8 +1147,13 @@
             const shouldAutoSubmit = launchOptions.autoSubmit === true && launchQuery !== '';
             launchOptions.query = '';
             launchOptions.autoSubmit = false;
-            if (launchQuery) queryInput.value = launchQuery;
-            queryInput.focus();
+            if (launchQuery) {
+                queryInput.value = launchQuery;
+                textQuestionEnabled = true;
+                renderSelectedMode();
+            }
+            (composer.hidden ? primaryModeButton : queryInput).focus();
+            if (!hasApiKey) settingsButton.click();
             if (shouldAutoSubmit) setTimeout(() => { if (popup) void submitUserRequest(); }, 0);
         }
 
@@ -1248,7 +1190,7 @@
             } else {
                 sendButton.removeAttribute('aria-busy');
             }
-            uiQueryAll('#gemini-primary-mode, #gemini-mode-rail button, #gemini-agent-mode-row button, #gemini-popup-presets button, .gemini-answer-actions button').forEach((button) => {
+            uiQueryAll('#gemini-primary-mode, #gemini-text-question, #gemini-mode-select, #gemini-settings-button, #gemini-instructions-button, #gemini-agent-mode-row button, #gemini-popup-presets button, .gemini-answer-actions button').forEach((button) => {
                 button.disabled = isLoading;
             });
             if (!isLoading) refreshModeControls();
@@ -1403,6 +1345,7 @@
         }
 
         async function submitUserRequest(presetQuery = null) {
+            if (!popup || sendButton?.disabled) return;
             if (!hasApiKey) {
                 showUserError('Please set your Gemini API key in Settings');
                 return;
@@ -1729,10 +1672,10 @@
             errorFallbackDiv.style.top = '10px';
             errorFallbackDiv.style.left = '50%';
             errorFallbackDiv.style.transform = 'translateX(-50%)';
-            errorFallbackDiv.style.backgroundColor = 'red';
-            errorFallbackDiv.style.color = 'white';
+            errorFallbackDiv.style.backgroundColor = '#edf6ff';
+            errorFallbackDiv.style.color = '#173b62';
             errorFallbackDiv.style.padding = '15px';
-            errorFallbackDiv.style.border = '2px solid darkred';
+            errorFallbackDiv.style.border = '2px solid #326599';
             errorFallbackDiv.style.borderRadius = '8px';
             errorFallbackDiv.style.zIndex = '2147483647';
             errorFallbackDiv.style.fontFamily = 'Arial, sans-serif';

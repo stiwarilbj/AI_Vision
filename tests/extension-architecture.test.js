@@ -259,18 +259,13 @@ test('the content panel never exposes the key to normal page DOM or performs Gem
   assert.match(PANEL_CODE, /Stop Agent Mode task/);
   assert.match(PANEL_CODE, /Planner rationale:/);
   assert.match(PANEL_CODE, /id = 'gemini-primary-mode'/);
-  assert.match(PANEL_CODE, /id = 'gemini-beta-rail'/);
   assert.match(PANEL_CODE, /id = 'gemini-capture-frame'/);
   assert.match(PANEL_CODE, /Retake the screenshot/);
   assert.match(PANEL_CODE, /isAgentModeEnabled = false/);
-  assert.match(PANEL_CODE, /Beta tools/);
   assert.match(PANEL_CODE, /aria-label', 'Open instructions'/);
   assert.match(PANEL_CODE, /aria-label', 'Open settings'/);
-  assert.match(PANEL_CODE, /setAttribute\('aria-selected',/);
   assert.match(PANEL_CODE, /setAttribute\('role', 'switch'\)/);
   assert.match(PANEL_CSS, /max-width:\s*420px/);
-  assert.match(PANEL_CODE, /id = 'gemini-settings-store-link'/);
-  assert.match(PANEL_CODE, /Only setup: paste a key and press Save key/);
   assert.match(PANEL_CODE, /className = 'gemini-answer-actions'/);
   assert.match(PANEL_CODE, /conversationHistory: requestHistory/);
   assert.doesNotMatch(PANEL_CODE, /buildStyledPrompt/);

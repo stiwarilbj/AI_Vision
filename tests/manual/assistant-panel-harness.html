@@ -17,17 +17,20 @@
     <button type="button">Example page action</button>
   </main>
   <script>
+    const scenario = new URLSearchParams(location.search).get('scenario');
+    window.__aiVisionTestRequests = [];
     window.__aiVisionTestSettings = {
       geminiModel: 'gemini-3.5-flash',
       geminiTemperature: 1,
       geminiMode: 'tab',
       geminiResponseStyle: 'balanced',
       geminiAgentMode: true,
-      hasApiKey: true,
+      hasApiKey: scenario !== 'setup',
       apiKeyMasked: '••••-key'
     };
 
     const runtimeListeners = new Set();
+    const emitRuntime = (message) => runtimeListeners.forEach((listener) => listener(message, {}, () => {}));
     window.chrome = {
       storage: {
         local: {
@@ -49,6 +52,7 @@
           removeListener(listener) { runtimeListeners.delete(listener); }
         },
         async sendMessage(request) {
+          window.__aiVisionTestRequests.push(request);
           if (request.action === 'captureVisibleTab') return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
           if (request.action === 'getSettings') return window.__aiVisionTestSettings;
           if (request.action === 'getAvailableModels') return { models: ['gemini-3.5-flash'] };
@@ -75,8 +79,9 @@
           if (request.action === 'collectWindowContext') {
             return { tabs: [{ title: document.title, url: location.href, text: document.body.innerText }] };
           }
-          if (request.action === 'ensureAllTabsAccess') return { granted: true };
+          if (request.action === 'ensureAllTabsAccess') return { granted: scenario !== 'denied' };
           if (request.action === 'askGemini') {
+            if (scenario === 'error') return { error: 'Test connection unavailable. Please try again.' };
             const turnCount = Array.isArray(request.conversationHistory) ? request.conversationHistory.length / 2 : 0;
             return {
               requestId: request.requestId,
@@ -87,8 +92,16 @@
           }
           if (request.action === 'startAgentTask') {
             const taskId = 'local-test-task';
-            setTimeout(() => runtimeListeners.forEach((listener) => listener({ action: 'agentModeComplete', taskId, summary: 'Local test task completed.' }, {}, () => {})), 0);
+            if (scenario === 'approval') {
+              setTimeout(() => emitRuntime({ action: 'agentModeProposal', taskId, proposal: { action: { action: 'click', reason: 'Open the fictional example.' }, preview: { label: 'Example page action' } } }), 50);
+            } else if (scenario !== 'running') {
+              setTimeout(() => emitRuntime({ action: 'agentModeComplete', taskId, summary: 'Local test task completed.' }), 0);
+            }
             return { taskId };
+          }
+          if (['approveAgentAction', 'rejectAgentAction', 'cancelAgentTask'].includes(request.action)) {
+            setTimeout(() => emitRuntime({ action: 'agentModeComplete', taskId: request.taskId, summary: request.action === 'approveAgentAction' ? 'Local test action approved.' : 'Local test task stopped.' }), 0);
+            return { ok: true };
           }
           return null;
         }

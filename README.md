@@ -14,7 +14,9 @@ AI Vision lets you ask Gemini about a selected screenshot, the current tab, or s
 - Screenshot is the normal first screen: one clear button starts a selected-area question.
 - This page reads the current HTTP or HTTPS page.
 - Compare tabs compares supported pages in the starting Chrome window after optional permission is granted.
-- Screenshot, This page, Compare tabs, and Browser tasks stay together under the **Ask about** selector.
+- One **Ask about** dropdown switches between Screenshot, This page, and Compare tabs.
+- Screenshot starts with **Select an area**. The question field and shortcuts appear after capture; **Or just ask a question** also supports text-only questions.
+- Model and response preferences, along with optional **Browser tasks (Beta)**, live in Settings. Active tasks keep their approval and Stop controls in the main panel.
 - Gemini requests, key storage, model discovery, and settings persistence run in the service worker.
 - The visible panel is isolated in a closed Shadow DOM and shows only masked key status.
 - Browser tasks are powered by the Google ADK runtime bundled in the extension; no terminal, Node.js install, companion process, or download is needed.
@@ -60,6 +62,8 @@ the place to request a recrawl and review impressions, queries, clicks, and
 indexing status; no code change can guarantee a particular ranking position.
 
 `npm run package` creates a small `dist/` release ZIP from the allowlist; marketing assets and documentation are not included. For a visual smoke test, serve the project root and open `tests/manual/assistant-panel-harness.html`. The harness uses fake worker APIs and never calls Gemini.
+
+For repeatable browser checks, run `node scripts/check-panel-ui.cjs` with Playwright installed. `PLAYWRIGHT_MODULE` can point to an existing Playwright package, `CHROME_EXECUTABLE` selects Chrome for Testing, and `UI_SCREENSHOTS` saves review images. The check starts its own local server and covers capture, follow-ups, settings, optional permission denial, API errors, approval/Stop, and responsive layouts using fake worker responses.
 
 ## Set up AI Vision
 
