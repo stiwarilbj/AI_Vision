@@ -10,7 +10,7 @@ Screenshot guide: https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-as
 Webpage summary guide: https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html
 Tab comparison guide: https://stiwarilbj.github.io/AI_Vision/guides/compare-chrome-tabs-with-gemini.html
 Current version: 2.6
-Last updated: 2026-09-06
+Last updated: 2026-09-07
 
 Canonical project guide: https://github.com/stiwarilbj/AI_Vision/blob/main/README.md
 Security policy: https://github.com/stiwarilbj/AI_Vision/blob/main/SECURITY.md
@@ -18,7 +18,7 @@ Security policy: https://github.com/stiwarilbj/AI_Vision/blob/main/SECURITY.md
 ## Primary features
 
 - Screenshot mode analyzes a user-selected screenshot region.
-- Screenshot is the simple first screen; This page, Compare tabs, and Browser tasks are optional controls in the Ask about selector.
+- Screenshot is the simple first screen; This page and Compare tabs are contexts in Ask about. Browser tasks are optional in Settings.
 - This page answers questions about readable content on the current supported webpage.
 - Compare tabs compares up to 20 supported tabs in one Chrome window.
 - Response styles include Balanced, Concise, Formal, Casual, Detailed, and Bullet-oriented.
@@ -36,3 +36,5 @@ Security policy: https://github.com/stiwarilbj/AI_Vision/blob/main/SECURITY.md
 - The repository is publicly visible but does not currently contain an open-source license.
 
 AI Vision is an independent project and is not affiliated with or endorsed by Google.
+
+Gemini key setup guide: https://stiwarilbj.github.io/AI_Vision/guides/get-gemini-api-key.html

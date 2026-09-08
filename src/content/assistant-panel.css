@@ -132,3 +132,16 @@
 @media (prefers-reduced-motion: reduce) {
   #gemini-popup *, #gemini-popup *::after { animation: none; transition: none; }
 }
+
+/* Guided key setup: make the next action obvious before revealing preferences. */
+.gemini-get-key-guide { display: grid; gap: 10px; padding: 16px; border: 1px solid var(--line); background: #dceeff; border-radius: 16px; }
+.gemini-get-key-guide p { font-size: 12px; color: var(--muted); }
+#gemini-popup .gemini-get-key-link { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px; border: 1px solid #aacceb; border-radius: 10px; color: #164b81; background: #fff; font-weight: 650; text-decoration: none; }
+.gemini-get-key-guide summary { font-size: 12px; cursor: pointer; }
+.gemini-get-key-guide details p { margin-top: 8px !important; }
+.gemini-get-key-guide details a { font-size: 12px; }
+.gemini-api-key-actions { flex-wrap: wrap; }
+#gemini-popup .gemini-api-key-actions button:first-child { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
+#gemini-popup .gemini-check-key { font-size: 12px; padding-inline: 8px; }
+.gemini-question-echo { padding-bottom:12px; margin-bottom:12px!important; border-bottom:1px solid var(--line); color:var(--muted); font-size:12px; }
+#gemini-workspace:has(.gemini-answer-text) :is(.gemini-workspace-heading, #gemini-popup-presets) { display:none; }

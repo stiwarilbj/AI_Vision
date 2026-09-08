@@ -55,7 +55,12 @@
           window.__aiVisionTestRequests.push(request);
           if (request.action === 'captureVisibleTab') return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
           if (request.action === 'getSettings') return window.__aiVisionTestSettings;
-          if (request.action === 'getAvailableModels') return { models: ['gemini-3.5-flash'] };
+          if (request.action === 'getAvailableModels') {
+            if (scenario === 'invalid-key') return { error: 'Gemini rejected this API key. Replace it in Settings.' };
+            if (scenario === 'quota-key') return { error: 'Gemini rate limit or quota reached. Wait a moment or check your Google AI Studio limits.' };
+            if (scenario === 'empty-models') return { models: [] };
+            return { models: ['gemini-3.5-flash'] };
+          }
           if (request.action === 'saveSettings') {
             Object.assign(window.__aiVisionTestSettings, {
               geminiModel: request.geminiModel,

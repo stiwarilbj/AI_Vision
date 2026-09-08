@@ -110,6 +110,10 @@ const server = http.createServer((req, res) => {
     await open('setup');
     await page.waitForFunction(() => window.__panelTestRoot.querySelector('#gemini-settings-panel.show'));
     assert.equal(await text('.gemini-api-key-status'), 'Not set yet');
+    assert.equal(await visible('.gemini-get-key-link'), true);
+    assert.equal(await visible('#gemini-optional-settings'), false);
+    assert.equal(await visible('#gemini-agent-mode-row'), false);
+    await screenshot('extension-key-setup');
     await (await get('#gemini-settings-api-key')).fill('fictional-test-key');
     await click('.gemini-api-key-actions button');
     await page.waitForFunction(() => window.__panelTestRoot.querySelector('.gemini-api-key-status').textContent === 'Connected');
@@ -119,6 +123,15 @@ const server = http.createServer((req, res) => {
     await (await get('#gemini-popup-query-input')).fill('A text-only question');
     await page.keyboard.press('Enter');
     await waitText('Local test response.');
+    for (const scenario of ['invalid-key', 'quota-key', 'empty-models']) {
+      await open(scenario);
+      await click('#gemini-settings-button');
+      await page.waitForFunction(() => window.__panelTestRoot.querySelector('#gemini-key-feedback').textContent.includes('connection wasn’t confirmed'));
+      assert.notEqual(await text('.gemini-api-key-status'), 'Connected');
+      assert.equal(await page.evaluate(() => window.__aiVisionTestSettings.hasApiKey), true);
+      assert.equal(await (await get('.gemini-check-key')).isEnabled(), true);
+      await screenshot(`extension-${scenario}`);
+    }
     await open('denied');
     await choose('all-tabs'); await click('#gemini-popup-presets button');
     await waitText('Compare tabs access was not enabled.');

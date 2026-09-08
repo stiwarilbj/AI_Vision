@@ -20,6 +20,7 @@
     let isAgentModeEnabled = false;
     let availableModels = [];
     let keyConnectionState = 'unknown';
+    let keyConnectionError = '';
 
     const MODES = [
         { value: "capture", label: "Screenshot" },
@@ -118,7 +119,10 @@
         if (response) {
             hasApiKey = response.hasApiKey === true;
             apiKeyMasked = response.apiKeyMasked || '';
-            keyConnectionState = hasApiKey ? 'saved' : 'missing';
+            if (extra.apiKey || extra.clearApiKey) {
+                keyConnectionState = hasApiKey ? 'saved' : 'missing';
+                keyConnectionError = '';
+            }
         }
         return response;
     }
@@ -145,12 +149,17 @@
     }
 
     async function refreshAvailableModels() {
+        keyConnectionError = '';
         try {
             const modelResult = await sendWorkerMessage({ action: 'getAvailableModels' });
+            if (!Array.isArray(modelResult?.models) || !modelResult.models.length) {
+                throw new Error('No compatible Gemini models are available for this key. Check your project in Google AI Studio.');
+            }
             if (Array.isArray(modelResult?.models)) availableModels = modelResult.models;
             if (hasApiKey) keyConnectionState = 'connected';
-        } catch (_) {
+        } catch (error) {
             if (hasApiKey) keyConnectionState = 'saved';
+            keyConnectionError = error.message || 'Could not reach Gemini. Check your connection and try again.';
             return availableModels;
         }
         if (availableModels.length && !availableModels.includes(selectedModel)) selectedModel = availableModels[0];
@@ -694,12 +703,8 @@
                 instructionsButton.classList.remove('active');
                 instructionsButton.setAttribute('aria-expanded', 'false');
                 if (willShow) {
-                    setTimeout(() => apiKeyInput.focus(), 0);
-                    void refreshAvailableModels().then(() => {
-                        apiKeyStatus.textContent = apiKeyStatusLabel();
-                        apiKeyStatus.classList.toggle('valid', hasApiKey);
-                        renderModelOptions();
-                    }).catch(() => {});
+                    setTimeout(() => (hasApiKey ? settingsDone : getKeyLink).focus(), 0);
+                    if (hasApiKey) void checkKeyConnection();
                 }
             };
 
@@ -715,6 +720,19 @@
             
             const apiKeyGroup = document.createElement('div');
             apiKeyGroup.className = 'settings-group gemini-api-key-card';
+            const getKeyGuide = document.createElement('section');
+            getKeyGuide.className = 'gemini-get-key-guide';
+            getKeyGuide.innerHTML = '<strong>1. Get your Gemini key</strong><p>A key connects AI Vision to Google’s AI. Sign in to Google AI Studio, then copy an existing key or choose <b>Create API key</b>.</p>';
+            const getKeyLink = document.createElement('a');
+            getKeyLink.href = 'https://aistudio.google.com/app/apikey';
+            getKeyLink.target = '_blank';
+            getKeyLink.rel = 'noreferrer';
+            getKeyLink.className = 'gemini-get-key-link';
+            getKeyLink.innerHTML = `Open Google AI Studio ${iconSvg('external')}`;
+            getKeyGuide.appendChild(getKeyLink);
+            const keyTrouble = document.createElement('details');
+            keyTrouble.innerHTML = '<summary>Can’t find a key?</summary><p>New to AI Studio? Google may create a default project and key after you finish setup. If you already use Google Cloud, import a project first. Work or school accounts may need an administrator’s help.</p><a href="https://stiwarilbj.github.io/AI_Vision/guides/get-gemini-api-key.html" target="_blank" rel="noreferrer">Follow the setup guide ↗</a>';
+            getKeyGuide.appendChild(keyTrouble);
             const apiKeyTitleRow = document.createElement('div');
             apiKeyTitleRow.className = 'gemini-api-key-title-row';
             const apiKeyTitle = document.createElement('div');
@@ -766,7 +784,7 @@
             const saveKeyButton = document.createElement('button');
             saveKeyButton.type = 'button';
             saveKeyButton.className = 'gemini-secondary-button';
-            saveKeyButton.textContent = 'Save key';
+            saveKeyButton.textContent = 'Save & check key';
             const clearKeyButton = document.createElement('button');
             clearKeyButton.type = 'button';
             clearKeyButton.className = 'gemini-secondary-button';
@@ -774,13 +792,21 @@
             clearKeyButton.disabled = !hasApiKey;
             apiKeyActions.appendChild(saveKeyButton);
             apiKeyActions.appendChild(clearKeyButton);
+            const checkKeyButton = document.createElement('button');
+            checkKeyButton.type = 'button';
+            checkKeyButton.textContent = 'Check connection';
+            checkKeyButton.className = 'gemini-check-key';
+            apiKeyActions.appendChild(checkKeyButton);
 
             const apiKeyHelp = document.createElement('div');
             apiKeyHelp.className = 'api-key-help';
-            apiKeyHelp.innerHTML = `Get a Gemini key, paste it here, then save. Your key stays in Chrome. <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">Get a key ${iconSvg('external')}</a>`;
+            apiKeyHelp.innerHTML = 'Your key is saved in this browser. Google controls API availability, limits, and charges. <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">Manage keys ↗</a>';
             
             const apiKeyError = document.createElement('div');
             apiKeyError.className = 'error-message';
+            apiKeyError.setAttribute('role', 'status');
+            apiKeyInput.setAttribute('aria-describedby', 'gemini-key-feedback');
+            apiKeyError.id = 'gemini-key-feedback';
             
             apiKeyGroup.appendChild(apiKeyTitleRow);
             apiKeyGroup.appendChild(apiKeyField);
@@ -880,15 +906,24 @@
 
             const settingsFooter = document.createElement('div');
             settingsFooter.className = 'gemini-settings-footer';
-            settingsFooter.innerHTML = `${iconSvg('spark')}<span>Preferences save when changed. API keys save only when you press Save key.</span>`;
+            settingsFooter.innerHTML = `${iconSvg('spark')}<span>Preferences save when changed. API keys save only when you press Save & check key.</span>`;
 
             const setupIntro = document.createElement('div');
             setupIntro.className = 'gemini-setup-intro';
             function renderSetupIntro() {
-                setupIntro.innerHTML = `<strong>${hasApiKey ? 'Make yourself at home.' : 'A key, then you’re in.'}</strong><span>${hasApiKey ? 'Your key stays saved in this browser. Connection status is shown below.' : 'Get a Gemini key, paste it below, and save. Then try your first screenshot.'}</span>`;
+                setupIntro.innerHTML = `<strong>${hasApiKey ? 'Your AI, your way.' : 'Let’s get you connected.'}</strong><span>${hasApiKey ? 'Manage your key and keep the rest as simple as you like.' : 'One small setup. Then ask about anything you see.'}</span>`;
+                getKeyGuide.hidden = hasApiKey;
+                optionalSettings.hidden = !hasApiKey;
+                agentModeRow.hidden = !hasApiKey;
+                settingsFooter.hidden = !hasApiKey;
+                checkKeyButton.hidden = !hasApiKey;
+                clearKeyButton.hidden = !hasApiKey;
+                apiKeyLabel.textContent = hasApiKey ? 'Gemini API key' : '2. Paste your key here';
+                apiKeyInput.placeholder = hasApiKey ? 'Paste a replacement key' : 'Paste the key you copied from AI Studio';
             }
             renderSetupIntro();
             settingsPanel.appendChild(setupIntro);
+            settingsPanel.appendChild(getKeyGuide);
             settingsPanel.appendChild(apiKeyGroup);
             settingsPanel.appendChild(optionalSettings);
             settingsPanel.appendChild(agentModeRow);
@@ -897,6 +932,7 @@
             settingsDone.type = 'button';
             settingsDone.className = 'gemini-done-button';
             settingsDone.textContent = 'Back to asking';
+            settingsDone.hidden = !hasApiKey;
             settingsDone.onclick = () => {
                 closeUtilityPanels();
                 renderSelectedMode();
@@ -904,6 +940,22 @@
             };
             settingsPanel.appendChild(settingsDone);
             content.appendChild(settingsPanel);
+
+            async function checkKeyConnection() {
+                checkKeyButton.disabled = true;
+                saveKeyButton.disabled = true;
+                clearKeyButton.disabled = true;
+                apiKeyStatus.textContent = 'Checking connection…';
+                await refreshAvailableModels();
+                apiKeyStatus.textContent = apiKeyStatusLabel();
+                apiKeyError.textContent = keyConnectionError ? `Your key is saved, but the connection wasn’t confirmed. ${keyConnectionError}` : '';
+                apiKeyStatus.classList.toggle('valid', keyConnectionState === 'connected');
+                renderModelOptions();
+                checkKeyButton.disabled = false;
+                saveKeyButton.disabled = false;
+                clearKeyButton.disabled = !hasApiKey;
+            }
+            checkKeyButton.onclick = () => { void checkKeyConnection(); };
             
             saveKeyButton.onclick = async () => {
                 const newKey = apiKeyInput.value.trim();
@@ -913,9 +965,12 @@
                     return;
                 }
                 saveKeyButton.disabled = true;
+                saveKeyButton.textContent = 'Saving…';
+                clearKeyButton.disabled = true;
+                checkKeyButton.disabled = true;
                 apiKeyError.textContent = '';
                 try {
-                    const result = await saveSettings({ apiKey: newKey });
+                    await saveSettings({ apiKey: newKey });
                     apiKeyInput.value = '';
                     apiKeyInput.type = 'password';
                     apiKeyVisibility.innerHTML = iconSvg('eye');
@@ -925,18 +980,16 @@
                     apiKeyStatus.classList.add('valid');
                     renderSetupIntro();
                     clearKeyButton.disabled = false;
-                    try {
-                        await refreshAvailableModels();
-                        apiKeyStatus.textContent = apiKeyStatusLabel();
-                        apiKeyStatus.classList.toggle('valid', hasApiKey);
-                        renderModelOptions();
-                    } catch (_) {
-                        // The key is saved even if model discovery is temporarily unavailable.
-                    }
+                    await checkKeyConnection();
+                    settingsDone.hidden = false;
+                    settingsDone.textContent = keyConnectionState === 'connected' ? 'Try a screenshot →' : 'Back to asking';
                 } catch (error) {
                     apiKeyError.textContent = error.message || 'The API key could not be saved.';
                 } finally {
                     saveKeyButton.disabled = false;
+                    saveKeyButton.textContent = 'Save & check key';
+                    clearKeyButton.disabled = !hasApiKey;
+                    checkKeyButton.disabled = false;
                 }
             };
 
@@ -948,6 +1001,7 @@
                     apiKeyStatus.textContent = apiKeyStatusLabel();
                     apiKeyStatus.classList.remove('valid');
                     renderSetupIntro();
+                    settingsDone.hidden = true;
                     apiKeyError.textContent = 'Key removed. Save a Gemini key to ask questions.';
                 } catch (error) {
                     apiKeyError.textContent = error.message || 'The API key could not be cleared.';
@@ -1108,7 +1162,7 @@
                         : 'Reads supported pages in this Chrome window';
                 }
                 textOnlyMessage.hidden = !isAgentModeEnabled;
-                if (isAgentModeEnabled) textOnlyMessage.textContent += ' · Approval required for every action.';
+                if (isAgentModeEnabled) textOnlyMessage.textContent += ' · Browser changes need your approval.';
 
                 renderCaptureFrame();
                 renderQuickActions();
@@ -1221,6 +1275,11 @@
             const answerText = document.createElement('div');
             answerText.className = 'gemini-answer-text';
             answerText.textContent = text;
+            const questionEcho = document.createElement('p');
+            questionEcho.className = 'gemini-question-echo';
+            questionEcho.textContent = lastSubmittedQuery;
+            responseArea.appendChild(questionEcho);
+            responseArea.parentNode.insertBefore(responseArea, uiQuery('#gemini-popup-composer'));
 
             const actions = document.createElement('div');
             actions.className = 'gemini-answer-actions';
@@ -1256,6 +1315,9 @@
 
             responseArea.appendChild(answerText);
             responseArea.appendChild(actions);
+            requestAnimationFrame(() => {
+                if (responseArea?.isConnected) responseArea.scrollIntoView({ block: 'nearest' });
+            });
         }
 
         function renderAgentProgress(step = 1, message = 'Understanding your task', planner = {}) {

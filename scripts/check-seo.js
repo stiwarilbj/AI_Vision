@@ -90,7 +90,8 @@ const index = checkPage('docs/index.html', siteUrl, ['WebSite', 'SoftwareApplica
 const guidePaths = [
   'ai-screenshot-assistant.html',
   'summarize-webpage-with-gemini.html',
-  'compare-chrome-tabs-with-gemini.html'
+  'compare-chrome-tabs-with-gemini.html',
+  'get-gemini-api-key.html'
 ];
 const guides = guidePaths.map((guidePath) => checkPage(
   `docs/guides/${guidePath}`,
@@ -98,6 +99,26 @@ const guides = guidePaths.map((guidePath) => checkPage(
   ['Article', 'BreadcrumbList']
 ));
 checkPage('docs/privacy.html', `${siteUrl}privacy.html`, []);
+assert(new Set([index, ...guides].map(page => page.title)).size === guides.length + 1, 'page titles must be distinct');
+assert(metaContent(read('docs/index.html'), 'name', 'google-site-verification') === 'YLyFwZK2cHcakG3nOrYRYw27DdFpeYfny3f_DKoIWP8', 'preserve the verified Search Console property tag');
+
+// Check every local destination, including fragment links and image fallbacks.
+for (const relativePath of ['index.html', 'privacy.html', ...guidePaths.map(file => `guides/${file}`)]) {
+  const markup = read(`docs/${relativePath}`);
+  for (const match of markup.matchAll(/\b(?:href|src)=["']([^"']+)["']/g)) {
+    const target = match[1];
+    if (/^(?:https?:|mailto:|data:)/.test(target)) continue;
+    const resolved = new URL(target, `${siteUrl}${relativePath}`);
+    const local = resolved.pathname.slice('/AI_Vision/'.length);
+    const file = path.join(docsRoot, local.endsWith('/') || !local ? `${local}index.html` : local);
+    assert(fs.existsSync(file), `${relativePath} has a missing destination: ${target}`);
+    if (resolved.hash && file.endsWith('.html')) {
+      const fragment = decodeURIComponent(resolved.hash.slice(1));
+      assert(new RegExp(`\\bid=["']${escapeRegExp(fragment)}["']`).test(fs.readFileSync(file, 'utf8')), `${relativePath} has a broken fragment: ${target}`);
+    }
+  }
+  assert(metaContent(markup, 'property', 'og:url') === canonical(markup), `${relativePath} social URL differs from canonical`);
+}
 
 const robots = read('docs/robots.txt');
 assert(robots.includes('User-agent: *') && robots.includes('Allow: /'), 'robots.txt must allow the public site');

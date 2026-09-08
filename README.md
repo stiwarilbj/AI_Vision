@@ -69,7 +69,9 @@ For repeatable browser checks, run `node scripts/check-panel-ui.cjs` with Playwr
 
 1. Install the extension from the Chrome Web Store, or load this folder as an unpacked extension from `chrome://extensions` with Developer mode enabled.
 2. Create a Gemini API key in [Google AI Studio](https://aistudio.google.com/app/apikey).
-3. Open AI Vision, choose Settings, paste the key, and press **Save key**.
+3. Open AI Vision. First-time setup opens automatically. Choose **Open Google AI Studio**, copy or create your key, then return and use **Save & check key**.
+
+The [Gemini key setup guide](https://stiwarilbj.github.io/AI_Vision/guides/get-gemini-api-key.html) explains projects, key creation, and common errors. **Saved** means local storage succeeded; **Connected** means Gemini's model-list request succeeded. Connection failures retain the key and show a retry action with the reason. Generation can still encounter model or quota limits.
 
 That is the only setup. Screenshot is ready immediately after the key is saved;
 response style, model, This page, Compare tabs, and Browser tasks are optional controls
@@ -129,3 +131,11 @@ Chrome internal pages, the Chrome Web Store, and other restricted pages cannot b
 The source is publicly visible in this repository. There is currently no license file, so public visibility alone does not grant permission to copy, modify, or redistribute the code. Add an OSI-approved license before describing the project as open source.
 
 AI Vision is independent and is not affiliated with or endorsed by Google. Gemini and Chrome are trademarks of Google LLC.
+
+Website browser checks (serve the repository root on port 8765 first):
+
+```sh
+node scripts/check-website-ui.cjs
+```
+
+This checks six pages at 390, 768, 1024, and 1440 pixels, image proportions, keyboard dialogs, sample interactions, no-JavaScript content, and the homepage payload budget. Optional `PLAYWRIGHT_MODULE`, `CHROME_EXECUTABLE`, and `UI_SCREENSHOTS` settings match the panel browser checks.
