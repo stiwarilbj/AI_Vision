@@ -5,16 +5,24 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const base = process.env.SITE_TEST_URL || 'http://127.0.0.1:8765/docs/';
+const reportPath = process.env.WEBSITE_REPORT || '';
+const writeReport = report => {
+  if (!reportPath) return;
+  fs.mkdirSync(path.dirname(reportPath), { recursive: true });
+  fs.writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`);
+};
 (async () => {
   const browser = await chromium.launch({ headless:true, executablePath:process.env.CHROME_EXECUTABLE || undefined });
   const failures = [];
+  const widths = [390,768,1024,1440];
+  const pages = ['', 'privacy.html','guides/get-gemini-api-key.html','guides/ai-screenshot-assistant.html','guides/summarize-webpage-with-gemini.html','guides/compare-chrome-tabs-with-gemini.html','guides/copy-text-from-screenshot-chrome.html'];
+  let homepagePayloadSize = null;
   try {
     const page = await browser.newPage({ reducedMotion:'reduce' });
     page.on('pageerror',e => failures.push(e.message));
     page.on('response',r => { if(r.status() >= 400) failures.push(`${r.status()} ${r.url()}`); });
-    const pages = ['', 'privacy.html','guides/get-gemini-api-key.html','guides/ai-screenshot-assistant.html','guides/summarize-webpage-with-gemini.html','guides/compare-chrome-tabs-with-gemini.html'];
     for (const route of pages) {
-      for (const width of [390,768,1024,1440]) {
+      for (const width of widths) {
         await page.setViewportSize({width,height:900});
         await page.goto(base+route);
         await page.evaluate(() => Promise.all([...document.images].map(i => i.decode().catch(()=>{}))));
@@ -50,18 +58,32 @@ const base = process.env.SITE_TEST_URL || 'http://127.0.0.1:8765/docs/';
     cold.on('response', response => payloads.push(response.body().then(body => body.length)));
     await cold.goto(base);
     await cold.evaluate(() => Promise.all([...document.images].map(i => i.decode().catch(()=>{}))));
-    const size = (await Promise.all(payloads)).reduce((a,b)=>a+b,0);
-    assert.ok(size < 800000, `Homepage transfer ${size} under 800 KB`);
-    console.log(`Cold homepage payload: ${size} bytes (uncompressed resource bodies).`);
+    homepagePayloadSize = (await Promise.all(payloads)).reduce((a,b)=>a+b,0);
+    assert.ok(homepagePayloadSize < 800000, `Homepage transfer ${homepagePayloadSize} under 800 KB`);
+    console.log(`Cold homepage payload: ${homepagePayloadSize} bytes (uncompressed resource bodies).`);
     await cold.close();
     const nojs = await browser.newContext({javaScriptEnabled:false,viewport:{width:390,height:844}});
     const plain = await nojs.newPage();
     await plain.goto(base);
     assert.equal(await plain.locator('.example:visible').count(),3);
     assert.equal(await plain.locator('a[href="guides/get-gemini-api-key.html"]').first().isVisible(),true);
+    assert.equal(await plain.locator('a[href="guides/copy-text-from-screenshot-chrome.html"]').first().isVisible(),true);
     await plain.locator('summary').first().click();
     assert.equal(await plain.locator('.faq-list details').first().evaluate(e=>e.open),true);
     assert.deepEqual(failures,[]);
-    console.log('Website checks passed: six pages, four widths, image proportions, no overflow, demo scenarios, keyboard dialog, no-JavaScript content.');
+    writeReport({
+      status: 'passed',
+      base,
+      pages,
+      widths,
+      homepagePayloadBytes: homepagePayloadSize,
+      checks: ['one heading per page', 'no horizontal overflow', 'image proportions', 'keyboard lightbox', 'interactive examples', 'no-JavaScript content', 'reduced motion'],
+      generatedAt: new Date().toISOString()
+    });
+    console.log(`Website checks passed: ${pages.length} pages, four widths, image proportions, no overflow, demo scenarios, keyboard dialog, no-JavaScript content.`);
   } finally { await browser.close(); }
-})().catch(error => { console.error(error); process.exitCode=1; });
+})().catch(error => {
+  writeReport({ status: 'failed', base, error: error && error.stack ? error.stack : String(error), generatedAt: new Date().toISOString() });
+  console.error(error);
+  process.exitCode=1;
+});

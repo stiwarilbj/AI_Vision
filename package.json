@@ -13,11 +13,13 @@
     "package:check": "npm run build:adk && node scripts/check-package.js",
     "package": "npm run build:adk && node scripts/check-package.js && node scripts/package-extension.js",
     "version:check": "node scripts/check-version.js",
-    "seo:check": "node scripts/check-seo.js"
+    "seo:check": "node scripts/check-seo.js",
+    "website:check": "node scripts/check-website-ui.cjs"
   },
   "devDependencies": {
     "@google/adk": "2.0.0",
-    "esbuild": "^0.28.2"
+    "esbuild": "^0.28.2",
+    "playwright": "1.62.1"
   },
   "overrides": {
     "adm-zip": "0.6.0",

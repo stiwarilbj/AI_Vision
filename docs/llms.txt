@@ -7,10 +7,11 @@ Official active Chrome Web Store listing: https://chromewebstore.google.com/deta
 Public source: https://github.com/stiwarilbj/AI_Vision
 Privacy notice: https://stiwarilbj.github.io/AI_Vision/privacy.html
 Screenshot guide: https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html
+Screenshot text extraction guide: https://stiwarilbj.github.io/AI_Vision/guides/copy-text-from-screenshot-chrome.html
 Webpage summary guide: https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html
 Tab comparison guide: https://stiwarilbj.github.io/AI_Vision/guides/compare-chrome-tabs-with-gemini.html
 Current version: 2.7
-Last updated: 2026-09-07
+Last updated: 2026-09-08
 
 Canonical project guide: https://github.com/stiwarilbj/AI_Vision/blob/main/README.md
 Security policy: https://github.com/stiwarilbj/AI_Vision/blob/main/SECURITY.md
@@ -23,7 +24,8 @@ Security policy: https://github.com/stiwarilbj/AI_Vision/blob/main/SECURITY.md
 - Compare tabs compares up to 20 supported tabs in one Chrome window.
 - Response styles include Balanced, Concise, Formal, Casual, Detailed, and Bullet-oriented.
 - Browser tasks can be enabled in Screenshot, This page, or Compare tabs. Its bundled Google ADK browser runtime rotates one planning request at a time through gemini-3.5-flash, gemini-3-flash-preview, gemini-2.5-flash, gemini-3.1-flash-lite, and gemini-2.5-flash-lite, then repeats. No terminal or companion process is needed.
-- Practical guides cover screenshot prompts, webpage summaries, tab comparisons, Browser tasks boundaries, and setup: https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html
+- Practical guides cover screenshot prompts, screenshot text extraction, webpage summaries, tab comparisons, Browser tasks boundaries, and setup: https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html
+- Screenshot text extraction workflow: https://stiwarilbj.github.io/AI_Vision/guides/copy-text-from-screenshot-chrome.html
 - Webpage summary workflow: https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html
 - Multi-tab comparison workflow: https://stiwarilbj.github.io/AI_Vision/guides/compare-chrome-tabs-with-gemini.html
 - Reading, waiting, scrolling, and activating an existing in-scope tab can run automatically. Every click, type, direct navigation, new tab, history move, and reload requires approval. Screenshot and This page remain scoped to one tab; Compare tabs is optional-permission gated and remains inside the starting Chrome window, subject to permanent safety blocks and a 12-step limit.

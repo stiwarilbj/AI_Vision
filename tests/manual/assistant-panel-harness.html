@@ -99,6 +99,9 @@
             if (scenario === 'slow-manual') {
               return new Promise(resolve => setTimeout(() => resolve({ requestId: request.requestId, text: 'Local test response.' }), 240));
             }
+            if (scenario === 'extract') {
+              return { requestId: request.requestId, text: 'Weekly reading progress\nWeek 1: 40 pages\nWeek 2: 60 pages\nWeek 3: 90 pages\nWeek 4: 100 pages' };
+            }
             const turnCount = Array.isArray(request.conversationHistory) ? request.conversationHistory.length / 2 : 0;
             return {
               requestId: request.requestId,

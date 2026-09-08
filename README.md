@@ -1,6 +1,6 @@
-# AI Vision – Gemini Screenshot & Browser Assistant
+# AI Vision – Gemini Screenshot, Text Extraction & Browser Assistant
 
-AI Vision lets you ask Gemini about a selected screenshot, the current tab, or supported tabs in one Chrome window. Optional Browser tasks can complete a constrained browser task while enforcing an explicit approval boundary.
+AI Vision lets you ask Gemini about a selected screenshot, copy text from an image, summarize the current tab, or compare supported tabs in one Chrome window. Optional Browser tasks can complete a constrained browser task while enforcing an explicit approval boundary.
 
 [Actual active Chrome Web Store extension listing](https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en) · [Get a Gemini API key](https://aistudio.google.com/app/apikey)
 
@@ -23,6 +23,8 @@ AI Vision lets you ask Gemini about a selected screenshot, the current tab, or s
 - ADK planning calls rotate persistently through five Gemini models, one model per planning request.
 - Browser tasks use strict structured actions, live target signatures, task IDs, cancellation, timeouts, context limits, and stale-progress protection.
 - Response styles include Balanced, Concise, Formal, Casual, Detailed, and Bullet-oriented.
+
+The public website includes practical guides for [explaining screenshots](https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html), [copying text from screenshots](https://stiwarilbj.github.io/AI_Vision/guides/copy-text-from-screenshot-chrome.html), [summarizing webpages](https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html), and [comparing Chrome tabs](https://stiwarilbj.github.io/AI_Vision/guides/compare-chrome-tabs-with-gemini.html).
 
 ## Project structure
 
@@ -138,4 +140,4 @@ Website browser checks (serve the repository root on port 8765 first):
 node scripts/check-website-ui.cjs
 ```
 
-This checks six pages at 390, 768, 1024, and 1440 pixels, image proportions, keyboard dialogs, sample interactions, no-JavaScript content, and the homepage payload budget. Optional `PLAYWRIGHT_MODULE`, `CHROME_EXECUTABLE`, and `UI_SCREENSHOTS` settings match the panel browser checks.
+This checks seven pages at 390, 768, 1024, and 1440 pixels, image proportions, keyboard dialogs, sample interactions, no-JavaScript content, and the homepage payload budget. Optional `PLAYWRIGHT_MODULE`, `CHROME_EXECUTABLE`, and `UI_SCREENSHOTS` settings match the panel browser checks.

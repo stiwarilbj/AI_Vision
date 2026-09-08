@@ -16,3 +16,19 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm audit --audit-level=high
+      - name: Install browser for website checks
+        run: npx playwright install --with-deps chromium
+      - name: Serve GitHub Pages source
+        run: python3 -m http.server 8765 --directory . > /tmp/ai-vision-http.log 2>&1 &
+      - name: Run website browser checks
+        run: npm run website:check
+        env:
+          SITE_TEST_URL: http://127.0.0.1:8765/docs/
+          WEBSITE_REPORT: outputs/website-browser-report.json
+      - name: Save website browser report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-browser-report
+          path: outputs/website-browser-report.json
+          if-no-files-found: error

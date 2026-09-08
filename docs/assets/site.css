@@ -110,6 +110,7 @@ footer nav{display:flex;flex-wrap:wrap;gap:18px}
 .article-shell code{overflow-wrap:anywhere}
 .article-shell .contents{font-size:14px;padding:18px 24px;background:#fff;border:1px solid var(--line);border-radius:14px}
 .article-shell .contents a{display:inline-block;margin:3px 16px 3px 0}
+.article-shell pre{white-space:pre-wrap;overflow:auto;padding:18px 20px;background:#183b61;color:#eef7ff;border-radius:14px;font-size:14px;line-height:1.6}
 .article-shell table{width:100%;border-collapse:collapse;font-size:14px}
 .article-shell td,.article-shell th{text-align:left;padding:12px;border-bottom:1px solid var(--line)}
 .breadcrumb{font-size:12px;margin-bottom:18px;color:var(--muted)}
