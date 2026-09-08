@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AI Vision assistant panel harness</title>
-  <link rel="stylesheet" href="../../src/content/assistant-panel.css?v=2.6-refresh">
+  <link rel="stylesheet" href="../../src/content/assistant-panel.css?v=2.7-one-tap">
   <style>
     body { min-height: 100vh; margin: 0; padding: 48px; box-sizing: border-box; font: 16px/1.5 system-ui, sans-serif; background: #f4f9ff; color: #16324f; }
     main { max-width: 680px; }
@@ -24,6 +24,7 @@
       geminiTemperature: 1,
       geminiMode: 'tab',
       geminiResponseStyle: 'balanced',
+      geminiCaptureBehavior: scenario === 'auto' || scenario === 'slow-request' ? 'auto-explain' : 'manual',
       geminiAgentMode: true,
       hasApiKey: scenario !== 'setup',
       apiKeyMasked: '••••-key'
@@ -46,14 +47,18 @@
         }
       },
       runtime: {
-        getURL(file) { return `../../${file}?v=2.6-refresh`; },
+        getURL(file) { return `../../${file}?v=2.7-one-tap`; },
         onMessage: {
           addListener(listener) { runtimeListeners.add(listener); },
           removeListener(listener) { runtimeListeners.delete(listener); }
         },
         async sendMessage(request) {
           window.__aiVisionTestRequests.push(request);
-          if (request.action === 'captureVisibleTab') return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+          if (request.action === 'captureVisibleTab') {
+            const image = `data:image/svg+xml;base64,${btoa('<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="768" viewBox="0 0 1024 768"><rect width="1024" height="768" fill="#f8fbff"/><rect x="42" y="36" width="940" height="72" rx="16" fill="#ffffff" stroke="#c7def2"/><text x="76" y="80" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#183b61">Weekly reading progress</text><rect x="80" y="150" width="740" height="450" rx="20" fill="#ffffff" stroke="#c7def2"/><text x="120" y="205" font-family="Arial, sans-serif" font-size="22" fill="#526d87">Pages read</text><path d="M130 520H760M130 420H760M130 320H760M130 220H760" stroke="#d8e7f5" stroke-width="3"/><rect x="185" y="400" width="82" height="120" rx="8" fill="#a9d2f6"/><rect x="330" y="340" width="82" height="180" rx="8" fill="#7db8eb"/><rect x="475" y="250" width="82" height="270" rx="8" fill="#4e98da"/><rect x="620" y="220" width="82" height="300" rx="8" fill="#2167b5"/><g font-family="Arial, sans-serif" font-size="20" fill="#183b61"><text x="190" y="560">Week 1</text><text x="335" y="560">Week 2</text><text x="480" y="560">Week 3</text><text x="625" y="560">Week 4</text></g></svg>')}`;
+            if (scenario === 'slow-capture') return new Promise(resolve => setTimeout(() => resolve(image), 180));
+            return image;
+          }
           if (request.action === 'getSettings') return window.__aiVisionTestSettings;
           if (request.action === 'getAvailableModels') {
             if (scenario === 'invalid-key') return { error: 'Gemini rejected this API key. Replace it in Settings.' };
@@ -67,6 +72,7 @@
               geminiTemperature: request.geminiTemperature,
               geminiMode: request.geminiMode,
               geminiResponseStyle: request.geminiResponseStyle,
+              geminiCaptureBehavior: request.geminiCaptureBehavior,
               geminiAgentMode: request.geminiAgentMode
             });
             if (request.clearApiKey) {
@@ -87,6 +93,12 @@
           if (request.action === 'ensureAllTabsAccess') return { granted: scenario !== 'denied' };
           if (request.action === 'askGemini') {
             if (scenario === 'error') return { error: 'Test connection unavailable. Please try again.' };
+            if (scenario === 'slow-request') {
+              return new Promise(resolve => setTimeout(() => resolve({ requestId: request.requestId, text: 'This late answer should not appear after Stop.' }), 240));
+            }
+            if (scenario === 'slow-manual') {
+              return new Promise(resolve => setTimeout(() => resolve({ requestId: request.requestId, text: 'Local test response.' }), 240));
+            }
             const turnCount = Array.isArray(request.conversationHistory) ? request.conversationHistory.length / 2 : 0;
             return {
               requestId: request.requestId,
@@ -95,6 +107,7 @@
                 : 'Local test response.'
             };
           }
+          if (request.action === 'cancelGeminiRequest') return { ok: true };
           if (request.action === 'startAgentTask') {
             const taskId = 'local-test-task';
             if (scenario === 'approval') {
@@ -113,7 +126,7 @@
       }
     };
   </script>
-  <script src="../../src/content/capture-utils.js?v=2.6-refresh"></script>
-  <script src="../../src/content/assistant-panel.js?v=2.6-refresh"></script>
+  <script src="../../src/content/capture-utils.js?v=2.7-one-tap"></script>
+  <script src="../../src/content/assistant-panel.js?v=2.7-one-tap"></script>
 </body>
 </html>

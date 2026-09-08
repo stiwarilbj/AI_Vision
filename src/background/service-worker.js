@@ -45,6 +45,7 @@ try {
 
 const VALID_MODES = new Set(['capture', 'tab', 'all-tabs']);
 const VALID_RESPONSE_STYLES = new Set(['balanced', 'concise', 'formal', 'casual', 'detailed', 'bullets']);
+const VALID_CAPTURE_BEHAVIORS = new Set(['manual', 'auto-explain']);
 const VALID_AGENT_ACTIONS = new Set(['click', 'type', 'scroll', 'navigate', 'activate_tab', 'open_tab', 'go_back', 'go_forward', 'reload', 'wait', 'done']);
 const MUTATING_AGENT_ACTIONS = new Set(['click', 'type', 'navigate', 'open_tab', 'go_back', 'go_forward', 'reload']);
 const NAVIGATION_AGENT_ACTIONS = new Set(['navigate', 'open_tab', 'go_back', 'go_forward', 'reload']);
@@ -164,6 +165,10 @@ function normalizeResponseStyle(style) {
   return VALID_RESPONSE_STYLES.has(style) ? style : 'balanced';
 }
 
+function normalizeCaptureBehavior(behavior) {
+  return VALID_CAPTURE_BEHAVIORS.has(behavior) ? behavior : 'manual';
+}
+
 function maskApiKey(key) {
   if (typeof key !== 'string' || key.trim() === '') return '';
   const value = key.trim();
@@ -176,6 +181,7 @@ function normalizeSettings(result = {}) {
     geminiTemperature: clampTemperature(result.geminiTemperature),
     geminiMode: normalizeMode(result.geminiMode),
     geminiResponseStyle: normalizeResponseStyle(result.geminiResponseStyle),
+    geminiCaptureBehavior: normalizeCaptureBehavior(result.geminiCaptureBehavior),
     geminiAgentMode: result.geminiAgentMode === true
       || (result.geminiAgentMode === undefined && result.geminiAutoBrowse === true),
     hasApiKey: typeof result.geminiApiKey === 'string' && result.geminiApiKey.trim() !== '',
@@ -190,6 +196,7 @@ async function getStoredSettings() {
     'geminiTemperature',
     'geminiMode',
     'geminiResponseStyle',
+    'geminiCaptureBehavior',
     'geminiAgentMode',
     'geminiAutoBrowse'
   ]);
@@ -236,13 +243,15 @@ async function saveSettings(request = {}) {
     'geminiTemperature',
     'geminiMode',
     'geminiResponseStyle',
-    'geminiAgentMode'
+    'geminiAgentMode',
+    'geminiCaptureBehavior'
   ]);
   const values = {
     geminiModel: normalizeModel(request.geminiModel ?? current.geminiModel),
     geminiTemperature: clampTemperature(request.geminiTemperature ?? current.geminiTemperature),
     geminiMode: normalizeMode(request.geminiMode ?? current.geminiMode),
     geminiResponseStyle: normalizeResponseStyle(request.geminiResponseStyle ?? current.geminiResponseStyle),
+    geminiCaptureBehavior: normalizeCaptureBehavior(request.geminiCaptureBehavior ?? current.geminiCaptureBehavior),
     geminiAgentMode: request.geminiAgentMode ?? (current.geminiAgentMode === true)
   };
 
@@ -1645,6 +1654,7 @@ if (typeof module !== 'undefined') {
     inspectVisiblePageAction,
     isTrustedSender,
     normalizeConversationHistory,
+    normalizeCaptureBehavior,
     normalizeLaunchOptions,
     openAssistantInTab,
     createContextMenu,

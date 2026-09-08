@@ -160,3 +160,9 @@ footer nav{display:flex;flex-wrap:wrap;gap:18px}
 }
 
 .hero > *, .setup-layout > *, .faq-layout > *, .example > * { min-width:0; }
+
+/* The product preview shows a readable answer state without making the hero feel dense. */
+.hero-media .media-button{display:grid;place-items:center}
+.hero-media .media-button img{max-height:560px;width:auto;max-width:100%;object-fit:contain}
+.example-follow-up{padding:10px 12px;border-radius:10px;background:#eef7ff;color:var(--ink);font-size:14px;line-height:1.45}
+@media(max-width:600px){.hero-media .media-button img{max-height:500px}}

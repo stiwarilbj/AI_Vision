@@ -1,4 +1,4 @@
-# Chrome Web Store copy – version 2.6
+# Chrome Web Store copy – version 2.7
 
 Official active listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
 
@@ -31,8 +31,8 @@ For everyday productivity, AI Vision can:
 - Explain screenshots, charts, diagrams, interfaces, and error messages in plain language
 - Summarize articles, documents, product pages, and research sources
 - Compare claims, prices, requirements, or limitations across open tabs
-- Keep a short follow-up conversation in the open panel, with Copy, Follow up, and Try again actions
-- Use quick prompts such as Summarize, Explain, and Copy text, plus Balanced, Concise, Formal, Casual, Detailed, or Bullet-oriented response styles
+- Follow up directly beneath an answer, with Copy answer and Retry as secondary actions
+- Start with Select an area, then choose Explain screenshot; use More actions for Summarize and Extract text, plus Balanced, Concise, Formal, Casual, Detailed, or Bullet-oriented response styles
 - Open from the toolbar, the right-click menu, or **Alt + Shift + V**
 
 ### Optional Browser tasks (Beta)
@@ -46,8 +46,8 @@ The Google ADK browser runtime is bundled with the extension. Each planning step
 ### Get started in under two minutes
 
 1. Install AI Vision from the Chrome Web Store.
-2. Create a Gemini API key at [Google AI Studio](https://aistudio.google.com/app/apikey), open Settings, and press **Save key**.
-3. Open a page, press **Alt + Shift + V**, choose Screenshot, This page, or Compare tabs, and ask a question.
+2. Create a Gemini API key at [Google AI Studio](https://aistudio.google.com/app/apikey), open Settings, and press **Save & check key**.
+3. Open a page, press **Alt + Shift + V**, choose Screenshot, select an area, and press **Explain screenshot**.
 
 Google controls API availability, model access, free-tier limits, and pricing. Compare tabs asks for its optional permission only when you choose that mode.
 
@@ -81,7 +81,7 @@ The contextMenus permission creates the “AI Vision” right-click entry. This 
 
 ### storage justification
 
-The storage permission saves the user's Gemini API key and selected model, temperature, mode, response style, and Browser tasks preference in chrome.storage.local. This keeps settings available between sessions and ensures the selected mode remains active until the user changes it. AI Vision does not use this permission for analytics, advertising, or cross-site tracking.
+The storage permission saves the user's Gemini API key, selected model, temperature, response style, screenshot explanation preference, and Browser tasks preference in chrome.storage.local. This keeps settings available between sessions. AI Vision does not use this permission for analytics, advertising, or cross-site tracking.
 
 ### tabs justification
 

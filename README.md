@@ -4,18 +4,18 @@ AI Vision lets you ask Gemini about a selected screenshot, the current tab, or s
 
 [Actual active Chrome Web Store extension listing](https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en) · [Get a Gemini API key](https://aistudio.google.com/app/apikey)
 
-## Version 2.6
+## Version 2.7
 
 - Open Screenshot from anywhere with **Alt + Shift + V**, summarize a page from the right-click menu, or explain selected text in one click.
-- Every mode now has three context-aware quick actions, so common questions do not require typing.
-- Answers include **Copy**, **Follow up**, and **Try again** actions; up to three recent question/answer turns stay in the open panel for natural follow-ups.
+- Every mode has context-aware actions, while Screenshot keeps the main Explain action separate and easy to find.
+- Screenshot now follows one clear path: **Select an area**, **Explain screenshot**, then a direct follow-up field below the answer. Copy answer and Retry stay available as secondary actions.
 - Startup no longer waits for model discovery, and settings load the model list only when opened.
 - Selected captures keep their original detail without wastefully upscaling small images.
-- Screenshot is the normal first screen: one clear button starts a selected-area question.
+- Screenshot is the normal first screen: one clear button starts selection, and Settings offers either **One-tap Explain** or explicit **Explain automatically** behavior for new screenshots.
 - This page reads the current HTTP or HTTPS page.
 - Compare tabs compares supported pages in the starting Chrome window after optional permission is granted.
 - One **Ask about** dropdown switches between Screenshot, This page, and Compare tabs.
-- Screenshot starts with **Select an area**. The question field and shortcuts appear after capture; **Or just ask a question** also supports text-only questions.
+- Screenshot starts with **Select an area**. After capture, use **Explain screenshot**, open **Ask something specific**, or find Summarize and **Extract text** under More actions.
 - Model and response preferences, along with optional **Browser tasks (Beta)**, live in Settings. Active tasks keep their approval and Stop controls in the main panel.
 - Gemini requests, key storage, model discovery, and settings persistence run in the service worker.
 - The visible panel is isolated in a closed Shadow DOM and shows only masked key status.
@@ -85,7 +85,7 @@ The extension key is stored only by the service worker in `chrome.storage.local`
 
 Open AI Vision with **Alt + Shift + V**, the toolbar icon, or the right-click menu. The right-click menu can immediately summarize the page or explain selected text.
 
-- **Screenshot:** the normal mode. Click Select an area, drag over a visible region, then ask a question or use Summarize, Explain, or Copy text.
+- **Screenshot:** the normal mode. Click Select an area, drag over a visible region, then choose Explain screenshot. Use Ask something specific for a custom question or More actions for Summarize and Extract text.
 - **This page:** choose it from **Ask about** when you want to ask about readable content in the current page.
 - **Compare tabs:** choose it from **Ask about** when you want to ask across up to 20 supported pages in the Chrome window where AI Vision was opened. The first use opens a separate permission page; access is optional and the feature fails closed when it is denied.
 
