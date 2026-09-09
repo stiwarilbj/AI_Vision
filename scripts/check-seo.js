@@ -48,7 +48,11 @@ function canonical(markup) {
 }
 
 function jsonLdTypes(markup) {
-  const types = [];
+  return jsonLdNodes(markup).flatMap((node) => Array.isArray(node?.['@type']) ? node['@type'] : typeof node?.['@type'] === 'string' ? [node['@type']] : []);
+}
+
+function jsonLdNodes(markup) {
+  const nodes = [];
   for (const match of markup.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
     let parsed;
     try {
@@ -56,13 +60,9 @@ function jsonLdTypes(markup) {
     } catch (error) {
       fail(`invalid JSON-LD: ${error.message}`);
     }
-    const nodes = parsed?.['@graph'] || [parsed];
-    for (const node of nodes) {
-      if (typeof node?.['@type'] === 'string') types.push(node['@type']);
-      if (Array.isArray(node?.['@type'])) types.push(...node['@type']);
-    }
+    nodes.push(...(parsed?.['@graph'] || [parsed]));
   }
-  return types;
+  return nodes;
 }
 
 function publicHtmlPaths(directory = docsRoot) {
@@ -78,8 +78,41 @@ function publicHtmlPaths(directory = docsRoot) {
   return paths;
 }
 
+function localPathFor(target, relativePath) {
+  let resolved;
+  try {
+    resolved = new URL(target, `${siteUrl}${relativePath}`);
+  } catch (error) {
+    fail(`${relativePath} contains an invalid URL: ${target}`);
+  }
+  const site = new URL(siteUrl);
+  if (resolved.hostname !== site.hostname || resolved.protocol !== site.protocol || !resolved.pathname.startsWith(site.pathname)) return null;
+  const localRelative = decodeURIComponent(resolved.pathname.slice(site.pathname.length));
+  const normalized = localRelative.endsWith('/') || !localRelative ? `${localRelative}index.html` : localRelative;
+  const file = path.resolve(docsRoot, normalized);
+  assert(file === docsRoot || file.startsWith(`${docsRoot}${path.sep}`), `destination escapes docs: ${target}`);
+  return { file, resolved };
+}
+
+function pngDimensions(file) {
+  const bytes = fs.readFileSync(file);
+  const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  if (bytes.length >= 24 && bytes.subarray(0, 8).equals(signature)) {
+    return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+  }
+  return null;
+}
+
+function imageTargetFromTag(tag, attribute) {
+  return tag.match(new RegExp(`\\b${attribute}=["']([^"']+)["']`, 'i'))?.[1] || null;
+}
+
+function dateOnPage(markup) {
+  return markup.match(/<time\b[^>]*\bdatetime=["'](\d{4}-\d{2}-\d{2})["'][^>]*>/i)?.[1] || null;
+}
+
 function checkPage(relativePath, expectedCanonical, requiredTypes) {
-  const markup = read(relativePath);
+  const markup = read(`docs/${relativePath}`);
   const title = pageTitle(markup);
   const description = metaContent(markup, 'name', 'description');
   assert(title && title.includes('AI Vision'), `${relativePath} needs a descriptive AI Vision title`);
@@ -89,12 +122,55 @@ function checkPage(relativePath, expectedCanonical, requiredTypes) {
   assert((metaContent(markup, 'name', 'robots') || '').includes('index,follow'), `${relativePath} must allow indexing and following links`);
   assert(!/<meta\b[^>]*\bname=["']keywords["']/i.test(markup), `${relativePath} must not use a keyword-stuffing meta tag`);
   assert(!/gitchubst\.github\.io/i.test(markup), `${relativePath} contains the retired GitHub Pages hostname`);
+  const nodes = jsonLdNodes(markup);
   for (const imageTag of markup.matchAll(/<img\b[^>]*>/gi)) {
-    assert(/\balt=["'][^"']*["']/i.test(imageTag[0]), `${relativePath} contains an image without alt text`);
+    const tag = imageTag[0];
+    assert(/\balt=["'][^"']*["']/i.test(tag), `${relativePath} contains an image without alt text`);
+    const src = imageTargetFromTag(tag, 'src');
+    if (src) {
+      const width = Number(tag.match(/\bwidth=["'](\d+)["']/i)?.[1]);
+      const height = Number(tag.match(/\bheight=["'](\d+)["']/i)?.[1]);
+      assert(width > 0 && height > 0, `${relativePath} image dimensions must be positive: ${src}`);
+    }
   }
   const types = jsonLdTypes(markup);
   for (const type of requiredTypes) assert(types.includes(type), `${relativePath} JSON-LD is missing ${type}`);
-  return { relativePath, title, description, types };
+  const ogImage = metaContent(markup, 'property', 'og:image');
+  const ogWidth = Number(metaContent(markup, 'property', 'og:image:width'));
+  const ogHeight = Number(metaContent(markup, 'property', 'og:image:height'));
+  assert(ogImage && ogWidth > 0 && ogHeight > 0, `${relativePath} needs a social image with dimensions`);
+  const ogLocal = localPathFor(ogImage, relativePath);
+  assert(ogLocal && fs.existsSync(ogLocal.file), `${relativePath} social image is not a local site asset: ${ogImage}`);
+  const ogActual = pngDimensions(ogLocal.file);
+  if (ogActual) assert(ogActual.width === ogWidth && ogActual.height === ogHeight, `${relativePath} social image dimensions do not match metadata`);
+  const twitterImage = metaContent(markup, 'name', 'twitter:image');
+  assert(twitterImage, `${relativePath} needs a Twitter image`);
+  const twitterLocal = localPathFor(twitterImage, relativePath);
+  assert(twitterLocal && fs.existsSync(twitterLocal.file), `${relativePath} Twitter image is not a local site asset: ${twitterImage}`);
+
+  if (relativePath === 'index.html') {
+    const website = nodes.find((node) => node?.['@type'] === 'WebSite');
+    const application = nodes.find((node) => node?.['@type'] === 'SoftwareApplication');
+    assert(website?.url === expectedCanonical, `${relativePath} WebSite URL must match canonical`);
+    assert(application?.url === expectedCanonical, `${relativePath} SoftwareApplication URL must match canonical`);
+    assert(application?.softwareVersion === '2.5', `${relativePath} SoftwareApplication must reflect the public Store version 2.5`);
+    assert(String(application?.releaseNotes || '').includes('v2.8'), `${relativePath} SoftwareApplication release notes must identify the v2.8 preview`);
+    const appImage = localPathFor(application?.image || '', relativePath);
+    assert(appImage && fs.existsSync(appImage.file), `${relativePath} SoftwareApplication image is missing`);
+  }
+  if (relativePath.startsWith('guides/')) {
+    const article = nodes.find((node) => node?.['@type'] === 'Article');
+    assert(article?.mainEntityOfPage === expectedCanonical, `${relativePath} Article mainEntityOfPage must match canonical`);
+    assert(article?.description === description, `${relativePath} Article description must match the page description`);
+    const articleImage = localPathFor(article?.image || '', relativePath);
+    assert(articleImage && fs.existsSync(articleImage.file), `${relativePath} Article image is missing`);
+    const breadcrumb = nodes.find((node) => node?.['@type'] === 'BreadcrumbList');
+    const breadcrumbItems = breadcrumb?.itemListElement || [];
+    assert(breadcrumbItems.at(-1)?.item === expectedCanonical, `${relativePath} breadcrumb must end at the canonical URL`);
+    const visibleDate = dateOnPage(markup);
+    assert(visibleDate && article?.dateModified === visibleDate, `${relativePath} visible date and Article dateModified must match`);
+  }
+  return { relativePath, title, description, types, nodes, markup };
 }
 
 const version = manifest.version;
@@ -109,25 +185,36 @@ const pageInfos = publicPages.map((relativePath) => {
       ? ['Article', 'BreadcrumbList']
       : [];
   const expectedCanonical = relativePath === 'index.html' ? siteUrl : `${siteUrl}${relativePath}`;
-  return checkPage(`docs/${relativePath}`, expectedCanonical, requiredTypes);
+  return checkPage(relativePath, expectedCanonical, requiredTypes);
 });
 assert(new Set(pageInfos.map(page => page.title)).size === pageInfos.length, 'page titles must be distinct');
+assert(new Set(pageInfos.map(page => page.description)).size === pageInfos.length, 'page descriptions must be distinct');
 assert(pageInfos.every(page => !page.types.includes('FAQPage')), 'FAQPage JSON-LD is retired for this site and must not be emitted');
 assert(metaContent(read('docs/index.html'), 'name', 'google-site-verification') === 'YLyFwZK2cHcakG3nOrYRYw27DdFpeYfny3f_DKoIWP8', 'preserve the verified Search Console property tag');
 
-// Check every local destination, including fragment links and image fallbacks.
+// Check every local destination, including same-site absolute links, fragments, and image fallbacks.
 for (const relativePath of publicPages) {
   const markup = read(`docs/${relativePath}`);
   for (const match of markup.matchAll(/\b(?:href|src)=["']([^"']+)["']/g)) {
     const target = match[1];
-    if (/^(?:https?:|mailto:|data:)/.test(target)) continue;
-    const resolved = new URL(target, `${siteUrl}${relativePath}`);
-    const local = resolved.pathname.slice('/AI_Vision/'.length);
-    const file = path.join(docsRoot, local.endsWith('/') || !local ? `${local}index.html` : local);
-    assert(fs.existsSync(file), `${relativePath} has a missing destination: ${target}`);
-    if (resolved.hash && file.endsWith('.html')) {
-      const fragment = decodeURIComponent(resolved.hash.slice(1));
-      assert(new RegExp(`\\bid=["']${escapeRegExp(fragment)}["']`).test(fs.readFileSync(file, 'utf8')), `${relativePath} has a broken fragment: ${target}`);
+    if (/^(?:mailto:|data:|javascript:)/i.test(target)) continue;
+    const local = localPathFor(target, relativePath);
+    if (!local) {
+      if (/^https?:/i.test(target)) continue;
+      fail(`${relativePath} has an invalid local destination: ${target}`);
+    }
+    assert(fs.existsSync(local.file), `${relativePath} has a missing destination: ${target}`);
+    if (local.resolved.hash && local.file.endsWith('.html')) {
+      const fragment = decodeURIComponent(local.resolved.hash.slice(1));
+      assert(new RegExp(`\\bid=["']${escapeRegExp(fragment)}["']`).test(fs.readFileSync(local.file, 'utf8')), `${relativePath} has a broken fragment: ${target}`);
+    }
+  }
+  for (const match of markup.matchAll(/\bsrcset=["']([^"']+)["']/gi)) {
+    for (const candidate of match[1].split(',')) {
+      const target = candidate.trim().split(/\s+/)[0];
+      if (!target) continue;
+      const local = localPathFor(target, relativePath);
+      assert(local && fs.existsSync(local.file), `${relativePath} has a missing responsive image source: ${target}`);
     }
   }
   assert(metaContent(markup, 'property', 'og:url') === canonical(markup), `${relativePath} social URL differs from canonical`);
@@ -149,6 +236,13 @@ for (const url of sitemapUrls) {
   assert(fs.existsSync(localPath), `sitemap URL has no local file: ${url}`);
 }
 for (const url of expectedSitemapUrls) assert(sitemapUrls.includes(url), `sitemap.xml is missing ${url}`);
+const sitemapDates = new Map([...sitemap.matchAll(/<url>[\s\S]*?<loc>([^<]+)<\/loc>[\s\S]*?<lastmod>(\d{4}-\d{2}-\d{2})<\/lastmod>[\s\S]*?<\/url>/gi)].map((match) => [match[1], match[2]]));
+for (const page of pageInfos) {
+  const visibleDate = dateOnPage(page.markup);
+  if (!visibleDate) continue;
+  const url = page.relativePath === 'index.html' ? siteUrl : `${siteUrl}${page.relativePath}`;
+  assert(sitemapDates.get(url) === visibleDate, `${page.relativePath} visible modification date must match sitemap lastmod`);
+}
 
 const webManifest = JSON.parse(read('docs/site.webmanifest'));
 assert(webManifest.name && webManifest.start_url === '/AI_Vision/', 'site.webmanifest must describe the AI Vision site');

@@ -6,6 +6,16 @@ const path = require('node:path');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const base = process.env.SITE_TEST_URL || 'http://127.0.0.1:8765/docs/';
 const reportPath = process.env.WEBSITE_REPORT || '';
+const docsRoot = path.resolve(__dirname, '..', 'docs');
+function discoverPublicPages(directory = docsRoot) {
+  const pages = [];
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    const absolute = path.join(directory, entry.name);
+    if (entry.isDirectory()) pages.push(...discoverPublicPages(absolute));
+    else if (entry.isFile() && entry.name.endsWith('.html')) pages.push(path.relative(docsRoot, absolute).split(path.sep).join('/'));
+  }
+  return pages;
+}
 const writeReport = report => {
   if (!reportPath) return;
   fs.mkdirSync(path.dirname(reportPath), { recursive: true });
@@ -15,8 +25,11 @@ const writeReport = report => {
   const browser = await chromium.launch({ headless:true, executablePath:process.env.CHROME_EXECUTABLE || undefined });
   const failures = [];
   const widths = [390,768,1024,1440];
-  const pages = ['', 'privacy.html','guides/get-gemini-api-key.html','guides/ai-screenshot-assistant.html','guides/summarize-webpage-with-gemini.html','guides/compare-chrome-tabs-with-gemini.html','guides/copy-text-from-screenshot-chrome.html'];
+  const pages = discoverPublicPages().sort().map(route => route === 'index.html' ? '' : route);
   let homepagePayloadSize = null;
+  const heroImagePath = path.join(docsRoot, 'assets/previews/hero-showcase.jpg');
+  const heroImageBytes = fs.statSync(heroImagePath).size;
+  assert.ok(heroImageBytes < 300000, `Hero image ${heroImageBytes} under 300 KB`);
   try {
     const page = await browser.newPage({ reducedMotion:'reduce' });
     page.on('pageerror',e => failures.push(e.message));
@@ -48,11 +61,17 @@ const writeReport = report => {
       assert.equal(await page.locator('.example:visible').count(),1);
       assert.equal(await page.locator(`[data-sample="${example}"]`).isVisible(),true);
     }
-    await page.locator('[data-lightbox]').focus();
-    await page.keyboard.press('Enter');
-    assert.equal(await page.locator('#lightbox').evaluate(e=>e.open),true);
-    await page.keyboard.press('Escape');
-    assert.equal(await page.locator('[data-lightbox]').evaluate(e=>e===document.activeElement),true);
+    for (const route of pages) {
+      await page.goto(base + route);
+      const lightboxLink = page.locator('[data-lightbox]').first();
+      if (await lightboxLink.count()) {
+        await lightboxLink.focus();
+        await page.keyboard.press('Enter');
+        assert.equal(await page.locator('#lightbox').evaluate(e=>e.open),true, `${route} opens its image dialog`);
+        await page.keyboard.press('Escape');
+        assert.equal(await lightboxLink.evaluate(e=>e===document.activeElement),true, `${route} restores image focus`);
+      }
+    }
     const cold = await browser.newPage();
     const payloads = [];
     cold.on('response', response => payloads.push(response.body().then(body => body.length)));
@@ -64,12 +83,19 @@ const writeReport = report => {
     await cold.close();
     const nojs = await browser.newContext({javaScriptEnabled:false,viewport:{width:390,height:844}});
     const plain = await nojs.newPage();
-    await plain.goto(base);
-    assert.equal(await plain.locator('.example:visible').count(),3);
-    assert.equal(await plain.locator('a[href="guides/get-gemini-api-key.html"]').first().isVisible(),true);
-    assert.equal(await plain.locator('a[href="guides/copy-text-from-screenshot-chrome.html"]').first().isVisible(),true);
-    await plain.locator('summary').first().click();
-    assert.equal(await plain.locator('.faq-list details').first().evaluate(e=>e.open),true);
+    for (const route of pages) {
+      await plain.goto(base + route);
+      assert.equal(await plain.locator('h1').count(),1, `${route} remains readable without JavaScript`);
+      assert.ok((await plain.locator('body').innerText()).length > 100, `${route} has essential no-JS content`);
+      if (!route) {
+        assert.equal(await plain.locator('.example:visible').count(),3);
+        assert.equal(await plain.locator('a[href="guides/get-gemini-api-key.html"]').first().isVisible(),true);
+        assert.equal(await plain.locator('a[href="guides/copy-text-from-screenshot-chrome.html"]').first().isVisible(),true);
+        await plain.locator('summary').first().click();
+        assert.equal(await plain.locator('.faq-list details').first().evaluate(e=>e.open),true);
+      }
+    }
+    await nojs.close();
     assert.deepEqual(failures,[]);
     writeReport({
       status: 'passed',
@@ -77,6 +103,7 @@ const writeReport = report => {
       pages,
       widths,
       homepagePayloadBytes: homepagePayloadSize,
+      heroImageBytes,
       checks: ['one heading per page', 'no horizontal overflow', 'image proportions', 'keyboard lightbox', 'interactive examples', 'no-JavaScript content', 'reduced motion'],
       generatedAt: new Date().toISOString()
     });

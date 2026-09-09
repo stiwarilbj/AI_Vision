@@ -2,13 +2,13 @@
   "status": "passed",
   "base": "http://127.0.0.1:8765/docs/",
   "pages": [
-    "",
-    "privacy.html",
-    "guides/get-gemini-api-key.html",
     "guides/ai-screenshot-assistant.html",
-    "guides/summarize-webpage-with-gemini.html",
     "guides/compare-chrome-tabs-with-gemini.html",
-    "guides/copy-text-from-screenshot-chrome.html"
+    "guides/copy-text-from-screenshot-chrome.html",
+    "guides/get-gemini-api-key.html",
+    "guides/summarize-webpage-with-gemini.html",
+    "",
+    "privacy.html"
   ],
   "widths": [
     390,
@@ -16,7 +16,8 @@
     1024,
     1440
   ],
-  "homepagePayloadBytes": 93635,
+  "homepagePayloadBytes": 94573,
+  "heroImageBytes": 137073,
   "checks": [
     "one heading per page",
     "no horizontal overflow",
@@ -26,5 +27,5 @@
     "no-JavaScript content",
     "reduced motion"
   ],
-  "generatedAt": "2026-09-09T01:30:15.776Z"
+  "generatedAt": "2026-09-09T04:37:40.028Z"
 }
