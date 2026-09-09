@@ -104,6 +104,12 @@
             if (scenario === 'extract') {
               return { requestId: request.requestId, text: 'Weekly reading progress\nWeek 1: 40 pages\nWeek 2: 60 pages\nWeek 3: 90 pages\nWeek 4: 100 pages' };
             }
+            if (scenario === 'page') {
+              return { requestId: request.requestId, text: 'The library is testing quiet study hours from 4–5 pm on Tuesdays and Thursdays for six weeks. The ground floor stays open for conversation, and visitor feedback will decide what happens next.' };
+            }
+            if (scenario === 'tabs') {
+              return { requestId: request.requestId, text: 'Daylight 18 is 250 g lighter and explicitly includes a laptop sleeve. Cloudpack 22 adds 4 L and includes a rain cover, but its laptop storage is not specified.' };
+            }
             const turnCount = Array.isArray(request.conversationHistory) ? request.conversationHistory.length / 2 : 0;
             return {
               requestId: request.requestId,
