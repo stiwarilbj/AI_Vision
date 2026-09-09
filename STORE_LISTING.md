@@ -1,14 +1,14 @@
-# Chrome Web Store copy – version 2.7
+# Chrome Web Store copy – version 2.8
 
 Official active listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
 
 ## Title from package
 
-AI Vision: Gemini Screenshot, Webpage & Multi-Tab AI Assistant for Chrome
+AI Vision: AI Screenshot Assistant
 
 ## Summary from package
 
-Ask Gemini about screenshots, webpages, articles, products, research, and up to 20 tabs—then run safe approval-based browser tasks.
+Explain screenshots, copy text from images, summarize webpages, and compare tabs in Chrome with your own Gemini API key.
 
 ## Category
 
@@ -16,23 +16,20 @@ Workflow & Planning
 
 ## Detailed description
 
-Turn the page you see into an answer you can use.
+Turn one screenshot into a clear answer without leaving Chrome.
 
-AI Vision is a Gemini-powered Chrome extension for visual questions, webpage reading, and focused browser workflows. Capture a region, ask about the page in front of you, or compare supported tabs without copying content into another app.
+AI Vision is an AI screenshot assistant for Chrome. Select part of a chart, image, error, or document, ask Gemini to explain it, and ask a follow-up while the screenshot stays in context. It also extracts text from images, summarizes readable webpages, and compares useful details across supported tabs.
 
-Choose the workflow that fits:
+Use AI Vision to:
 
-- **Screenshot:** select a chart, image, paragraph, product detail, or error and ask Gemini about exactly what matters.
-- **This page:** summarize, explain, or question readable content from the current supported webpage.
-- **Compare tabs:** compare and synthesize up to 20 supported pages in the Chrome window where the task began.
+- Explain screenshots, charts, diagrams, interfaces, and error messages in plain language
+- Extract text from images, then copy the answer into a document or message
+- Summarize articles, product pages, documents, and research
+- Compare claims, prices, requirements, or limitations across open tabs
+- Follow up directly beneath an answer, with Copy answer and Retry as secondary actions
 
 For everyday productivity, AI Vision can:
 
-- Explain screenshots, charts, diagrams, interfaces, and error messages in plain language
-- Summarize articles, documents, product pages, and research sources
-- Compare claims, prices, requirements, or limitations across open tabs
-- Follow up directly beneath an answer, with Copy answer and Retry as secondary actions
-- Start with Select an area, then choose Explain screenshot; use More actions for Summarize and Extract text, plus Balanced, Concise, Formal, Casual, Detailed, or Bullet-oriented response styles
 - Open from the toolbar, the right-click menu, or **Alt + Shift + V**
 
 ### Optional Browser tasks (Beta)
@@ -41,15 +38,15 @@ Enable Browser tasks when you want a bounded browser workflow instead of an expl
 
 Reading, waiting, and scrolling can proceed automatically. Clicks, text entry, navigation, new tabs, history movement, and reloads pause for your approval. Passwords, credentials, payments, purchases, deletions, uploads, posts, sign-ins, permission changes, legal acceptance, and other sensitive actions are permanently blocked. Every task stops after 12 steps so you can review what happened.
 
-The Google ADK browser runtime is bundled with the extension. Each planning step uses the configured Gemini rotation inside the service worker—no terminal, Node.js installation, companion process, or download is required.
+Browser tasks are optional. Approval prompts and a visible Stop action protect clicks, typing, navigation, and other supported actions. Sensitive actions are blocked and every task stops after 12 steps so you can review what happened.
 
-### Get started in under two minutes
+### Get started in three steps
 
 1. Install AI Vision from the Chrome Web Store.
 2. Create a Gemini API key at [Google AI Studio](https://aistudio.google.com/app/apikey), open Settings, and press **Save & check key**.
 3. Open a page, press **Alt + Shift + V**, choose Screenshot, select an area, and press **Explain screenshot**.
 
-Google controls API availability, model access, free-tier limits, and pricing. Compare tabs asks for its optional permission only when you choose that mode.
+Your key stays in Chrome's local extension storage. Requests go directly to Google's Gemini API. Google controls API availability, model access, free-tier limits, and pricing. Compare tabs asks for its optional permission only when you choose that mode.
 
 ### Privacy and control
 

@@ -1,6 +1,6 @@
-# AI Vision: Gemini Screenshot, Webpage & Multi-Tab AI Assistant for Chrome
+# AI Vision: AI Screenshot Assistant for Chrome
 
-> AI Vision is a Chrome extension for asking Google's Gemini API about a selected screenshot, This page, or supported tabs in one Chrome window. Its optional Browser tasks feature can perform constrained browser actions within the user-selected scope.
+> AI Vision is a Chrome extension for explaining selected screenshots, extracting text from images, summarizing webpages, and comparing supported tabs with Google's Gemini API and the user's own key.
 
 Canonical website: https://stiwarilbj.github.io/AI_Vision/
 Official active Chrome Web Store listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
@@ -10,7 +10,7 @@ Screenshot guide: https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-as
 Screenshot text extraction guide: https://stiwarilbj.github.io/AI_Vision/guides/copy-text-from-screenshot-chrome.html
 Webpage summary guide: https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html
 Tab comparison guide: https://stiwarilbj.github.io/AI_Vision/guides/compare-chrome-tabs-with-gemini.html
-Current version: 2.7
+Current version: 2.8
 Last updated: 2026-09-08
 
 Canonical project guide: https://github.com/stiwarilbj/AI_Vision/blob/main/README.md

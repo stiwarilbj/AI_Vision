@@ -4,7 +4,7 @@ AI Vision lets you ask Gemini about a selected screenshot, copy text from an ima
 
 [Actual active Chrome Web Store extension listing](https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en) · [Get a Gemini API key](https://aistudio.google.com/app/apikey)
 
-## Version 2.7
+## Version 2.8
 
 - Open Screenshot from anywhere with **Alt + Shift + V**, summarize a page from the right-click menu, or explain selected text in one click.
 - Every mode has context-aware actions, while Screenshot keeps the main Explain action separate and easy to find.
@@ -19,7 +19,7 @@ AI Vision lets you ask Gemini about a selected screenshot, copy text from an ima
 - Model and response preferences, along with optional **Browser tasks (Beta)**, live in Settings. Active tasks keep their approval and Stop controls in the main panel.
 - Gemini requests, key storage, model discovery, and settings persistence run in the service worker.
 - The visible panel is isolated in a closed Shadow DOM and shows only masked key status.
-- Browser tasks are powered by the Google ADK runtime bundled in the extension; no terminal, Node.js install, companion process, or download is needed.
+- Browser tasks remain optional and approval-based; no terminal, Node.js install, companion process, or download is needed.
 - ADK planning calls rotate persistently through five Gemini models, one model per planning request.
 - Browser tasks use strict structured actions, live target signatures, task IDs, cancellation, timeouts, context limits, and stale-progress protection.
 - Response styles include Balanced, Concise, Formal, Casual, Detailed, and Bullet-oriented.

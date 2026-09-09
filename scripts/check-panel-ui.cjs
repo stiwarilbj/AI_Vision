@@ -91,7 +91,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await visible('#gemini-more-actions'), true);
     await screenshot('extension-capture');
     await click('#gemini-explain-capture');
-    await waitText('Local test response.');
+    await waitText('The selected chart rises from 40 to 100 pages.');
     assert.equal((await requests()).length, 1);
     assert.ok((await requests())[0].captureImageData);
     assert.equal(await visible('#gemini-popup-composer'), true);
@@ -118,12 +118,12 @@ const server = http.createServer((req, res) => {
     assert.equal(await visible('#gemini-capture-frame'), false);
     await openMoreActions();
     await click('#gemini-popup-presets button');
-    await waitText('Local test response.');
+    await waitText('The selected chart rises from 40 to 100 pages.');
     assert.equal((await requests()).at(-1).mode, 'tab');
     await choose('all-tabs');
     await openMoreActions();
     await click('#gemini-popup-presets button');
-    await waitText('Local test response.');
+    await waitText('The selected chart rises from 40 to 100 pages.');
     assert.equal((await requests()).at(-1).mode, 'all-tabs');
 
     await click('#gemini-settings-button');
@@ -198,15 +198,15 @@ const server = http.createServer((req, res) => {
       explain.click();
     });
     assert.equal((await requests()).length, 1, 'duplicate Explain clicks send only one request');
-    await waitText('Local test response.');
+    await waitText('The selected chart rises from 40 to 100 pages.');
 
     await open('auto');
     assert.match(await text('#gemini-primary-mode'), /Select & explain/);
     await captureArea();
-    await waitText('Local test response.');
+    await waitText('The selected chart rises from 40 to 100 pages.');
     assert.equal((await requests()).length, 1, 'automatic mode sends exactly once');
     await captureArea();
-    await waitText('Local test response.');
+    await waitText('The selected chart rises from 40 to 100 pages.');
     assert.equal((await requests()).length, 2, 'a successful retake explains exactly once');
 
     await open('slow-request');
