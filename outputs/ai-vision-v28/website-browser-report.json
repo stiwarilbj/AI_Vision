@@ -16,8 +16,8 @@
     1024,
     1440
   ],
-  "homepagePayloadBytes": 94573,
-  "heroImageBytes": 137073,
+  "homepagePayloadBytes": 75652,
+  "heroImageBytes": 54673,
   "checks": [
     "one heading per page",
     "no horizontal overflow",
@@ -27,5 +27,5 @@
     "no-JavaScript content",
     "reduced motion"
   ],
-  "generatedAt": "2026-09-09T04:37:40.028Z"
+  "generatedAt": "2026-09-09T06:47:54.963Z"
 }

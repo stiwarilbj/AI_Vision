@@ -8,7 +8,7 @@ AI Vision: AI Screenshot Assistant
 
 ## Summary from package
 
-Explain screenshots, copy text from images, summarize webpages, and compare tabs in Chrome with your own Gemini API key.
+Explain screenshots, copy text from images, and ask follow-up questions in Chrome with your own Gemini API key.
 
 ## Category
 
@@ -16,47 +16,28 @@ Workflow & Planning
 
 ## Detailed description
 
-Turn one screenshot into a clear answer without leaving Chrome.
+AI Vision is an AI screenshot assistant for Chrome. Select part of a chart, image, error, or document, ask Gemini to explain it, and ask a follow-up while the screenshot stays in context.
 
-AI Vision is an AI screenshot assistant for Chrome. Select part of a chart, image, error, or document, ask Gemini to explain it, and ask a follow-up while the screenshot stays in context. It also extracts text from images, summarizes readable webpages, and compares useful details across supported tabs.
+Use it to:
 
-Use AI Vision to:
+- Understand screenshots, charts, diagrams, interfaces, and error messages
+- Copy text from images into a document, search box, or message
+- Summarize a readable webpage without leaving Chrome
+- Compare useful details across supported tabs
 
-- Explain screenshots, charts, diagrams, interfaces, and error messages in plain language
-- Extract text from images, then copy the answer into a document or message
-- Summarize articles, product pages, documents, and research
-- Compare claims, prices, requirements, or limitations across open tabs
-- Follow up directly beneath an answer, with Copy answer and Retry as secondary actions
+Open AI Vision from the toolbar, right-click menu, or **Alt + Shift + V**. The main flow is simple: select an area, explain it, and follow up.
 
-For everyday productivity, AI Vision can:
-
-- Open from the toolbar, the right-click menu, or **Alt + Shift + V**
-
-### Optional Browser tasks (Beta)
-
-Enable Browser tasks when you want a bounded browser workflow instead of an explanation. Screenshot and This page stay in the source tab. Compare tabs can search, switch, navigate, click, type, or scroll only inside the starting Chrome window.
-
-Reading, waiting, and scrolling can proceed automatically. Clicks, text entry, navigation, new tabs, history movement, and reloads pause for your approval. Passwords, credentials, payments, purchases, deletions, uploads, posts, sign-ins, permission changes, legal acceptance, and other sensitive actions are permanently blocked. Every task stops after 12 steps so you can review what happened.
-
-Browser tasks are optional. Approval prompts and a visible Stop action protect clicks, typing, navigation, and other supported actions. Sensitive actions are blocked and every task stops after 12 steps so you can review what happened.
-
-### Get started in three steps
+### Get started
 
 1. Install AI Vision from the Chrome Web Store.
-2. Create a Gemini API key at [Google AI Studio](https://aistudio.google.com/app/apikey), open Settings, and press **Save & check key**.
-3. Open a page, press **Alt + Shift + V**, choose Screenshot, select an area, and press **Explain screenshot**.
+2. Create a Gemini API key at [Google AI Studio](https://aistudio.google.com/app/apikey), open Settings, and choose **Save & check key**.
+3. Choose Screenshot, select an area, and press **Explain screenshot**. Use **More actions** for **Extract text** or Summarize.
 
-Your key stays in Chrome's local extension storage. Requests go directly to Google's Gemini API. Google controls API availability, model access, free-tier limits, and pricing. Compare tabs asks for its optional permission only when you choose that mode.
+Browser tasks (Beta) are optional. They use clear approval prompts and a visible Stop action for supported clicks, typing, navigation, and scrolling.
 
-### Privacy and control
+Your key and preferences stay in Chrome's local extension storage. Prompts and the screenshot or page context needed for a request go directly to Google's Gemini API over HTTPS. Google controls model access, API limits, and pricing. Restricted Chrome pages cannot be analyzed. See the linked privacy notice for complete details.
 
-AI Vision runs when you open it or start a task. Your Gemini API key and preferences stay in local Chrome extension storage; the visible panel receives only masked key status. Prompts and the screenshot or page context needed for a request go directly to Google's Gemini API over HTTPS.
-
-There is no developer-operated analytics, advertising, tracking, or proxy server. Chrome internal pages, the Chrome Web Store, and other restricted pages cannot be analyzed. See the linked privacy notice for the complete data-handling details.
-
-The source is publicly available at [github.com/stiwarilbj/AI_Vision](https://github.com/stiwarilbj/AI_Vision). If AI Vision saves you time, an honest Chrome Web Store rating helps other people find it. Ratings are never required or rewarded.
-
-AI Vision is an independent project and is not affiliated with or endorsed by Google. Gemini and Chrome are trademarks of Google LLC.
+AI Vision is free to install, independent, and not affiliated with Google. The source is available at [github.com/stiwarilbj/AI_Vision](https://github.com/stiwarilbj/AI_Vision).
 
 ## Privacy form
 

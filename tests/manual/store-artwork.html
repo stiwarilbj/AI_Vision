@@ -9,22 +9,18 @@
     * { box-sizing:border-box; }
     html,body { margin:0; width:100%; height:100%; overflow:hidden; }
     body { background:var(--baby); color:var(--navy); }
-    .art { width:100vw; height:100vh; min-width:440px; min-height:280px; position:relative; overflow:hidden; padding:62px 76px; background:linear-gradient(135deg,#f5faff 0%,var(--baby) 52%,#d5ecff 100%); }
-    .art::before,.art::after { content:""; position:absolute; border:2px solid #b9d9f466; border-radius:34px; transform:rotate(18deg); pointer-events:none; }
-    .art::before { width:220px; height:220px; right:-70px; top:-90px; }
-    .art::after { width:170px; height:170px; left:-84px; bottom:-90px; transform:rotate(-14deg); }
-    .kicker { font-size:16px; letter-spacing:2px; font-weight:700; color:var(--blue); text-transform:uppercase; }
+    .art { width:100vw; height:100vh; min-width:440px; min-height:280px; position:relative; overflow:hidden; padding:62px 76px; background:linear-gradient(135deg,#f8fcff 0%,var(--baby) 54%,#d5ecff 100%); }
+    .art::before { content:""; position:absolute; width:280px; height:280px; right:-130px; top:-150px; border:2px solid #b9d9f466; border-radius:50%; pointer-events:none; }
+    .art::after { content:""; position:absolute; width:190px; height:190px; left:-115px; bottom:-125px; border:2px solid #b9d9f466; border-radius:50%; pointer-events:none; }
+    .kicker { font-size:14px; letter-spacing:1.5px; font-weight:700; color:var(--blue); text-transform:uppercase; }
     h1 { margin:16px 0 14px; max-width:610px; font-size:52px; line-height:1.05; letter-spacing:-2.2px; }
-    .sub { margin:0; max-width:530px; color:var(--muted); font-size:22px; line-height:1.4; }
+    .sub { margin:0; max-width:530px; color:var(--muted); font-size:20px; line-height:1.4; }
     .split { display:grid; grid-template-columns:minmax(0,1fr) 475px; align-items:center; gap:54px; height:100%; position:relative; z-index:1; }
     .copy { align-self:center; }
-    .badge { display:inline-flex; margin-top:28px; align-items:center; gap:8px; padding:10px 14px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--navy); font-size:15px; font-weight:700; }
-    .badge span { width:9px; height:9px; border-radius:50%; background:var(--blue); }
     .capture { width:475px; max-height:680px; object-fit:contain; object-position:center; filter:drop-shadow(0 20px 28px #3a6c9740); }
-    .slide-number { position:absolute; right:76px; top:36px; color:var(--muted); font-size:14px; font-weight:700; letter-spacing:1px; }
-    .hero-art { padding:48px 58px; }
-    .hero-art .split { grid-template-columns:minmax(0,1fr) minmax(280px,360px) minmax(260px,340px); gap:22px; }
-    .hero-art h1 { font-size:44px; max-width:520px; }
+    .slide-number { display:none; }
+    .hero-art { padding:36px 42px; }
+    .hero-art .split { grid-template-columns:minmax(260px,360px) minmax(320px,1fr); gap:34px; }
     .source-card { width:100%; padding:28px; background:#fff; border:1px solid var(--line); border-radius:24px; box-shadow:0 16px 30px #3a6c971c; }
     .source-card h2 { margin:10px 0 24px; font-size:27px; letter-spacing:-1px; }
     .chart { height:200px; display:flex; align-items:end; gap:18px; padding:20px 14px 0; border-bottom:2px solid #c6def2; background:repeating-linear-gradient(to top,transparent 0 43px,#d8e9f640 44px); }
@@ -32,12 +28,12 @@
     .bar b { position:absolute; top:-24px; left:0; right:0; text-align:center; font-size:14px; color:var(--navy); }
     .labels { display:flex; gap:18px; padding:9px 14px 0; color:var(--muted); font-size:12px; }
     .labels span { flex:1; text-align:center; }
-    .hero-art .capture { width:100%; max-height:520px; align-self:center; }
-    .hero-art .kicker { font-size:13px; }
-    .hero-art .sub { font-size:18px; }
-    .small-art{padding:28px 26px}.small-art .split{grid-template-columns:minmax(0,1fr) 145px;gap:14px}.small-art h1{font-size:29px;max-width:250px;margin:10px 0}.small-art .sub{font-size:15px;max-width:210px}.small-art .kicker{font-size:11px;letter-spacing:1.3px}.small-art .badge{font-size:11px;padding:7px 10px;margin-top:14px}.small-art .capture{width:145px;max-height:220px;align-self:end}.small-art .slide-number{display:none}
-    @media(max-width:800px){ .art{padding:40px 34px}.split{grid-template-columns:1fr;gap:24px}.capture{width:min(430px,100%);justify-self:center;max-height:480px}h1{font-size:42px}.sub{font-size:19px}.slide-number{right:34px}.hero-art .split{grid-template-columns:1fr}.hero-art .capture{width:min(360px,100%);justify-self:center} }
-    @media(max-width:600px){ .art{min-width:0;padding:28px}.kicker{font-size:12px}.art h1{font-size:34px}.sub{font-size:16px}.badge{margin-top:18px;font-size:12px}.slide-number{right:28px;top:18px}.source-card{padding:20px}.source-card h2{font-size:22px}.chart{height:150px}.hero-art{padding:24px}.hero-art h1{font-size:30px} }
+    .hero-art .capture { width:100%; max-height:540px; align-self:center; }
+    .hero-art .kicker { font-size:12px; }
+    .hero-art .source-card::after { content:"Selected screenshot → answer"; display:block; margin-top:20px; color:var(--muted); font-size:13px; font-weight:650; }
+    .small-art{padding:28px 26px}.small-art .split{grid-template-columns:minmax(0,1fr) 145px;gap:14px}.small-art h1{font-size:29px;max-width:250px;margin:10px 0}.small-art .sub{font-size:15px;max-width:210px}.small-art .kicker{font-size:11px;letter-spacing:1.3px}.small-art .capture{width:145px;max-height:220px;align-self:end}
+    @media(max-width:800px){ .art{padding:40px 34px}.split{grid-template-columns:1fr;gap:24px}.capture{width:min(430px,100%);justify-self:center;max-height:480px}h1{font-size:42px}.sub{font-size:19px}.hero-art .split{grid-template-columns:1fr}.hero-art .capture{width:min(360px,100%);justify-self:center} }
+    @media(max-width:600px){ .art{min-width:0;padding:28px}.kicker{font-size:12px}.art h1{font-size:34px}.sub{font-size:16px}.source-card{padding:20px}.source-card h2{font-size:22px}.chart{height:150px}.hero-art{padding:24px}.hero-art .source-card::after{margin-top:14px;font-size:11px} }
   </style>
 </head>
 <body>
@@ -45,18 +41,18 @@
   <script>
     const q = new URLSearchParams(location.search); const slide = q.get('slide') || '1'; const kind = q.get('kind') || 'store';
     const content = {
-      '1': {k:'SCREENSHOT EXPLANATION · V2.8 PREVIEW', h:'Explain what you see.', s:'Select a detail. Get the point. Ask a follow-up while the screenshot stays in context.', img:'../../docs/assets/previews/extension-answer.png', badge:'Explain a screenshot in one tap'},
-      '2': {k:'TEXT EXTRACTION · V2.8 PREVIEW', h:'Turn image text into copy.', s:'Capture a chart, error, or announcement, then copy a clean transcription into your next task.', img:'../../docs/assets/previews/extension-text-extraction.png', badge:'Extract text, then copy the answer'},
-      '3': {k:'WEBPAGE SUMMARY · V2.8 PREVIEW', h:'Find the point of a page.', s:'Ask Gemini for a useful summary without leaving the article or losing your place in Chrome.', img:'../../docs/assets/previews/extension-page.png', badge:'Summarize a readable webpage'},
-      '4': {k:'TAB COMPARISON · V2.8 PREVIEW', h:'Compare tabs with context.', s:'Bring related product pages or sources together and ask for the differences that matter.', img:'../../docs/assets/previews/extension-tabs.png', badge:'Compare supported Chrome tabs'},
-      '5': {k:'QUICK SETUP · V2.8 PREVIEW', h:'Ready after one key.', s:'Create a Gemini API key, save it in Settings, and start with the screenshot in front of you.', img:'../../docs/assets/previews/extension-setup.png', badge:'Save your key and start capturing'}
+      '1': {k:'SCREENSHOT EXPLANATION · V2.8 PREVIEW', h:'Understand your screenshot.', s:'Select a detail, get a clear answer, and ask a follow-up.', img:'../../docs/assets/previews/extension-answer.png'},
+      '2': {k:'TEXT EXTRACTION · V2.8 PREVIEW', h:'Copy text from images.', s:'Turn a screenshot into clean, editable text.', img:'../../docs/assets/previews/extension-text-extraction.png'},
+      '3': {k:'WEBPAGE SUMMARY · V2.8 PREVIEW', h:'Summarize a webpage.', s:'Find the useful points without leaving Chrome.', img:'../../docs/assets/previews/extension-page.png'},
+      '4': {k:'TAB COMPARISON · V2.8 PREVIEW', h:'Compare two tabs.', s:'Ask for the differences that matter.', img:'../../docs/assets/previews/extension-tabs.png'},
+      '5': {k:'QUICK SETUP · V2.8 PREVIEW', h:'Add your Gemini key.', s:'Save your key once, then start with a screenshot.', img:'../../docs/assets/previews/extension-setup.png'}
     };
     const c = content[slide] || content['1']; const root = document.querySelector('#art');
-    if (kind === 'small') { root.classList.add('small-art'); root.innerHTML = `<div class="split"><div class="copy"><div class="kicker">AI VISION · CHROME</div><h1>Explain any screenshot.</h1><p class="sub">Select, ask Gemini, and keep moving.</p><div class="badge"><span></span>Free to install</div></div><img class="capture" src="../../docs/assets/previews/extension-answer.png" alt="AI Vision answer interface"></div>`; }
+    if (kind === 'small') { root.classList.add('small-art'); root.innerHTML = `<div class="split"><div class="copy"><div class="kicker">AI VISION · CHROME</div><h1>Understand your screenshot.</h1><p class="sub">Select, ask Gemini, and keep moving.</p></div><img class="capture" src="../../docs/assets/previews/extension-answer.png" alt="AI Vision answer interface"></div>`; }
     else if (kind === 'hero') {
-      root.classList.add('hero-art'); root.innerHTML = `<div class="split"><div class="copy"><div class="kicker">AI SCREENSHOT ASSISTANT FOR CHROME · V2.8 PREVIEW</div><h1>One screenshot.<br>One clear answer.</h1><p class="sub">Select a detail, ask Gemini to explain it, and keep a follow-up ready in Chrome.</p><div class="badge"><span></span>Authentic extension interface · Store update pending review</div></div><div class="source-card"><div class="kicker">FICTIONAL SOURCE · READING CLUB</div><h2>Weekly reading progress</h2><div class="chart"><div class="bar" style="height:40%"><b>40</b></div><div class="bar" style="height:60%"><b>60</b></div><div class="bar" style="height:90%"><b>90</b></div><div class="bar" style="height:100%"><b>100</b></div></div><div class="labels"><span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span></div></div><img class="capture" src="../../docs/assets/previews/extension-answer.png" alt="AI Vision answer interface"></div>`;
+      root.classList.add('hero-art'); root.innerHTML = `<div class="split"><div class="source-card"><div class="kicker">FICTIONAL SCREENSHOT</div><h2>Weekly reading progress</h2><div class="chart"><div class="bar" style="height:40%"><b>40</b></div><div class="bar" style="height:60%"><b>60</b></div><div class="bar" style="height:90%"><b>90</b></div><div class="bar" style="height:100%"><b>100</b></div></div><div class="labels"><span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span></div></div><img class="capture" src="../../docs/assets/previews/extension-answer.png" alt="AI Vision answer interface"></div>`;
     } else {
-      root.innerHTML = `<div class="slide-number">${slide} / 5</div><div class="split"><div class="copy"><div class="kicker">${c.k}</div><h1>${c.h}</h1><p class="sub">${c.s}</p><div class="badge"><span></span>${c.badge}</div></div><img class="capture" src="${c.img}" alt="Authentic AI Vision extension interface preview"></div>`;
+      root.innerHTML = `<div class="split"><div class="copy"><div class="kicker">${c.k}</div><h1>${c.h}</h1><p class="sub">${c.s}</p></div><img class="capture" src="${c.img}" alt="Authentic AI Vision extension interface preview"></div>`;
     }
   </script>
 </body>
