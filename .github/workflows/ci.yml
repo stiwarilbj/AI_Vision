@@ -26,9 +26,11 @@ jobs:
           SITE_TEST_URL: http://127.0.0.1:8765/docs/
           WEBSITE_REPORT: outputs/website-browser-report.json
       - name: Save website browser report
-        if: always()
+        # Keep the original check failure visible without masking it with a
+        # second failure when the browser check stopped before writing a report.
+        if: always() && hashFiles('outputs/website-browser-report.json') != ''
         uses: actions/upload-artifact@v4
         with:
           name: website-browser-report
           path: outputs/website-browser-report.json
-          if-no-files-found: error
+          if-no-files-found: warn
