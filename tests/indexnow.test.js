@@ -91,10 +91,11 @@ test('the checked-in key file contains exactly the key used by the notifier', ()
 
 test('IndexNow workflow waits for the successful Pages deployment and rejects stale events', () => {
   const workflow = fs.readFileSync(path.join(projectRoot, '.github/workflows/indexnow.yml'), 'utf8');
-  assert.match(workflow, /workflow_run:/);
-  assert.match(workflow, /workflow_run\.name == 'pages build and deployment'/);
-  assert.match(workflow, /conclusion == 'success'/);
-  assert.match(workflow, /head_sha/);
+  assert.match(workflow, /deployment_status:/);
+  assert.match(workflow, /deployment_status\.state == 'success'/);
+  assert.match(workflow, /deployment\.environment == 'github-pages'/);
+  assert.match(workflow, /deployment\.ref == 'main'/);
+  assert.match(workflow, /deployment\.sha/);
   assert.match(workflow, /repository\.full_name == github\.repository/);
   assert.match(workflow, /git ls-remote origin refs\/heads\/main/);
   assert.match(workflow, /INDEXNOW_CHANGED_FILES/);
