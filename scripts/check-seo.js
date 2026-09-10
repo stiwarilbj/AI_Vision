@@ -197,6 +197,7 @@ assert(new Set(pageInfos.map(page => page.title)).size === pageInfos.length, 'pa
 assert(new Set(pageInfos.map(page => page.description)).size === pageInfos.length, 'page descriptions must be distinct');
 assert(pageInfos.every(page => !page.types.includes('FAQPage')), 'FAQPage JSON-LD is retired for this site and must not be emitted');
 assert(metaContent(read('docs/index.html'), 'name', 'google-site-verification') === 'YLyFwZK2cHcakG3nOrYRYw27DdFpeYfny3f_DKoIWP8', 'preserve the verified Search Console property tag');
+assert(metaContent(read('docs/index.html'), 'name', 'msvalidate.01') === 'EFCCCA467135B73D7F4747E1C1A15E33', 'preserve the Bing Webmaster verification tag');
 
 // Check every local destination, including same-site absolute links, fragments, and image fallbacks.
 for (const relativePath of publicPages) {
