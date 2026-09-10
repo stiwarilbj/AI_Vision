@@ -17,7 +17,7 @@ const expectedAgentModels = [
   'gemini-3.1-flash-lite',
   'gemini-2.5-flash-lite'
 ];
-const officialStoreUrl = 'https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en';
+const officialStoreUrl = 'https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk';
 
 const forbiddenInPanel = [
   /chrome\.storage/,

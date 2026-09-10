@@ -196,6 +196,17 @@ const pageInfos = publicPages.map((relativePath) => {
 assert(new Set(pageInfos.map(page => page.title)).size === pageInfos.length, 'page titles must be distinct');
 assert(new Set(pageInfos.map(page => page.description)).size === pageInfos.length, 'page descriptions must be distinct');
 assert(pageInfos.every(page => !page.types.includes('FAQPage')), 'FAQPage JSON-LD is retired for this site and must not be emitted');
+const requiredGuideAnchors = {
+  'guides/ai-screenshot-assistant.html': ['capture', 'worked-example', 'troubleshooting'],
+  'guides/copy-text-from-screenshot-chrome.html': ['setup', 'steps', 'examples', 'prompts', 'troubleshooting'],
+  'guides/summarize-webpage-with-gemini.html': ['setup', 'worked-example', 'prompts', 'troubleshooting', 'related'],
+  'guides/compare-chrome-tabs-with-gemini.html': ['setup', 'worked-example', 'prompts', 'troubleshooting'],
+  'guides/get-gemini-api-key.html': ['get-key', 'save-key', 'troubleshooting', 'limits']
+};
+for (const [relativePath, anchors] of Object.entries(requiredGuideAnchors)) {
+  const markup = read(`docs/${relativePath}`);
+  for (const anchor of anchors) assert(new RegExp(`\\bid=["']${escapeRegExp(anchor)}["']`, 'i').test(markup), `${relativePath} is missing stable section anchor #${anchor}`);
+}
 assert(metaContent(read('docs/index.html'), 'name', 'google-site-verification') === 'YLyFwZK2cHcakG3nOrYRYw27DdFpeYfny3f_DKoIWP8', 'preserve the verified Search Console property tag');
 assert(metaContent(read('docs/index.html'), 'name', 'msvalidate.01') === 'EFCCCA467135B73D7F4747E1C1A15E33', 'preserve the Bing Webmaster verification tag');
 
@@ -230,7 +241,7 @@ for (const relativePath of publicPages) {
 const robots = read('docs/robots.txt');
 assert(robots.includes('User-agent: *') && robots.includes('Allow: /'), 'robots.txt must allow the public site');
 assert(robots.includes(`Sitemap: ${siteUrl}sitemap.xml`), 'robots.txt sitemap URL must match the canonical site');
-for (const crawler of ['Googlebot', 'Bingbot', 'OAI-SearchBot', 'PerplexityBot', 'Claude-SearchBot']) {
+for (const crawler of ['Googlebot', 'Bingbot', 'OAI-SearchBot', 'ChatGPT-User', 'PerplexityBot', 'Perplexity-User', 'Claude-SearchBot', 'Claude-User']) {
   assert(new RegExp(`User-agent:\\s*${escapeRegExp(crawler)}[\\s\\S]*?Allow:\\s*/`, 'i').test(robots), `robots.txt must explicitly allow ${crawler}`);
 }
 
@@ -239,6 +250,7 @@ assert(/id=["']facts["'][\s\S]*?Product facts|PRODUCT FACTS/i.test(homepageMarku
 for (const fact of ['Gemini Chrome extension', 'supported webpages', 'Google AI Studio', 'official Chrome Web Store', 'public GitHub repository']) {
   assert(homepageMarkup.includes(fact), `homepage product facts should mention ${fact}`);
 }
+assert(!/chromewebstore\.google\.com\/detail\/ai-vision-gemini-screensh\/ghmmlbclopoakmjjbkkmoefjldgjimgk\?/.test(pageInfos.map(page => page.markup).join('\n')), 'public Store links must use the canonical URL without account-selection parameters');
 
 const extractionGuide = read('docs/guides/copy-text-from-screenshot-chrome.html');
 assert(countMatches(extractionGuide, /class=["']source-table["']/gi) === 1, 'screenshot text guide must contain one source table');

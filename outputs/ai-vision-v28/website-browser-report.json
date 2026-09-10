@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "base": "http://127.0.0.1:8765/docs/",
+  "base": "http://127.0.0.1:8899/docs/",
   "pages": [
     "guides/ai-screenshot-assistant.html",
     "guides/compare-chrome-tabs-with-gemini.html",
@@ -16,7 +16,7 @@
     1024,
     1440
   ],
-  "homepagePayloadBytes": 75652,
+  "homepagePayloadBytes": 78080,
   "heroImageBytes": 54673,
   "checks": [
     "one heading per page",
@@ -27,5 +27,5 @@
     "no-JavaScript content",
     "reduced motion"
   ],
-  "generatedAt": "2026-09-09T06:47:54.963Z"
+  "generatedAt": "2026-09-10T22:10:40.349Z"
 }

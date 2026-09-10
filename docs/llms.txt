@@ -5,7 +5,7 @@
 ## Official links
 
 - Product website: https://stiwarilbj.github.io/AI_Vision/
-- Chrome Web Store listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
+- Chrome Web Store listing (public v2.5): https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk
 - Public source: https://github.com/stiwarilbj/AI_Vision
 - Privacy notice: https://stiwarilbj.github.io/AI_Vision/privacy.html
 
@@ -21,7 +21,7 @@
 
 - Supported browser: desktop Google Chrome on supported webpages.
 - Main workflow: choose Screenshot, select an area, explain the image, and ask a follow-up.
-- Other contexts: This page and Compare tabs; Browser tasks are an optional, approval-gated feature.
+- Other contexts: This page and Compare tabs; Browser tasks are optional and approval-gated.
 - Gemini requirement: users bring their own API key from Google AI Studio and save it in the extension Settings.
 - Cost and limits: the extension is free to install; Google controls Gemini model access, quotas, rate limits, and billing.
 - Data handling: the key and preferences stay in local Chrome extension storage. A requested question and the necessary screenshot or page context go directly to Google’s Gemini API. AI Vision has no developer proxy, advertising, or analytics service.

@@ -2,9 +2,11 @@
 
 AI Vision lets you ask Gemini about a selected screenshot, copy text from an image, summarize the current tab, or compare supported tabs in one Chrome window. Optional Browser tasks can complete a constrained browser task while enforcing an explicit approval boundary.
 
-[Actual active Chrome Web Store extension listing](https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en) · [Get a Gemini API key](https://aistudio.google.com/app/apikey)
+[Actual active Chrome Web Store extension listing (public v2.5)](https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk) · [Get a Gemini API key](https://aistudio.google.com/app/apikey)
 
-## Version 2.8
+The repository contains the v2.8 GitHub-build preview. The public Store listing remains v2.5 until Google publishes a reviewed update; screenshots and preview-only controls are labeled accordingly.
+
+## GitHub build 2.8 (preview)
 
 - Open Screenshot from anywhere with **Alt + Shift + V**, summarize a page from the right-click menu, or explain selected text in one click.
 - Every mode has context-aware actions, while Screenshot keeps the main Explain action separate and easy to find.

@@ -16,4 +16,13 @@ Allow: /
 User-agent: Claude-SearchBot
 Allow: /
 
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
 Sitemap: https://stiwarilbj.github.io/AI_Vision/sitemap.xml

@@ -1,61 +1,112 @@
 name: Notify IndexNow
 
 on:
-  push:
+  workflow_run:
+    workflows: ["pages build and deployment"]
+    types: [completed]
     branches: [main]
-    paths:
-      - 'docs/**'
-      - 'scripts/notify-indexnow.js'
-      - '.github/workflows/indexnow.yml'
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   notify:
+    # Pages must have succeeded for this repository and its main branch. The
+    # head SHA is checked again below so a delayed event cannot notify for an
+    # older deployment after main has moved on.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.repository.full_name == github.repository &&
+      github.event.workflow_run.event != 'pull_request'
     runs-on: ubuntu-latest
+    env:
+      DEPLOY_COMMIT: ${{ github.event.workflow_run.head_sha }}
     steps:
-      - name: Check out the published source
+      - name: Check out the deployed commit
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
           node-version: 24.13.0
 
-      - name: Detect website content changes
-        id: changed
+      - name: Reject a superseded deployment
+        id: current
         shell: bash
         run: |
           set -euo pipefail
-          before="${{ github.event.before }}"
-          if [[ "$before" == "0000000000000000000000000000000000000000" ]]; then
-            files="$(git show --pretty= --name-only "$GITHUB_SHA")"
+          current="$(git ls-remote origin refs/heads/main | awk '{print $1}')"
+          if [[ -z "$current" || "$current" != "$DEPLOY_COMMIT" ]]; then
+            echo "superseded=true" >> "$GITHUB_OUTPUT"
+            echo "Pages event $DEPLOY_COMMIT is no longer the current main commit ($current); skipping IndexNow."
           else
-            files="$(git diff --name-only "$before" "$GITHUB_SHA")"
+            echo "superseded=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Detect website content changes
+        id: changed
+        if: steps.current.outputs.superseded == 'false'
+        shell: bash
+        env:
+          DEPLOY_COMMIT: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          files="$(git diff-tree --root --no-commit-id --name-only -r "$DEPLOY_COMMIT")"
           if printf '%s\n' "$files" | grep -q '^docs/'; then
-            echo 'changed=true' >> "$GITHUB_OUTPUT"
+            {
+              echo 'changed=true'
+              echo 'files<<INDEXNOW_FILES'
+              printf '%s\n' "$files" | grep '^docs/'
+              echo 'INDEXNOW_FILES'
+            } >> "$GITHUB_OUTPUT"
           else
             echo 'changed=false' >> "$GITHUB_OUTPUT"
+            echo 'files=' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Restore an acknowledged receipt for this commit
+        if: steps.current.outputs.superseded == 'false' && steps.changed.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOY_COMMIT: ${{ github.event.workflow_run.head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .indexnow-previous
+          previous_run="$(gh run list --workflow indexnow.yml --status completed --limit 30 --json databaseId,headSha --jq '.[] | select(.headSha == env.DEPLOY_COMMIT) | .databaseId' | head -n 1 || true)"
+          if [[ -n "$previous_run" ]]; then
+            gh run download "$previous_run" --name indexnow-receipt --dir .indexnow-previous || true
+          fi
+          receipt="$(find .indexnow-previous -type f -name indexnow-receipt.json -print -quit || true)"
+          if [[ -n "$receipt" ]]; then
+            echo "INDEXNOW_RECEIPT_FILE=$receipt" >> "$GITHUB_ENV"
           fi
 
       - name: Verify the deployed Pages files and notify IndexNow
-        if: steps.changed.outputs.changed == 'true'
+        if: steps.current.outputs.superseded == 'false' && steps.changed.outputs.changed == 'true'
         env:
           WEBSITE_CHANGED: 'true'
+          INDEXNOW_DEPLOY_COMMIT: ${{ github.event.workflow_run.head_sha }}
+          INDEXNOW_CHANGED_FILES: ${{ steps.changed.outputs.files }}
           INDEXNOW_KEY_FILE: docs/ai-vision-indexnow-20260910.txt
           INDEXNOW_KEY_LOCATION: https://stiwarilbj.github.io/AI_Vision/ai-vision-indexnow-20260910.txt
           INDEXNOW_ENDPOINT: https://www.bing.com/indexnow
           INDEXNOW_LIVE_ATTEMPTS: '12'
           INDEXNOW_LIVE_DELAY_MS: '10000'
-        run: node scripts/notify-indexnow.js --submit --changed --output outputs/indexnow-response.json
+        run: |
+          mkdir -p outputs
+          node scripts/notify-indexnow.js --submit --changed --output outputs/indexnow-response.json --receipt outputs/indexnow-receipt.json
 
-      - name: Save IndexNow response
-        if: always() && steps.changed.outputs.changed == 'true'
+      - name: Save IndexNow receipt
+        if: always() && steps.current.outputs.superseded == 'false' && steps.changed.outputs.changed == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: indexnow-response
-          path: outputs/indexnow-response.json
+          name: indexnow-receipt
+          path: |
+            outputs/indexnow-response.json
+            outputs/indexnow-receipt.json
           if-no-files-found: warn

@@ -8,7 +8,7 @@
     const DEFAULT_RESPONSE_STYLE = "balanced";
     const DEFAULT_CAPTURE_BEHAVIOR = "manual";
     const EXPLAIN_CAPTURE_QUERY = 'Explain the captured content and what it means.';
-    const STORE_URL = "https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en";
+    const STORE_URL = "https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk";
     const GITHUB_URL = "https://github.com/stiwarilbj/AI_Vision";
     const launchOptions = (() => {
         const value = globalThis.__aiVisionLaunchOptions;

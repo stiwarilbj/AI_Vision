@@ -1,6 +1,6 @@
-# Chrome Web Store copy – version 2.8
+# Chrome Web Store copy – GitHub preview v2.8
 
-Official active listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
+Official active listing (public v2.5): https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk
 
 ## Title from package
 
