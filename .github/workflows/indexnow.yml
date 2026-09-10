@@ -1,0 +1,61 @@
+name: Notify IndexNow
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'scripts/notify-indexnow.js'
+      - '.github/workflows/indexnow.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the published source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.13.0
+
+      - name: Detect website content changes
+        id: changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          before="${{ github.event.before }}"
+          if [[ "$before" == "0000000000000000000000000000000000000000" ]]; then
+            files="$(git show --pretty= --name-only "$GITHUB_SHA")"
+          else
+            files="$(git diff --name-only "$before" "$GITHUB_SHA")"
+          fi
+          if printf '%s\n' "$files" | grep -q '^docs/'; then
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify the deployed Pages files and notify IndexNow
+        if: steps.changed.outputs.changed == 'true'
+        env:
+          WEBSITE_CHANGED: 'true'
+          INDEXNOW_KEY_FILE: docs/ai-vision-indexnow-20260910.txt
+          INDEXNOW_KEY_LOCATION: https://stiwarilbj.github.io/AI_Vision/ai-vision-indexnow-20260910.txt
+          INDEXNOW_ENDPOINT: https://www.bing.com/indexnow
+          INDEXNOW_LIVE_ATTEMPTS: '12'
+          INDEXNOW_LIVE_DELAY_MS: '10000'
+        run: node scripts/notify-indexnow.js --submit --changed --output outputs/indexnow-response.json
+
+      - name: Save IndexNow response
+        if: always() && steps.changed.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: indexnow-response
+          path: outputs/indexnow-response.json
+          if-no-files-found: warn

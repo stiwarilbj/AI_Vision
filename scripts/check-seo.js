@@ -111,6 +111,10 @@ function dateOnPage(markup) {
   return markup.match(/<time\b[^>]*\bdatetime=["'](\d{4}-\d{2}-\d{2})["'][^>]*>/i)?.[1] || null;
 }
 
+function countMatches(markup, pattern) {
+  return [...markup.matchAll(pattern)].length;
+}
+
 function checkPage(relativePath, expectedCanonical, requiredTypes) {
   const markup = read(`docs/${relativePath}`);
   const title = pageTitle(markup);
@@ -122,6 +126,8 @@ function checkPage(relativePath, expectedCanonical, requiredTypes) {
   assert((metaContent(markup, 'name', 'robots') || '').includes('index,follow'), `${relativePath} must allow indexing and following links`);
   assert(!/<meta\b[^>]*\bname=["']keywords["']/i.test(markup), `${relativePath} must not use a keyword-stuffing meta tag`);
   assert(!/gitchubst\.github\.io/i.test(markup), `${relativePath} contains the retired GitHub Pages hostname`);
+  assert(countMatches(markup, /<code\b/gi) === countMatches(markup, /<\/code>/gi), `${relativePath} has unbalanced code tags`);
+  assert(countMatches(markup, /<pre\b/gi) === countMatches(markup, /<\/pre>/gi), `${relativePath} has unbalanced preformatted blocks`);
   const nodes = jsonLdNodes(markup);
   for (const imageTag of markup.matchAll(/<img\b[^>]*>/gi)) {
     const tag = imageTag[0];
@@ -223,6 +229,27 @@ for (const relativePath of publicPages) {
 const robots = read('docs/robots.txt');
 assert(robots.includes('User-agent: *') && robots.includes('Allow: /'), 'robots.txt must allow the public site');
 assert(robots.includes(`Sitemap: ${siteUrl}sitemap.xml`), 'robots.txt sitemap URL must match the canonical site');
+for (const crawler of ['Googlebot', 'Bingbot', 'OAI-SearchBot', 'PerplexityBot', 'Claude-SearchBot']) {
+  assert(new RegExp(`User-agent:\\s*${escapeRegExp(crawler)}[\\s\\S]*?Allow:\\s*/`, 'i').test(robots), `robots.txt must explicitly allow ${crawler}`);
+}
+
+const homepageMarkup = read('docs/index.html');
+assert(/id=["']facts["'][\s\S]*?Product facts|PRODUCT FACTS/i.test(homepageMarkup), 'homepage needs a visible product facts section');
+for (const fact of ['Gemini Chrome extension', 'supported webpages', 'Google AI Studio', 'official Chrome Web Store', 'public GitHub repository']) {
+  assert(homepageMarkup.includes(fact), `homepage product facts should mention ${fact}`);
+}
+
+const extractionGuide = read('docs/guides/copy-text-from-screenshot-chrome.html');
+assert(countMatches(extractionGuide, /class=["']source-table["']/gi) === 1, 'screenshot text guide must contain one source table');
+const outsidePre = extractionGuide.replace(/<pre\b[\s\S]*?<\/pre>/gi, '');
+assert(!/(^|\n)\s*\|[^\n]*\|\s*$/m.test(outsidePre), 'screenshot text guide contains a stray Markdown table outside its code block');
+assert(!/<\/code>\s*<\/pre>\s*<\/div>\s*<\/div>/i.test(outsidePre), 'screenshot text guide contains a malformed closing fragment');
+
+const indexNowKeyPath = path.join(docsRoot, 'ai-vision-indexnow-20260910.txt');
+assert(fs.existsSync(indexNowKeyPath), 'IndexNow key file is missing from docs');
+const indexNowKey = fs.readFileSync(indexNowKeyPath, 'utf8').trim();
+assert(/^[A-Za-z0-9-]{8,128}$/.test(indexNowKey), 'IndexNow key must use a valid public key format');
+assert(`${siteUrl}ai-vision-indexnow-20260910.txt`.startsWith(siteUrl), 'IndexNow keyLocation must stay scoped to the project path');
 
 const sitemap = read('docs/sitemap.xml');
 const sitemapUrls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/gi)].map((match) => match[1]);
@@ -250,6 +277,8 @@ assert(fs.existsSync(path.join(docsRoot, '.nojekyll')), 'docs/.nojekyll is requi
 
 const llms = read('docs/llms.txt');
 assert(llms.includes(`Current version: ${version}`), 'llms.txt version is stale');
+assert(llms.includes('public Chrome Web Store listing currently shows version 2.5'), 'llms.txt must disclose the verified public Store version');
+assert(llms.includes('2.8 GitHub-build preview'), 'llms.txt must distinguish the GitHub preview from the public Store version');
 for (const guidePath of guidePaths) {
   assert(llms.includes(`${siteUrl}${guidePath}`), `llms.txt must link to ${guidePath}`);
 }

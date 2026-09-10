@@ -4,4 +4,16 @@ Allow: /
 User-agent: OAI-SearchBot
 Allow: /
 
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
 Sitemap: https://stiwarilbj.github.io/AI_Vision/sitemap.xml

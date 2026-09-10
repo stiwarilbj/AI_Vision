@@ -25,7 +25,7 @@
   <meta name="twitter:image" content="https://stiwarilbj.github.io/AI_Vision/assets/social-preview.png">
     <script type="application/ld+json">
   {"@context":"https://schema.org","@graph":[
-    {"@type":"Article","headline":"Copy text from screenshots in Chrome with AI Vision","description":"Copy text from a screenshot in Chrome with AI Vision. Select an image area, use Extract text, and copy a Gemini transcription with practical prompts and troubleshooting.","mainEntityOfPage":"https://stiwarilbj.github.io/AI_Vision/guides/copy-text-from-screenshot-chrome.html","dateModified":"2026-09-09","image":"https://stiwarilbj.github.io/AI_Vision/assets/previews/extension-text-extraction.png","author":{"@type":"Organization","name":"AI Vision project","url":"https://stiwarilbj.github.io/AI_Vision/"}},
+    {"@type":"Article","headline":"Copy text from screenshots in Chrome with AI Vision","description":"Copy text from a screenshot in Chrome with AI Vision. Select an image area, use Extract text, and copy a Gemini transcription with practical prompts and troubleshooting.","mainEntityOfPage":"https://stiwarilbj.github.io/AI_Vision/guides/copy-text-from-screenshot-chrome.html","dateModified":"2026-09-10","image":"https://stiwarilbj.github.io/AI_Vision/assets/previews/extension-text-extraction.png","author":{"@type":"Organization","name":"AI Vision project","url":"https://stiwarilbj.github.io/AI_Vision/"}},
     {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"AI Vision","item":"https://stiwarilbj.github.io/AI_Vision/"},{"@type":"ListItem","position":2,"name":"Copy text from screenshots in Chrome","item":"https://stiwarilbj.github.io/AI_Vision/guides/copy-text-from-screenshot-chrome.html"}]}
   ]}
   </script>
@@ -36,8 +36,8 @@
   <main class="article-shell" id="main">
     <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../">AI Vision</a> / Guide</nav>
     <h1>Copy text from screenshots in Chrome</h1>
-    <p class="updated">By AI Vision project · Updated <time datetime="2026-09-09">September 9, 2026</time></p>
-    <p class="lede">Text in a chart, image, error dialog, or announcement is visible but often cannot be selected. AI Vision lets you select that area, ask Gemini to extract the words, and copy the answer back into your notes.</p>
+    <p class="updated">By AI Vision project · Updated <time datetime="2026-09-10">September 10, 2026</time></p>
+    <p class="lede">For image-to-text in Chrome, select the text area in AI Vision, ask Gemini for an AI-assisted OCR transcription, and copy the answer back into your notes. It works for charts, error dialogs, and announcements that cannot be selected directly, but always check important words and numbers against the image.</p>
     <div class="note"><strong>Quick answer:</strong> save a Gemini API key, choose <strong>Screenshot</strong>, drag around the text, open <strong>More actions</strong>, choose <strong>Extract text</strong>, then use <strong>Copy answer</strong>. The website preview below is from the GitHub build; the live Chrome Web Store listing remains v2.5.</div>
     <figure><a class="media-button guide-media-button" href="../assets/previews/extension-text-extraction.png" data-lightbox="../assets/previews/extension-text-extraction.png" aria-label="Enlarge the AI Vision screenshot text extraction preview"><picture><source type="image/webp" srcset="../assets/previews/extension-text-extraction.webp"><img class="workflow-shot" src="../assets/previews/extension-text-extraction.png" width="430" height="800" alt="AI Vision v2.8 preview showing extracted text from a selected reading chart" loading="lazy"></picture></a><figcaption>GitHub-build v2.8 preview: a selected screenshot, an Extract text answer, and the Copy answer control. The live Store listing currently shows v2.5.</figcaption></figure>
     <nav class="contents" aria-label="On this page"><a href="#setup">Set up</a><a href="#steps">Extract and copy</a><a href="#examples">Worked examples</a><a href="#prompts">Prompts</a><a href="#troubleshooting">Troubleshooting</a></nav>
@@ -73,19 +73,11 @@ The ground floor remains open for conversation.</code></pre></div></div>
     <h3>Small table</h3>
     <p>Drag around the table with its column headings. Ask Gemini to keep the row and column relationship visible:</p>
     <blockquote>“Transcribe this table as Markdown. Keep the header names, preserve units, and do not fill in blank cells.”</blockquote>
-|------------|---------|-------------|
-| Starter    | 5 GB    | $4/month    |
-| Team       | 50 GB   | $12/month   |
-| Enterprise | —       | Contact us  |</code></pre></div></div>
     <div class="paired-example"><div><p class="example-label">Fictional source table in the screenshot</p><table class="source-table"><caption>Source material</caption><thead><tr><th scope="col">Plan</th><th scope="col">Storage</th><th scope="col">Price</th></tr></thead><tbody><tr><th scope="row">Starter</th><td>5 GB</td><td>$4/month</td></tr><tr><th scope="row">Team</th><td>50 GB</td><td>$12/month</td></tr><tr><th scope="row">Enterprise</th><td></td><td>Contact us</td></tr></tbody></table></div><div><p class="example-label">Expected transcription</p><pre><code>| Plan       | Storage | Price       |
 |------------|---------|-------------|
 | Starter    | 5 GB    | $4/month    |
 | Team       | 50 GB   | $12/month   |
 | Enterprise |         | Contact us  |</code></pre></div></div>
-|------------|---------|-------------|
-| Starter    | 5 GB    | $4/month    |
-| Team       | 50 GB   | $12/month   |
-| Enterprise | —       | Contact us  |</code></pre></div></div>
     <p>Tables are easy to misread when the selection misses a header or a row. Check every number before you use a copied transcription.</p>
 
     <h2 id="prompts">Prompts that protect accuracy</h2>
