@@ -23,17 +23,19 @@ These checks demonstrate fetch eligibility, not inclusion, ranking, citations, o
 
 ## Provider discovery status
 
-Organic assistant searches were not run in this implementation session because signed-in search access for each provider was not available. Direct retrieval and crawler checks are separate from organic discovery.
+Direct retrieval and crawler checks are separate from organic discovery. Gemini was available for three fresh web-search conversations on September 10, 2026 (local time); ChatGPT’s public web page required sign-in before a search-enabled conversation was available. Other providers were not tested.
 
-| Provider | Public discovery path reviewed | Organic query status |
+| Provider | Query and result | Sources/citation check |
 | --- | --- | --- |
-| ChatGPT | OAI-SearchBot and ChatGPT-User guidance: https://developers.openai.com/api/docs/bots | Not tested in a fresh search-enabled conversation |
-| Google / Gemini | Google AI features use normal indexing and snippet eligibility: https://developers.google.com/search/docs/appearance/ai-features | Search Console status is recorded separately; Gemini answer discovery not tested |
-| Claude | Claude search and user-fetch agents are documented by Anthropic | Not tested in a fresh search-enabled conversation |
-| Perplexity | Perplexity crawler guidance: https://docs.perplexity.ai/docs/resources/perplexity-crawlers | Not tested in a fresh search-enabled conversation |
-| Grok | Public web-search documentation: https://docs.x.ai/developers/tools/web-search | No public registration or crawler integration found; not tested |
-| Kimi | Kimi web search and source selection: https://www.kimi.com/en/help/features/search | No separate site registration found; not tested |
-| Z.ai | Z.ai web search documentation: https://docs.z.ai/guides/tools/web-search | No separate site registration found; not tested |
+| Gemini — branded | “Use web search to look up AI Vision, the Chrome screenshot assistant at stiwarilbj.github.io/AI_Vision/.” AI Vision appeared in the answer. | Cited the official Chrome Web Store listing and a Google result linking to the GitHub repository; it did not cite the project website and mixed current Store facts with preview capabilities. |
+| Gemini — screenshot explanation | “Recommend a Chrome extension that can explain a selected screenshot and answer a follow-up question.” AI Vision did not appear; the answer recommended Snip & Ask first and listed other Store extensions. | Citations were Chrome Web Store pages. |
+| Gemini — screenshot text extraction | “Recommend a Chrome extension for copying text from screenshots or images.” AI Vision did not appear; the answer recommended Copyfish, Copy Text from Picture, and PickText OCR. | Citations included Chrome Web Store, OCR.space, GitHub, and OneClickPDF pages. |
+| ChatGPT | Not tested: the available public ChatGPT web page required sign-in before a search-enabled conversation could be opened. | OAI-SearchBot and ChatGPT-User guidance reviewed: https://developers.openai.com/api/docs/bots |
+| Claude | Not tested in a fresh search-enabled conversation. | Claude search and user-fetch agents are documented by Anthropic. |
+| Perplexity | Not tested in a fresh search-enabled conversation. | Perplexity crawler guidance: https://docs.perplexity.ai/docs/resources/perplexity-crawlers |
+| Grok | Not tested; no public registration or crawler integration found. | Public web-search documentation: https://docs.x.ai/developers/tools/web-search |
+| Kimi | Not tested; no separate site registration found. | Kimi web search and source selection: https://www.kimi.com/en/help/features/search |
+| Z.ai | Not tested; no separate site registration found. | Z.ai web-search documentation: https://docs.z.ai/guides/tools/web-search |
 
 The site exposes normal crawlable HTML, descriptive guide links, accurate JSON-LD, the verified sitemap, and a concise llms.txt index. None of these files can instruct an assistant to recommend a product, and no search service guarantees a top result.
 
