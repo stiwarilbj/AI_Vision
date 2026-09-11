@@ -1,4 +1,7 @@
 // Every example exists in HTML. JavaScript adds a compact scenario switcher.
+if (window.AIVisionReferral) {
+  window.AIVisionReferral.apply(document, window.location, document.referrer);
+}
 const tabs = [...document.querySelectorAll('[data-example]')];
 const samples = [...document.querySelectorAll('[data-sample]')];
 function selectExample(button) {

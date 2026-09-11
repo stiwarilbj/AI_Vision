@@ -72,6 +72,27 @@ const writeReport = report => {
         assert.equal(await lightboxLink.evaluate(e=>e===document.activeElement),true, `${route} restores image focus`);
       }
     }
+    const referralCases = [
+      { query: '?utm_source=chatgpt.com', tagged: true },
+      { query: '?aiv_ref=chatgpt', tagged: true },
+      { query: '?utm_source=chatgpt.com.evil', tagged: false },
+      { query: '?utm_source=chatgpt.com%20', tagged: false },
+      { query: '', tagged: false }
+    ];
+    for (const referralCase of referralCases) {
+      await page.goto(base + referralCase.query);
+      const storeLinks = await page.locator('a[href*="chromewebstore.google.com/detail/ai-vision-gemini-screensh"]').evaluateAll(links => links.map(link => link.href));
+      assert.ok(storeLinks.length > 0, `Store links exist for referral case ${referralCase.query || 'none'}`);
+      for (const href of storeLinks) {
+        const url = new URL(href);
+        assert.equal(url.searchParams.get('utm_source'), referralCase.tagged ? 'ai_vision_website' : null, `Store source attribution for ${referralCase.query || 'none'}`);
+        assert.equal(url.searchParams.get('utm_campaign'), referralCase.tagged ? 'chatgpt_assisted' : null, `Store campaign attribution for ${referralCase.query || 'none'}`);
+      }
+      if (referralCase.tagged) {
+        const internal = await page.locator('a[href*="aiv_ref=chatgpt"]').count();
+        assert.ok(internal > 0, `Internal links carry the marker for ${referralCase.query}`);
+      }
+    }
     const cold = await browser.newPage();
     const payloads = [];
     cold.on('response', response => payloads.push(response.body().then(body => body.length)));

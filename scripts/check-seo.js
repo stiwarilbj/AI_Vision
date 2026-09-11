@@ -213,6 +213,8 @@ assert(metaContent(read('docs/index.html'), 'name', 'msvalidate.01') === 'EFCCCA
 // Check every local destination, including same-site absolute links, fragments, and image fallbacks.
 for (const relativePath of publicPages) {
   const markup = read(`docs/${relativePath}`);
+  const referralScript = relativePath === 'index.html' || relativePath === 'privacy.html' ? 'assets/referral.js' : '../assets/referral.js';
+  assert(markup.includes(`src="${referralScript}"`), `${relativePath} must load the referral helper`);
   for (const match of markup.matchAll(/\b(?:href|src)=["']([^"']+)["']/g)) {
     const target = match[1];
     if (/^(?:mailto:|data:|javascript:)/i.test(target)) continue;
