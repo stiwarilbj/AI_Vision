@@ -249,7 +249,7 @@ for (const crawler of ['Googlebot', 'Bingbot', 'OAI-SearchBot', 'ChatGPT-User', 
 
 const homepageMarkup = read('docs/index.html');
 assert(/id=["']facts["'][\s\S]*?Product facts|PRODUCT FACTS/i.test(homepageMarkup), 'homepage needs a visible product facts section');
-for (const fact of ['Gemini Chrome extension', 'supported webpages', 'Google AI Studio', 'official Chrome Web Store', 'public GitHub repository']) {
+for (const fact of ['Gemini Chrome extension', 'supported webpages', 'Google AI Studio', 'official Chrome Web Store', 'public GitHub repository', 'referral does not connect an assistant account']) {
   assert(homepageMarkup.includes(fact), `homepage product facts should mention ${fact}`);
 }
 assert(!/chromewebstore\.google\.com\/detail\/ai-vision-gemini-screensh\/ghmmlbclopoakmjjbkkmoefjldgjimgk\?/.test(pageInfos.map(page => page.markup).join('\n')), 'public Store links must use the canonical URL without account-selection parameters');

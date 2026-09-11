@@ -1,6 +1,8 @@
-# Chrome Web Store copy – version 2.8 (GitHub preview)
+# Chrome Web Store copy – version 2.8 package (public listing currently v2.5)
 
 Official active listing (public v2.5): https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk
+
+Prepared public-v2.5 capture set: `outputs/ai-vision-v28/store-assets/public-v25/`. These 1280×800 captures were taken from the public listing and show Capture, Settings, and The Tab controls. They are the conservative listing assets to use while the package remains v2.8 preview-only.
 
 ## Title from package
 
@@ -16,28 +18,24 @@ Workflow & Planning
 
 ## Detailed description
 
-AI Vision is an AI screenshot assistant for Chrome. Select part of a chart, image, error, or document, ask Gemini to explain it, and ask a follow-up while the screenshot stays in context.
+AI Vision is an AI screenshot assistant for Chrome. Select part of a chart, image, error message, or document, ask Gemini what it means, and keep the answer ready for a follow-up.
 
 Use it to:
 
-- Understand screenshots, charts, diagrams, interfaces, and error messages
-- Copy text from images into a document, search box, or message
-- Summarize a readable webpage without leaving Chrome
+- Explain charts, diagrams, interfaces, and error messages
+- Copy text from screenshots and other images
+- Summarize a readable webpage while you browse
 - Compare useful details across supported tabs
-
-Open AI Vision from the toolbar, right-click menu, or **Alt + Shift + V**. The main flow is simple: select an area, explain it, and follow up.
 
 ### Get started
 
 1. Install AI Vision from the Chrome Web Store.
-2. Create a Gemini API key at [Google AI Studio](https://aistudio.google.com/app/apikey), open Settings, and choose **Save & check key**.
-3. Choose Screenshot, select an area, and press **Explain screenshot**. Use **More actions** for **Extract text** or Summarize.
+2. Create a Gemini API key in [Google AI Studio](https://aistudio.google.com/app/apikey), open AI Vision Settings, and save it.
+3. Open an ordinary webpage, choose **Capture**, select an area, and ask a question. Follow up from the answer; labels may vary in the public v2.5 listing.
 
-Browser tasks (Beta) are optional. They use clear approval prompts and a visible Stop action for supported clicks, typing, navigation, and scrolling.
+Browser tasks (Beta) are optional and approval-gated, with a visible Stop action. AI Vision is free to install, but Google controls Gemini access, quotas, and any billing. Gemini can misread small or blurry text, so check important facts. Chrome internal pages, the Chrome Web Store, and other restricted pages cannot be analyzed.
 
-Your key and preferences stay in Chrome's local extension storage. Prompts and the screenshot or page context needed for a request go directly to Google's Gemini API over HTTPS. Google controls model access, API limits, and pricing. Restricted Chrome pages cannot be analyzed. See the linked privacy notice for complete details.
-
-AI Vision is free to install, independent, and not affiliated with Google. The source is available at [github.com/stiwarilbj/AI_Vision](https://github.com/stiwarilbj/AI_Vision).
+Your key and preferences stay in Chrome's local storage. Your prompt and the screenshot or page context needed for a request go directly to Google's Gemini API over HTTPS; there is no developer proxy or analytics. See the privacy notice and source at [github.com/stiwarilbj/AI_Vision](https://github.com/stiwarilbj/AI_Vision). AI Vision is an independent project and is not affiliated with Google.
 
 ## Privacy form
 

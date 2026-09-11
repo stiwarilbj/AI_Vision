@@ -30,7 +30,7 @@
   <main class="article-shell" id="main">
     <a class="back" href="./">← AI Vision</a>
     <h1>Privacy notice</h1>
-    <p class="muted">Last updated: <time datetime="2026-09-07">September 7, 2026</time></p>
+    <p class="muted">Last updated: <time datetime="2026-09-11">September 11, 2026</time></p>
     <p>AI Vision is a Chrome extension that lets a user ask Google's Gemini API about a selected screenshot, This page, or supported tabs in one Chrome window. Its optional Browser tasks mode can perform a limited browser task within the scope selected by the user.</p>
 
     <h2>Data AI Vision handles</h2>
@@ -40,7 +40,7 @@
     <h2>Use and sharing</h2>
     <p>AI Vision uses this information only to provide the feature the user requested. The prompt and necessary screenshot or webpage context are sent directly from the extension to the Google Gemini API over HTTPS. The Gemini API key is sent to Google in the <code>x-goog-api-key</code> request header so Google can authenticate the request.</p>
     <p>AI Vision has no developer-operated analytics, advertising, tracking, or proxy server. The developer does not sell or rent user data. Data sent to Google is handled under Google's applicable Gemini API and privacy terms.</p>
-    <p>When someone arrives from a ChatGPT search result, the website may carry a fixed <code>aiv_ref=chatgpt</code> marker between its pages and add <code>utm_source=ai_vision_website</code>, <code>utm_medium=referral</code>, and <code>utm_campaign=chatgpt_assisted</code> to the official Store link. These URL parameters are used only to distinguish a website-assisted referral; AI Vision does not set cookies, save the marker, or run analytics scripts. The marker does not prove that ChatGPT recommended the extension or identify a person.</p>
+    <p>When someone arrives from an allowlisted assistant source such as ChatGPT, Gemini, Claude, Kimi, DeepSeek, Grok, Z.ai, Perplexity, or Copilot, the website may carry a fixed <code>aiv_ref</code> marker between its pages and add <code>utm_source=ai_vision_website</code>, <code>utm_medium=referral</code>, and a provider-specific <code>utm_campaign</code> such as <code>chatgpt_assisted</code> to the official Store link. These URL parameters are used only to distinguish a website-assisted referral; AI Vision does not set cookies, save the marker, run analytics scripts, or make background requests. Shared tagged links, stripped referrers, and direct Store visits can limit attribution. A marker does not prove that an assistant recommended the extension or identify a person.</p>
 
     <h2>Storage and retention</h2>
     <p>The Gemini API key and user preferences are stored locally through <code>chrome.storage.local</code> in the user's Chrome profile. The service worker is the only runtime component that reads the full key; the panel receives only masked status. AI Vision does not intentionally store screenshots, page content, prompts, Gemini responses, or browser-task context on a developer server. Users can remove locally stored extension data by clearing the extension's data or uninstalling it.</p>

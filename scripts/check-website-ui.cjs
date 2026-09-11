@@ -27,9 +27,16 @@ const writeReport = report => {
   const widths = [390,768,1024,1440];
   const pages = discoverPublicPages().sort().map(route => route === 'index.html' ? '' : route);
   let homepagePayloadSize = null;
-  const heroImagePath = path.join(docsRoot, 'assets/previews/hero-showcase.jpg');
-  const heroImageBytes = fs.statSync(heroImagePath).size;
-  assert.ok(heroImageBytes < 300000, `Hero image ${heroImageBytes} under 300 KB`);
+  // Check the images the homepage actually uses, rather than an unused concept asset.
+  const heroImagePaths = [
+    path.join(docsRoot, 'assets/actual/screenshot-mode.png'),
+    path.join(docsRoot, 'assets/previews/extension-answer.png')
+  ];
+  const heroImageBytes = heroImagePaths.map(imagePath => {
+    const bytes = fs.statSync(imagePath).size;
+    assert.ok(bytes < 300000, `Homepage image ${path.basename(imagePath)} (${bytes}) under 300 KB`);
+    return bytes;
+  });
   try {
     const page = await browser.newPage({ reducedMotion:'reduce' });
     page.on('pageerror',e => failures.push(e.message));
@@ -73,11 +80,21 @@ const writeReport = report => {
       }
     }
     const referralCases = [
-      { query: '?utm_source=chatgpt.com', tagged: true },
-      { query: '?aiv_ref=chatgpt', tagged: true },
-      { query: '?utm_source=chatgpt.com.evil', tagged: false },
-      { query: '?utm_source=chatgpt.com%20', tagged: false },
-      { query: '', tagged: false }
+      { query: '?utm_source=chatgpt.com', provider: 'chatgpt' },
+      { query: '?aiv_ref=gemini', provider: 'gemini' },
+      { query: '?utm_source=claude.ai', provider: 'claude' },
+      { query: '?utm_source=kimi', provider: 'kimi' },
+      { query: '?utm_source=chat.deepseek.com', provider: 'deepseek' },
+      { query: '?utm_source=grok.com', provider: 'grok' },
+      { query: '?utm_source=z.ai', provider: 'zai' },
+      { query: '?utm_source=perplexity.ai', provider: 'perplexity' },
+      { query: '?utm_source=copilot.microsoft.com', provider: 'copilot' },
+      { query: '?utm_source=chatgpt.com.evil', provider: null },
+      { query: '?utm_source=chatgpt.com%20', provider: null },
+      { query: '?utm_source=google.com', provider: null },
+      { query: '?utm_source=x.com', provider: null },
+      { query: '?utm_source=chatgpt.com&aiv_ref=gemini', provider: null },
+      { query: '', provider: null }
     ];
     for (const referralCase of referralCases) {
       await page.goto(base + referralCase.query);
@@ -85,11 +102,11 @@ const writeReport = report => {
       assert.ok(storeLinks.length > 0, `Store links exist for referral case ${referralCase.query || 'none'}`);
       for (const href of storeLinks) {
         const url = new URL(href);
-        assert.equal(url.searchParams.get('utm_source'), referralCase.tagged ? 'ai_vision_website' : null, `Store source attribution for ${referralCase.query || 'none'}`);
-        assert.equal(url.searchParams.get('utm_campaign'), referralCase.tagged ? 'chatgpt_assisted' : null, `Store campaign attribution for ${referralCase.query || 'none'}`);
+        assert.equal(url.searchParams.get('utm_source'), referralCase.provider ? 'ai_vision_website' : null, `Store source attribution for ${referralCase.query || 'none'}`);
+        assert.equal(url.searchParams.get('utm_campaign'), referralCase.provider ? `${referralCase.provider}_assisted` : null, `Store campaign attribution for ${referralCase.query || 'none'}`);
       }
-      if (referralCase.tagged) {
-        const internal = await page.locator('a[href*="aiv_ref=chatgpt"]').count();
+      if (referralCase.provider) {
+        const internal = await page.locator(`a[href*="aiv_ref=${referralCase.provider}"]`).count();
         assert.ok(internal > 0, `Internal links carry the marker for ${referralCase.query}`);
       }
     }
