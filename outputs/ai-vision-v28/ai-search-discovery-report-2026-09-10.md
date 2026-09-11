@@ -39,9 +39,9 @@ The site exposes normal crawlable HTML, descriptive guide links, accurate JSON-L
 
 ## Search Console and Bing baseline
 
-The existing Google report records seven indexed pages with matching canonicals, 326 impressions, zero clicks, and aggregate average position 5.6 for the available September 5–7 window. The sitemap was fetched directly with HTTP 200 but its Search Console row still reported “Couldn’t fetch” at capture time; that processing state is separate from a live fetch.
+The available Google performance report records 334 impressions, zero clicks, and aggregate average position 5.6 for September 5–8. The sitemap URL was fetched directly with HTTP 200, but the Search Console sitemap row still reports “Couldn’t fetch” and its detail says the sitemap could not be read. That processing state is separate from a live fetch; no duplicate sitemap submission or recrawl request was made during this audit.
 
-Bing ownership is verified, the project sitemap is submitted and processing, and the homepage live test reports that it can be indexed. Bing’s index status previously showed “Discovered but not crawled.” No duplicate Google or Bing request was submitted for this pass.
+Bing ownership is verified. The project sitemap was submitted, last crawled on September 10, and now reports Success with seven discovered URLs. No duplicate Bing request was submitted for this pass.
 
 ## IndexNow delivery guard
 

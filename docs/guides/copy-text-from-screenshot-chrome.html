@@ -37,20 +37,20 @@
     <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../">AI Vision</a> / Guide</nav>
     <h1>Copy text from screenshots in Chrome</h1>
     <p class="updated">By AI Vision project · Updated <time datetime="2026-09-10">September 10, 2026</time></p>
-    <p class="lede">For image-to-text in Chrome, select the text area in AI Vision, ask Gemini for an AI-assisted OCR transcription, and copy the answer back into your notes. It works for charts, error dialogs, and announcements that cannot be selected directly, but always check important words and numbers against the image.</p>
-    <div class="note"><strong>Quick answer:</strong> save a Gemini API key, choose <strong>Screenshot</strong>, drag around the text, open <strong>More actions</strong>, choose <strong>Extract text</strong>, then use <strong>Copy answer</strong>. The website preview below is from the GitHub build; the live Chrome Web Store listing remains v2.5.</div>
+    <p class="lede">To copy text from a screenshot in Chrome, select the image area in AI Vision, choose <strong>Extract text</strong>, and copy Gemini’s AI-assisted transcription. It works for charts, error dialogs, and announcements that cannot be selected directly, but always check important words and numbers against the image.</p>
+    <div class="note"><strong>Quick answer:</strong> save a Gemini API key, choose <strong>Screenshot</strong>, drag around the text, open <strong>More actions</strong>, choose <strong>Extract text</strong>, then use <strong>Copy answer</strong>. These labels describe the GitHub-build v2.8 preview; the public Chrome Web Store listing is v2.5 and its capture controls may be named differently.</div>
     <figure><a class="media-button guide-media-button" href="../assets/previews/extension-text-extraction.png" data-lightbox="../assets/previews/extension-text-extraction.png" aria-label="Enlarge the AI Vision screenshot text extraction preview"><picture><source type="image/webp" srcset="../assets/previews/extension-text-extraction.webp"><img class="workflow-shot" src="../assets/previews/extension-text-extraction.png" width="430" height="800" alt="AI Vision v2.8 preview showing extracted text from a selected reading chart" loading="lazy"></picture></a><figcaption>GitHub-build v2.8 preview: a selected screenshot, an Extract text answer, and the Copy answer control. The live Store listing currently shows v2.5.</figcaption></figure>
-    <nav class="contents" aria-label="On this page"><a href="#setup">Set up</a><a href="#steps">Extract and copy</a><a href="#examples">Worked examples</a><a href="#prompts">Prompts</a><a href="#troubleshooting">Troubleshooting</a></nav>
+    <nav class="contents" aria-label="On this page"><a href="#setup">Set up</a><a href="#steps">Extract and copy</a><a href="#examples">Worked examples</a><a href="#error-message">Error message</a><a href="#announcement-image">Announcement</a><a href="#small-table">Table</a><a href="#prompts">Prompts</a><a href="#troubleshooting">Troubleshooting</a></nav>
 
     <h2 id="setup">1. Set up AI Vision</h2>
-    <ol><li><a href="get-gemini-api-key.html">Create or find a Gemini API key</a> in Google AI Studio.</li><li>Open AI Vision Settings, paste the key, and choose <strong>Save &amp; check key</strong>. Saved means the key is stored in Chrome; Connected means the model-list check reached Gemini successfully.</li><li>Return to a supported webpage. Chrome internal pages, the Chrome Web Store, and other restricted pages cannot be captured by this workflow.</li></ol>
+    <ol><li><a href="get-gemini-api-key.html">Create or find a Gemini API key</a> in Google AI Studio.</li><li>Open AI Vision Settings, paste the key, and save it. The v2.8 preview labels this action <strong>Save &amp; check key</strong>; Saved means the key is stored in Chrome, while Connected means the model check reached Gemini.</li><li>Return to a supported webpage. Chrome internal pages, the Chrome Web Store, and other restricted pages cannot be captured by this workflow.</li></ol>
 
     <h2 id="steps">2. Extract and copy the text</h2>
-    <ol><li>Open AI Vision and leave <strong>Ask about</strong> set to <strong>Screenshot</strong>.</li><li>Choose <strong>Select an area</strong>, then drag around the complete text. Include headings, labels, punctuation, and table columns when they matter.</li><li>After the preview appears, open <strong>More actions</strong> and choose <strong>Extract text</strong>. In the default One-tap Explain setting, this is the shortcut that asks Gemini for the transcription.</li><li>Review the answer against the screenshot. Choose <strong>Copy answer</strong> to place the result on your clipboard, then paste it into a document, search box, or message.</li><li>Use the follow-up field if a line needs correction: ask Gemini to re-read one region, preserve the original line breaks, or mark an unreadable word instead of guessing.</li></ol>
+    <ol><li>Open AI Vision and choose its screenshot context. The v2.8 preview calls this <strong>Ask about → Screenshot</strong>.</li><li>Start area selection, then drag around the complete text. Include headings, labels, punctuation, and table columns when they matter. The v2.8 preview labels the button <strong>Select an area</strong>.</li><li>After the preview appears, use the extension’s text-extraction action. In the v2.8 preview, open <strong>More actions</strong> and choose <strong>Extract text</strong>; older Store labels may differ.</li><li>Review the answer against the screenshot. Use the available copy action to place the result on your clipboard; the v2.8 preview calls it <strong>Copy answer</strong>.</li><li>Use the follow-up field if a line needs correction: ask Gemini to re-read one region, preserve the original line breaks, or mark an unreadable word instead of guessing.</li></ol>
     <p>For repeated use, Settings also offers <strong>Explain automatically</strong>. That preference sends a new Screenshot capture to Gemini immediately, but <strong>Extract text</strong> remains an explicit shortcut under More actions.</p>
 
     <h2 id="examples">3. Worked examples</h2>
-    <h3>Error message</h3>
+    <h3 id="error-message">Error message</h3>
     <p>Capture the complete error, including its code and the first line of surrounding context. Ask:</p>
     <blockquote>“Transcribe this error exactly. Keep punctuation and line breaks. Separate the error code from the explanatory text, and write [unclear] instead of guessing.”</blockquote>
     <div class="paired-example"><div><p class="example-label">Fictional source text in the screenshot</p><pre><code>Upload failed (E-204)
@@ -59,7 +59,7 @@ Try a smaller file and upload again.</code></pre></div><div><p class="example-la
 The selected file is larger than 25 MB.
 Try a smaller file and upload again.</code></pre></div></div>
 
-    <h3>Announcement image</h3>
+    <h3 id="announcement-image">Announcement image</h3>
     <p>Include the title, date, location, and any small-print condition. Ask:</p>
     <blockquote>“Extract the announcement in reading order. Preserve the date, time, names, and punctuation. Put each bullet on its own line.”</blockquote>
     <div class="paired-example"><div><p class="example-label">Fictional source text in the screenshot</p><pre><code>Quiet study hour
@@ -70,7 +70,7 @@ Tuesdays and Thursdays · 4–5 pm
 Six-week trial beginning September 15
 The ground floor remains open for conversation.</code></pre></div></div>
 
-    <h3>Small table</h3>
+    <h3 id="small-table">Small table</h3>
     <p>Drag around the table with its column headings. Ask Gemini to keep the row and column relationship visible:</p>
     <blockquote>“Transcribe this table as Markdown. Keep the header names, preserve units, and do not fill in blank cells.”</blockquote>
     <div class="paired-example"><div><p class="example-label">Fictional source table in the screenshot</p><table class="source-table"><caption>Source material</caption><thead><tr><th scope="col">Plan</th><th scope="col">Storage</th><th scope="col">Price</th></tr></thead><tbody><tr><th scope="row">Starter</th><td>5 GB</td><td>$4/month</td></tr><tr><th scope="row">Team</th><td>50 GB</td><td>$12/month</td></tr><tr><th scope="row">Enterprise</th><td></td><td>Contact us</td></tr></tbody></table></div><div><p class="example-label">Expected transcription</p><pre><code>| Plan       | Storage | Price       |

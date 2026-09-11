@@ -28,9 +28,10 @@
 - Data handling: the key and preferences stay in local Chrome extension storage. A requested question and the necessary screenshot or page context go directly to Google’s Gemini API. AI Vision has no developer proxy, advertising, or analytics service.
 - Accuracy: Gemini explanations and AI-assisted text extraction can be wrong. Check important names, numbers, dates, and codes against the source.
 
-## Version note
+## Versions
 
-Current version: 2.8 GitHub-build preview; the public Chrome Web Store listing currently shows version 2.5. Website screenshots labeled “v2.8 preview” describe the GitHub build and may contain controls that are not yet in the Store listing.
+- Published Chrome Web Store version: 2.5. These are the controls available from the official Store install.
+- GitHub-build preview: 2.8. Website screenshots labeled “v2.8 preview” describe the unreleased build and may contain newer controls.
 
 Last updated: 2026-09-10
 

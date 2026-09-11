@@ -197,8 +197,8 @@ assert(new Set(pageInfos.map(page => page.title)).size === pageInfos.length, 'pa
 assert(new Set(pageInfos.map(page => page.description)).size === pageInfos.length, 'page descriptions must be distinct');
 assert(pageInfos.every(page => !page.types.includes('FAQPage')), 'FAQPage JSON-LD is retired for this site and must not be emitted');
 const requiredGuideAnchors = {
-  'guides/ai-screenshot-assistant.html': ['capture', 'worked-example', 'troubleshooting'],
-  'guides/copy-text-from-screenshot-chrome.html': ['setup', 'steps', 'examples', 'prompts', 'troubleshooting'],
+  'guides/ai-screenshot-assistant.html': ['capture', 'worked-example', 'extract-text', 'error-example', 'troubleshooting'],
+  'guides/copy-text-from-screenshot-chrome.html': ['setup', 'steps', 'examples', 'error-message', 'announcement-image', 'small-table', 'prompts', 'troubleshooting'],
   'guides/summarize-webpage-with-gemini.html': ['setup', 'worked-example', 'prompts', 'troubleshooting', 'related'],
   'guides/compare-chrome-tabs-with-gemini.html': ['setup', 'worked-example', 'prompts', 'troubleshooting'],
   'guides/get-gemini-api-key.html': ['get-key', 'save-key', 'troubleshooting', 'limits']
@@ -289,9 +289,9 @@ assert(webManifest.name && webManifest.start_url === '/AI_Vision/', 'site.webman
 assert(fs.existsSync(path.join(docsRoot, '.nojekyll')), 'docs/.nojekyll is required for static GitHub Pages assets');
 
 const llms = read('docs/llms.txt');
-assert(llms.includes(`Current version: ${version}`), 'llms.txt version is stale');
-assert(llms.includes('public Chrome Web Store listing currently shows version 2.5'), 'llms.txt must disclose the verified public Store version');
-assert(llms.includes('2.8 GitHub-build preview'), 'llms.txt must distinguish the GitHub preview from the public Store version');
+assert(llms.includes(`GitHub-build preview: ${version}`), 'llms.txt preview version is stale');
+assert(llms.includes('Published Chrome Web Store version: 2.5'), 'llms.txt must disclose the verified public Store version');
+assert(llms.includes('unreleased build'), 'llms.txt must distinguish the GitHub preview from the public Store version');
 for (const guidePath of guidePaths) {
   assert(llms.includes(`${siteUrl}${guidePath}`), `llms.txt must link to ${guidePath}`);
 }
