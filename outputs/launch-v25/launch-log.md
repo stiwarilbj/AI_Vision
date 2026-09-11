@@ -4,6 +4,13 @@
 **Experiment window:** 14 days after the first approved publication
 **Goal:** 50–100 additional installs over two weeks as an experiment, not a forecast.
 
+## Source and deployment
+
+- Launch kit commit: `1e13b4f` — [Prepare v2.5 focused community launch](https://github.com/stiwarilbj/AI_Vision/commit/1e13b4faf95839b7fb533101603a6f3131a6ccee)
+- GitHub Pages: deployed successfully from `main` → `/docs`.
+- CI: passed for the launch commit.
+- IndexNow: completed successfully for the changed website content.
+
 ## Baseline before launch
 
 - Public Chrome Web Store version: **2.5**
