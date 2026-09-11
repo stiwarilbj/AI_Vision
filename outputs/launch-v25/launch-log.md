@@ -24,9 +24,9 @@
 
 | Destination | Status | URL | Published at | Views / engagement |
 | --- | --- | --- | --- | --- |
-| r/chrome_extensions | Draft ready; requires final post confirmation | — | — | — |
-| r/SideProject | Draft ready; requires final post confirmation | — | — | — |
-| Product Hunt | Draft ready; requires final submission and gallery review | — | — | — |
+| r/chrome_extensions | Draft ready; Reddit presented a “Prove your humanity” challenge before the feed/post flow | — | — | — |
+| r/SideProject | Draft ready; page is readable but the account is not signed in | — | — | — |
+| Product Hunt | Draft ready; `/launches/new` returned 404 and showed a Sign in control | — | — | — |
 | Hacker News | Not submitted; human-written submission required | — | — | — |
 
 The account owner must review each destination’s current rules, sign-in state, flair/category, and final preview immediately before posting. If a destination blocks login or eligibility, keep the prepared copy and note the blocker here rather than retrying repeatedly.
