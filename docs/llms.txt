@@ -20,7 +20,7 @@
 ## Product facts
 
 - Supported browser: desktop Google Chrome on supported webpages.
-- Main workflow: choose Screenshot, select an area, explain the image, and ask a follow-up.
+- Main workflow: install the public v2.5 build, save a personal Gemini key, choose Capture, select an area, explain the image, and ask a follow-up.
 - Other contexts: This page and Compare tabs; Browser tasks are optional and approval-gated.
 - Gemini requirement: users bring their own API key from Google AI Studio and save it in the extension Settings.
 - Cost and limits: the extension is free to install; Google controls Gemini model access, quotas, rate limits, and billing.
@@ -33,6 +33,6 @@
 - Published Chrome Web Store version: 2.5. These are the controls available from the official Store install.
 - GitHub-build preview: 2.8. Website screenshots labeled “v2.8 preview” describe the unreleased build and may contain newer controls.
 
-Last updated: 2026-09-10
+Last updated: 2026-09-11
 
 AI Vision is an independent project and is not affiliated with or endorsed by Google. This file is a factual navigation aid; search engines and answer services decide whether and how to index or cite these pages.
