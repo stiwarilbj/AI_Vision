@@ -13,6 +13,8 @@ const { compose } = require('../scripts/compose-health-report.cjs');
 const settings = require('../scripts/check-github-settings.cjs');
 const incidents = require('../scripts/manage-health-incident.cjs');
 const rollback = require('../scripts/prepare-pages-rollback.cjs');
+const { checkArchive, readArchiveEntry } = require('../scripts/check-release-archive.cjs');
+const { checkBaselineFiles } = require('../scripts/check-visual-baseline-files.cjs');
 const { checkStoreAssets, inspectPng } = require('../scripts/check-store-assets.cjs');
 
 function tempDir(prefix) { return fs.mkdtempSync(path.join(os.tmpdir(), prefix)); }
@@ -183,6 +185,23 @@ test('rollback preparation rejects short SHAs and commits without a successful P
   const commit = 'b'.repeat(40);
   const git = (args) => args[0] === 'rev-parse' ? `${commit}\n` : args[0] === 'ls-tree' ? 'docs\n' : Buffer.from('patch');
   assert.throws(() => rollback.prepareRollback({ repo: 'owner/repo', commit, git, gh: () => [] }), /no successful github-pages deployment/);
+});
+
+test('release archive matches every allowlisted source byte and detects a stale fixture', () => {
+  const result = checkArchive();
+  assert.equal(result.status, 'passed');
+  assert.equal(result.version, '2.8');
+  assert.equal(result.entries.length, 13);
+  assert.throws(() => checkArchive({
+    readEntry: (archive, entry) => entry === 'src/background/service-worker.js' ? Buffer.from('stale fixture') : readArchiveEntry(archive, entry)
+  }), /Release archive is stale for src\/background\/service-worker\.js/);
+});
+
+test('reviewed visual baseline guard catches a missing state before comparison', () => {
+  assert.equal(checkBaselineFiles({ requiredNames: ['extension-approval.png'] }).status, 'passed');
+  const fixture = tempDir('ai-vision-baseline-');
+  fs.mkdirSync(path.join(fixture, 'outputs', 'ai-vision-v28', 'panel-linux'), { recursive: true });
+  assert.throws(() => checkBaselineFiles({ root: fixture, baselineVariants: ['panel-linux'], requiredNames: ['extension-approval.png'] }), /Missing reviewed visual baselines/);
 });
 
 test('Store artwork is exact-size opaque RGB and rejects alpha PNG fixtures', () => {

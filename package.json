@@ -8,10 +8,11 @@
   },
   "scripts": {
     "build:adk": "node scripts/build-adk-runtime.js",
-    "check": "npm run build:adk && node --check src/background/service-worker.js && node --check src/content/capture-utils.js && node --check src/content/assistant-panel.js && node --check permission.js && node scripts/check-version.js && node scripts/check-seo.js && node scripts/lint.js && node scripts/check-package.js && node --test",
+    "check": "npm run build:adk && node --check src/background/service-worker.js && node --check src/content/capture-utils.js && node --check src/content/assistant-panel.js && node --check permission.js && node scripts/check-version.js && node scripts/check-seo.js && node scripts/lint.js && node scripts/check-package.js && npm run visual:baseline-files && npm run package:verify && node --test",
     "lint": "npm run build:adk && node --check src/background/service-worker.js && node --check src/content/capture-utils.js && node --check src/content/assistant-panel.js && node --check permission.js && node scripts/check-version.js && node scripts/check-seo.js && node scripts/lint.js",
-    "package:check": "npm run build:adk && node scripts/check-package.js",
+    "package:check": "npm run build:adk && node scripts/check-package.js && npm run visual:baseline-files",
     "package": "npm run build:adk && node scripts/check-package.js && node scripts/package-extension.js",
+    "package:verify": "node scripts/check-release-archive.cjs",
     "panel:check": "node scripts/check-panel-ui.cjs",
     "extension:check": "node scripts/check-extension-browser.cjs",
     "visual:check": "node scripts/check-visual-baselines.cjs",
@@ -25,6 +26,7 @@
     "version:check": "node scripts/check-version.js",
     "seo:check": "node scripts/check-seo.js",
     "website:check": "node scripts/check-website-ui.cjs",
+    "visual:baseline-files": "node scripts/check-visual-baseline-files.cjs",
     "artwork:render": "node scripts/render-store-artwork.cjs",
     "assets:check": "node scripts/check-store-assets.cjs"
   },
