@@ -9,12 +9,12 @@ const path = require('node:path');
 
 const projectRoot = path.resolve(__dirname, '..');
 
-function publicFiles(source) {
+function publicFiles(source, root = source) {
   const result = [];
   for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
     const absolute = path.join(source, entry.name);
-    if (entry.isDirectory()) result.push(...publicFiles(absolute));
-    else if (entry.isFile()) result.push(path.relative(source, absolute).split(path.sep).join('/'));
+    if (entry.isDirectory()) result.push(...publicFiles(absolute, root));
+    else if (entry.isFile()) result.push(path.relative(root, absolute).split(path.sep).join('/'));
   }
   return result.sort();
 }
