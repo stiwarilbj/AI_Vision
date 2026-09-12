@@ -15,6 +15,7 @@ const incidents = require('../scripts/manage-health-incident.cjs');
 const rollback = require('../scripts/prepare-pages-rollback.cjs');
 const { checkArchive, readArchiveEntry } = require('../scripts/check-release-archive.cjs');
 const { checkBaselineFiles } = require('../scripts/check-visual-baseline-files.cjs');
+const { checkSourceProvenance, checkStoreAssets, inspectPng } = require('../scripts/check-store-assets.cjs');
 
 function tempDir(prefix) { return fs.mkdtempSync(path.join(os.tmpdir(), prefix)); }
 
@@ -201,6 +202,30 @@ test('reviewed visual baseline guard catches a missing state before comparison',
   const fixture = tempDir('ai-vision-baseline-');
   fs.mkdirSync(path.join(fixture, 'outputs', 'ai-vision-v28', 'panel-linux'), { recursive: true });
   assert.throws(() => checkBaselineFiles({ root: fixture, baselineVariants: ['panel-linux'], requiredNames: ['extension-approval.png'] }), /Missing reviewed visual baselines/);
+});
+
+test('Store artwork is exact-size opaque RGB and rejects alpha PNG fixtures', () => {
+  assert.equal(checkSourceProvenance().status, 'passed');
+  const result = checkStoreAssets();
+  assert.equal(result.status, 'passed');
+  assert.equal(result.files.length, 7);
+  const fixture = tempDir('ai-vision-artwork-');
+  fs.mkdirSync(path.join(fixture, 'store-screenshots'), { recursive: true });
+  const source = path.join(projectRoot, 'release-assets-v2.8', 'store-screenshots', '01-understand-screenshot.png');
+  const candidate = path.join(fixture, 'store-screenshots', 'fixture.png');
+  fs.copyFileSync(source, candidate);
+  const alpha = fs.readFileSync(candidate);
+  alpha[25] = 6;
+  let crc = 0xffffffff;
+  for (const byte of alpha.subarray(12, 29)) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) crc = (crc & 1) ? 0xedb88320 ^ (crc >>> 1) : crc >>> 1;
+  }
+  alpha.writeUInt32BE((crc ^ 0xffffffff) >>> 0, 29);
+  fs.writeFileSync(candidate, alpha);
+  assert.equal(inspectPng(alpha, 'fixture.png').colorType, 6);
+  assert.throws(() => checkStoreAssets({ root: fixture, expected: [{ file: 'store-screenshots/fixture.png', width: 1280, height: 800 }] }), /opaque 24-bit RGB/);
+  assert.throws(() => inspectPng(fs.readFileSync(source).subarray(0, -20), 'truncated.png'), /truncated|IEND/);
 });
 
 test('reliability workflows keep deployment, health, and PR gates explicit', () => {

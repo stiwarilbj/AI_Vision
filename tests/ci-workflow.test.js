@@ -21,6 +21,8 @@ test('CI keeps the release gate reproducible and uploads browser evidence', () =
   assert.match(workflow, /npm run package/);
   assert.match(workflow, /Verify the freshly built archive against source/);
   assert.match(workflow, /RELEASE_ARCHIVE: dist\/ai-vision-extension-v2\.8\.zip/);
+  assert.match(workflow, /Extract the release archive for Chromium[\s\S]*Validate Store artwork dimensions and encoding/);
+  assert.match(workflow, /npm run assets:check/);
   assert.match(workflow, /npm run website:check/);
   assert.match(workflow, /npm run panel:check/);
   assert.match(workflow, /npm run visual:check/);

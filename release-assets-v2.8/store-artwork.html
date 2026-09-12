@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Vision v2.8 release artwork</title>
+  <style>
+    :root {
+      --baby: #dff0ff;
+      --baby-deep: #c6e4ff;
+      --white: #ffffff;
+      --navy: #082f62;
+      --cobalt: #1567cf;
+      --sky: #76b9f2;
+      --line: #b7d6f3;
+      font-family: Arial, "Helvetica Neue", sans-serif;
+      color: var(--navy);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: var(--baby); }
+    body { display: grid; place-items: start; }
+    .artboard {
+      width: 1280px;
+      height: 800px;
+      position: relative;
+      overflow: hidden;
+      padding: 62px 72px 48px;
+      background: linear-gradient(135deg, #f7fbff 0%, var(--baby) 58%, var(--baby-deep) 100%);
+    }
+    .artboard::before,
+    .artboard::after {
+      content: "";
+      position: absolute;
+      border: 2px solid #8ec2ed66;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .artboard::before { width: 460px; height: 460px; right: -270px; top: -230px; }
+    .artboard::after { width: 340px; height: 340px; left: -240px; bottom: -240px; }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.6px;
+    }
+    .lens-mark {
+      width: 42px;
+      height: 42px;
+      display: inline-grid;
+      place-items: center;
+      position: relative;
+      border-radius: 14px;
+      background: #c8e5ff;
+      border: 1px solid #a5cdf2;
+      color: var(--cobalt);
+    }
+    .lens-mark::before {
+      content: "";
+      width: 18px;
+      height: 18px;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+    }
+    .lens-mark::after {
+      content: "• ᴗ •";
+      position: absolute;
+      top: 12px;
+      font-size: 8px;
+      letter-spacing: 1px;
+      color: currentColor;
+    }
+    .content {
+      height: 676px;
+      display: grid;
+      grid-template-columns: 390px minmax(0, 1fr);
+      align-items: center;
+      gap: 46px;
+      position: relative;
+      z-index: 1;
+    }
+    .copy { align-self: center; padding-bottom: 22px; }
+    .eyebrow {
+      margin: 0 0 18px;
+      color: var(--cobalt);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+    }
+    h1 {
+      max-width: 410px;
+      margin: 0;
+      font-size: 70px;
+      line-height: .98;
+      letter-spacing: -3.6px;
+      font-weight: 750;
+    }
+    .subline {
+      max-width: 350px;
+      margin: 24px 0 0;
+      color: #315a84;
+      font-size: 23px;
+      line-height: 1.35;
+    }
+    .capture-shell {
+      width: 650px;
+      height: 650px;
+      display: grid;
+      place-items: center;
+      position: relative;
+      padding: 18px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: 0 24px 54px #1a5e9b26, 0 0 0 10px #ffffff80;
+    }
+    .capture-shell::before,
+    .capture-shell::after {
+      content: "";
+      position: absolute;
+      width: 38px;
+      height: 38px;
+      border-color: var(--cobalt);
+      border-style: solid;
+      pointer-events: none;
+    }
+    .capture-shell::before { left: -10px; top: -10px; border-width: 4px 0 0 4px; border-radius: 12px 0 0 0; }
+    .capture-shell::after { right: -10px; bottom: -10px; border-width: 0 4px 4px 0; border-radius: 0 0 12px 0; }
+    .capture {
+      display: block;
+      width: auto;
+      height: 610px;
+      max-width: 100%;
+      object-fit: contain;
+      border-radius: 16px;
+    }
+    .disclaimer {
+      position: absolute;
+      left: 72px;
+      bottom: 42px;
+      margin: 0;
+      color: #4e7091;
+      font-size: 14px;
+      letter-spacing: .1px;
+    }
+    .disclaimer strong { color: var(--navy); }
+
+    .promo {
+      width: 1400px;
+      height: 560px;
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      align-items: center;
+      padding: 70px 86px;
+      color: #fff;
+      background: #68b4f2 url("source/marquee-background.png") center/cover no-repeat;
+    }
+    .promo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, #0c448e9e 0%, #0c448e18 46%, transparent 74%);
+      pointer-events: none;
+    }
+    .promo-copy { position: relative; z-index: 1; max-width: 520px; }
+    .promo .brand { color: #fff; margin-bottom: 48px; }
+    .promo .lens-mark { background: #ffffff2b; border-color: #ffffff77; color: #fff; }
+    .promo h2 { margin: 0; max-width: 510px; font-size: 72px; line-height: .98; letter-spacing: -3px; }
+    .promo p { margin: 22px 0 0; font-size: 23px; line-height: 1.35; color: #eff8ff; }
+    .promo-small {
+      width: 440px;
+      height: 280px;
+      padding: 34px 30px;
+      background: #3f91e7 url("source/tile-background.png") center/cover no-repeat;
+    }
+    .promo-small::after { background: linear-gradient(90deg, #0a3d83c7 0%, #0a3d8326 70%, transparent); }
+    .promo-small .brand { font-size: 18px; gap: 8px; margin-bottom: 28px; }
+    .promo-small .lens-mark { width: 30px; height: 30px; border-radius: 10px; }
+    .promo-small .lens-mark::before { width: 13px; height: 13px; }
+    .promo-small .lens-mark::after { top: 9px; font-size: 6px; }
+    .promo-small h2 { max-width: 245px; font-size: 36px; letter-spacing: -1.5px; }
+    .promo-small p { max-width: 220px; margin-top: 13px; font-size: 15px; }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <main id="art" class="artboard" aria-label="AI Vision release artwork"></main>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const slide = params.get('slide') || '1';
+    const promo = params.get('promo');
+    const source = {
+      '1': { title: 'Select it.\nUnderstand it.', subline: 'A clear answer, then a follow-up.', image: 'source/extension-answer.png' },
+      '2': { title: 'Turn images\ninto text.', subline: 'Readable text you can copy.', image: 'source/extension-text-extraction.png' },
+      '3': { title: 'Get the\nmain points.', subline: 'A short summary beside the page.', image: 'source/extension-page.png' },
+      '4': { title: 'Compare before\nyou choose.', subline: 'See the details that matter.', image: 'source/extension-tabs.png' },
+      '5': { title: 'Your key.\nYour first answer.', subline: 'Save once, then start with a screenshot.', image: 'source/extension-key-setup.png' }
+    };
+    const root = document.querySelector('#art');
+    if (promo === 'marquee' || promo === 'small') {
+      root.className = `promo ${promo === 'small' ? 'promo-small' : ''}`;
+      root.innerHTML = `<div class="promo-copy"><div class="brand"><span class="lens-mark" aria-hidden="true"></span><span>AI Vision</span></div><h2>${promo === 'small' ? 'See it.\nAsk it.' : 'Understand what\'s\nin front of you.'}</h2><p>${promo === 'small' ? 'A friendly screenshot assistant for Chrome.' : 'Select a screenshot, ask Gemini, and keep moving.'}</p></div>`;
+    } else {
+      const card = source[slide] || source['1'];
+      root.innerHTML = `<div class="brand"><span class="lens-mark" aria-hidden="true"></span><span>AI Vision</span></div><div class="content"><div class="copy"><p class="eyebrow">AI SCREENSHOT ASSISTANT · V2.8 GITHUB PREVIEW</p><h1>${card.title.replaceAll('\\n', '<br>')}</h1><p class="subline">${card.subline}</p></div><div class="capture-shell"><img class="capture" src="${card.image}" alt="Authentic AI Vision v2.8 interface preview"></div></div><p class="disclaimer"><strong>GitHub build preview</strong> · fictional material · illustrative response</p>`;
+    }
+  </script>
+</body>
+</html>

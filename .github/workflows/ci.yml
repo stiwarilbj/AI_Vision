@@ -39,6 +39,8 @@ jobs:
           rm -rf /tmp/ai-vision-extension
           mkdir -p /tmp/ai-vision-extension
           unzip -q dist/ai-vision-extension-v2.8.zip -d /tmp/ai-vision-extension
+      - name: Validate Store artwork dimensions and encoding
+        run: npm run assets:check
       - name: Install Chromium for browser checks
         run: npx playwright install --with-deps chromium
       - name: Serve GitHub Pages source
