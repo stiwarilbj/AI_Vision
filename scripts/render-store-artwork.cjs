@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const { checkSourceProvenance } = require('./check-store-assets.cjs');
 
 const projectRoot = path.resolve(__dirname, '..');
 const artworkRoot = path.join(projectRoot, 'release-assets-v2.8');
@@ -18,6 +19,7 @@ const outputs = [
 
 async function render() {
   if (!fs.existsSync(htmlPath)) throw new Error(`Missing artwork source: ${htmlPath}`);
+  checkSourceProvenance();
   const browser = await chromium.launch({ headless: true, channel: process.env.CI ? 'chromium' : undefined, executablePath: process.env.CHROME_EXECUTABLE || undefined });
   try {
     const page = await browser.newPage({ deviceScaleFactor: 1 });
@@ -25,7 +27,7 @@ async function render() {
     for (const [query, relativeOutput, width, height] of outputs) {
       await page.setViewportSize({ width, height });
       await page.goto(`${artworkUrl}${query}`, { waitUntil: 'load' });
-      await page.waitForFunction(() => [...document.images].every(image => image.complete));
+      await page.waitForFunction(() => [...document.images].every(image => image.complete && image.naturalWidth > 0));
       await page.locator('#art').screenshot({ path: path.join(artworkRoot, relativeOutput), animations: 'disabled' });
     }
   } finally {
