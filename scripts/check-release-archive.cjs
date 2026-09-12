@@ -5,6 +5,7 @@ const path = require('node:path');
 
 const projectRoot = path.resolve(__dirname, '..');
 const defaultArchive = path.join(projectRoot, 'outputs', 'ai-vision-v28', 'ai-vision-extension-v2.8.zip');
+const defaultAlias = path.join(projectRoot, 'AI_Vision_Extension_Package.zip');
 const defaultAllowlist = path.join(__dirname, 'package-allowlist.json');
 
 function readArchiveEntries(archivePath) {
@@ -78,6 +79,11 @@ function parseArgs(argv = process.argv.slice(2)) {
 if (require.main === module) {
   try {
     const result = checkArchive(parseArgs());
+    const aliasPath = process.env.RELEASE_ALIAS || defaultAlias;
+    if (fs.existsSync(aliasPath) && path.resolve(aliasPath) !== path.resolve(result.archivePath)) {
+      checkArchive({ archivePath: aliasPath });
+      console.log(`Upload alias passed: ${path.relative(projectRoot, aliasPath)}.`);
+    }
     console.log(`Release archive passed: ${result.entries.length} files, version ${result.version}.`);
   } catch (error) {
     console.error(error.message || error);
@@ -85,4 +91,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { checkArchive, loadAllowlist, parseArgs, readArchiveEntries, readArchiveEntry };
+module.exports = { checkArchive, defaultAlias, loadAllowlist, parseArgs, readArchiveEntries, readArchiveEntry };
