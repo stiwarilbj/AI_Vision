@@ -21,6 +21,8 @@ const server = http.createServer((req, res) => {
   const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME_EXECUTABLE || undefined });
   const errors = [];
   let page;
+  let traceContext;
+  let traceIndex = 0;
   const url = `http://127.0.0.1:${server.address().port}/tests/manual/assistant-panel-harness.html`;
   const get = async selector => (await page.evaluateHandle(s => window.__panelTestRoot.querySelector(s), selector)).asElement();
   const click = async selector => { const element = await get(selector); assert.ok(element, selector); await element.click(); };
@@ -35,8 +37,17 @@ const server = http.createServer((req, res) => {
   });
 
   async function open(scenario = '') {
+    if (traceContext) {
+      await traceContext.tracing.stop({ path: path.resolve(process.env.PLAYWRIGHT_TRACE_DIR, `panel-${traceIndex++}.zip`) }).catch(() => {});
+      traceContext = null;
+    }
     if (page) await page.close();
     page = await browser.newPage({ viewport: { width: 1024, height: 768 }, reducedMotion: 'reduce' });
+    if (process.env.PLAYWRIGHT_TRACE_DIR) {
+      fs.mkdirSync(process.env.PLAYWRIGHT_TRACE_DIR, { recursive: true });
+      traceContext = page.context();
+      await traceContext.tracing.start({ screenshots: true, snapshots: true, sources: true });
+    }
     page.setDefaultTimeout(5000);
     page.on('pageerror', error => errors.push(error.message));
     await page.addInitScript(() => {
@@ -237,6 +248,10 @@ const server = http.createServer((req, res) => {
     assert.deepEqual(errors, []);
     console.log('Panel UI checks passed: one-tap and automatic capture, duplicate prevention, cancellation, stale callbacks, setup, contexts, preferences, answer follow-ups, and Browser task approval/Stop.');
   } finally {
+    if (traceContext) {
+      await traceContext.tracing.stop({ path: path.resolve(process.env.PLAYWRIGHT_TRACE_DIR, `panel-${traceIndex++}.zip`) }).catch(() => {});
+      traceContext = null;
+    }
     await browser.close();
   }
 })().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => server.close());

@@ -49,6 +49,42 @@ async function comparePng(page, baseline, candidate) {
   }, { baseline, candidate });
 }
 
+async function writeDiff(page, baseline, candidate, outputPath) {
+  const dataUrl = await page.evaluate(async ({ baseline, candidate }) => {
+    const decode = (encoded) => new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error('could not decode a PNG for the visual diff'));
+      image.src = `data:image/png;base64,${encoded}`;
+    });
+    const [before, after] = await Promise.all([decode(baseline), decode(candidate)]);
+    if (before.width !== after.width || before.height !== after.height) return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = before.width;
+    canvas.height = before.height;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    context.drawImage(before, 0, 0);
+    const a = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(after, 0, 0);
+    const b = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    const image = context.createImageData(canvas.width, canvas.height);
+    for (let i = 0; i < a.length; i += 4) {
+      const error = Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]);
+      image.data[i] = error > 18 ? 220 : 248;
+      image.data[i + 1] = error > 18 ? 60 : 250;
+      image.data[i + 2] = error > 18 ? 70 : 252;
+      image.data[i + 3] = error > 18 ? 220 : 90;
+    }
+    context.putImageData(image, 0, 0);
+    return canvas.toDataURL('image/png');
+  }, { baseline, candidate });
+  if (dataUrl) {
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, Buffer.from(dataUrl.slice('data:image/png;base64,'.length), 'base64'));
+  }
+}
+
 (async () => {
   const browser = await chromium.launch({ headless: true, channel: process.env.CI ? 'chromium' : undefined, executablePath: process.env.CHROME_EXECUTABLE || undefined });
   const page = await browser.newPage();
@@ -66,8 +102,13 @@ async function comparePng(page, baseline, candidate) {
       );
       // Font rasterization and browser patch versions can move a few pixels;
       // large layout shifts still fail loudly.
-      assert.ok(result.changedRatio <= 0.12, `${name} changed ${Math.round(result.changedRatio * 100)}% of pixels`);
-      assert.ok(result.meanError <= 0.045, `${name} mean pixel error ${result.meanError.toFixed(3)}`);
+      const ratioOkay = result.changedRatio <= 0.12;
+      const errorOkay = result.meanError <= 0.045;
+      if ((!ratioOkay || !errorOkay) && process.env.VISUAL_DIFF_DIR) {
+        await writeDiff(page, fs.readFileSync(baselinePath).toString('base64'), fs.readFileSync(candidatePath).toString('base64'), path.join(path.resolve(projectRoot, process.env.VISUAL_DIFF_DIR), name));
+      }
+      assert.ok(ratioOkay, `${name} changed ${Math.round(result.changedRatio * 100)}% of pixels`);
+      assert.ok(errorOkay, `${name} mean pixel error ${result.meanError.toFixed(3)}`);
       results.push({ name, ...result });
     }
     console.log(`Visual baselines passed: ${results.length} panel states.`);

@@ -134,13 +134,13 @@ test('the checked-in key file contains exactly the key used by the notifier', ()
   assert.equal(fs.readFileSync(indexnow.keyFile, 'utf8').trim(), indexnow.loadConfig().key);
 });
 
-test('IndexNow workflow waits for the successful Pages deployment and rejects stale events', () => {
+test('IndexNow workflow waits for the successful Pages workflow and rejects stale events', () => {
   const workflow = fs.readFileSync(path.join(projectRoot, '.github/workflows/indexnow.yml'), 'utf8');
-  assert.match(workflow, /deployment_status:/);
-  assert.match(workflow, /deployment_status\.state == 'success'/);
-  assert.match(workflow, /deployment\.environment == 'github-pages'/);
-  assert.match(workflow, /deployment\.ref == 'main'/);
-  assert.match(workflow, /deployment\.sha/);
+  assert.match(workflow, /workflow_run:/);
+  assert.match(workflow, /workflows: \["Pages"\]/);
+  assert.match(workflow, /workflow_run\.conclusion == 'success'/);
+  assert.match(workflow, /workflow_run\.head_branch == 'main'/);
+  assert.match(workflow, /workflow_run\.head_sha/);
   assert.match(workflow, /repository\.full_name == github\.repository/);
   assert.match(workflow, /git ls-remote origin refs\/heads\/main/);
   assert.match(workflow, /INDEXNOW_CHANGED_FILES/);
@@ -152,6 +152,7 @@ test('IndexNow workflow waits for the successful Pages deployment and rejects st
   assert.match(workflow, /actions\/checkout@11d5960a326750d5838078e36cf38b85af677262/);
   assert.match(workflow, /actions\/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020/);
   assert.match(workflow, /actions\/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02/);
+  assert.match(workflow, /retention-days: 30/);
   assert.match(workflow, /timeout-minutes: 15/);
   assert.match(workflow, /INDEXNOW_SUBMIT_TIMEOUT_MS/);
   assert.doesNotMatch(workflow, /^\s+push:/m);

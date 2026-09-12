@@ -46,11 +46,13 @@ jobs:
         run: npm run panel:check
         env:
           UI_SCREENSHOTS: outputs/ci/panel
+          PLAYWRIGHT_TRACE_DIR: outputs/ci/traces/panel
       - name: Compare reviewed panel visual baselines
         run: npm run visual:check
         env:
           PANEL_SCREENSHOTS: outputs/ci/panel
           VISUAL_REPORT: outputs/ci/visual-report.json
+          VISUAL_DIFF_DIR: outputs/ci/visual-diffs
       - name: Run the packaged extension in isolated Chromium profiles
         run: npm run extension:check
         env:
@@ -64,6 +66,7 @@ jobs:
           name: ai-vision-ci-reports
           path: outputs/ci/
           if-no-files-found: warn
+          retention-days: 30
 
   quality-gate:
     if: always()
