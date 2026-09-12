@@ -197,6 +197,14 @@ test('release archive matches every allowlisted source byte and detects a stale 
   }), /Release archive is stale for src\/background\/service-worker\.js/);
 });
 
+test('root upload alias is a separately validated v2.8 package', () => {
+  const alias = path.join(projectRoot, 'AI_Vision_Extension_Package.zip');
+  assert.ok(fs.existsSync(alias), 'The root upload alias must be present for repository handoff.');
+  const result = checkArchive({ archivePath: alias });
+  assert.equal(result.status, 'passed');
+  assert.equal(result.version, '2.8');
+});
+
 test('reviewed visual baseline guard catches a missing state before comparison', () => {
   assert.equal(checkBaselineFiles({ requiredNames: ['extension-approval.png'] }).status, 'passed');
   const fixture = tempDir('ai-vision-baseline-');
