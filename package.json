@@ -24,7 +24,9 @@
     "pages:rollback": "node scripts/prepare-pages-rollback.cjs",
     "version:check": "node scripts/check-version.js",
     "seo:check": "node scripts/check-seo.js",
-    "website:check": "node scripts/check-website-ui.cjs"
+    "website:check": "node scripts/check-website-ui.cjs",
+    "artwork:render": "node scripts/render-store-artwork.cjs",
+    "assets:check": "node scripts/check-store-assets.cjs"
   },
   "devDependencies": {
     "@google/adk": "2.0.0",

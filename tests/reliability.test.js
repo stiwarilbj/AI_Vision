@@ -13,6 +13,7 @@ const { compose } = require('../scripts/compose-health-report.cjs');
 const settings = require('../scripts/check-github-settings.cjs');
 const incidents = require('../scripts/manage-health-incident.cjs');
 const rollback = require('../scripts/prepare-pages-rollback.cjs');
+const { checkStoreAssets, inspectPng } = require('../scripts/check-store-assets.cjs');
 
 function tempDir(prefix) { return fs.mkdtempSync(path.join(os.tmpdir(), prefix)); }
 
@@ -182,6 +183,22 @@ test('rollback preparation rejects short SHAs and commits without a successful P
   const commit = 'b'.repeat(40);
   const git = (args) => args[0] === 'rev-parse' ? `${commit}\n` : args[0] === 'ls-tree' ? 'docs\n' : Buffer.from('patch');
   assert.throws(() => rollback.prepareRollback({ repo: 'owner/repo', commit, git, gh: () => [] }), /no successful github-pages deployment/);
+});
+
+test('Store artwork is exact-size opaque RGB and rejects alpha PNG fixtures', () => {
+  const result = checkStoreAssets();
+  assert.equal(result.status, 'passed');
+  assert.equal(result.files.length, 7);
+  const fixture = tempDir('ai-vision-artwork-');
+  fs.mkdirSync(path.join(fixture, 'store-screenshots'), { recursive: true });
+  const source = path.join(projectRoot, 'release-assets-v2.8', 'store-screenshots', '01-understand-screenshot.png');
+  const candidate = path.join(fixture, 'store-screenshots', 'fixture.png');
+  fs.copyFileSync(source, candidate);
+  const alpha = fs.readFileSync(candidate);
+  alpha[25] = 6;
+  fs.writeFileSync(candidate, alpha);
+  assert.equal(inspectPng(alpha, 'fixture.png').colorType, 6);
+  assert.throws(() => checkStoreAssets({ root: fixture, expected: [{ file: 'store-screenshots/fixture.png', width: 1280, height: 800 }] }), /opaque 24-bit RGB/);
 });
 
 test('reliability workflows keep deployment, health, and PR gates explicit', () => {

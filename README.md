@@ -4,6 +4,8 @@ Select part of a webpage, ask Gemini what it means, and ask a follow-up. AI Visi
 
 [Add to Chrome](https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk) · [Website and guides](https://stiwarilbj.github.io/AI_Vision/)
 
+The v2.8 preview and its release artwork are in this repository. Build the ZIP with `npm run package`, verify it with `npm run package:verify` after the safeguards PR is merged, and use the [release checklist](RELEASE_OPERATIONS.md) before publishing a draft release.
+
 ## Try it
 
 1. Install AI Vision in desktop Chrome.

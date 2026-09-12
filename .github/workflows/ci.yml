@@ -24,6 +24,8 @@ jobs:
           node-version: 24.13.0
           cache: npm
       - run: npm ci
+      - name: Validate Store artwork dimensions and encoding
+        run: npm run assets:check
       - run: npm run check
       - run: npm audit --audit-level=high
       - name: Build the release archive
