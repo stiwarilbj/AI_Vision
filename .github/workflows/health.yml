@@ -44,6 +44,9 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
+      - name: Install Chromium for production smoke checks
+        run: npx playwright install --with-deps chromium
+
       - name: Resolve the latest successful Pages deployment
         id: resolve
         continue-on-error: true
@@ -73,7 +76,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p outputs/health
-          node scripts/check-github-settings.cjs --repo "$GITHUB_REPOSITORY" --report outputs/health/settings-audit.json
+          # Branch protection is administrator-scoped and may be unavailable
+          # to the read-only Actions token. Preserve that result as a warning;
+          # the script still fails on any actual settings drift.
+          node scripts/check-github-settings.cjs --repo "$GITHUB_REPOSITORY" --allow-unavailable --report outputs/health/settings-audit.json
 
       - name: Verify the deployed site and retry browser smoke checks
         id: checks

@@ -24,14 +24,23 @@ function compose({ deployment, smoke, settings, commit = null, checkedAt = new D
     };
   }
   const failures = [];
+  const warnings = [];
   for (const [name, result] of Object.entries(checks)) {
-    if (!result || result.status !== 'passed') failures.push({ check: name, error: result?.error || `${name} did not pass` });
+    if (!result || result.status !== 'passed') {
+      // GitHub's built-in Actions token cannot read some administrator-only
+      // endpoints (notably branch protection). Record that limitation without
+      // turning an otherwise healthy deployment into a false incident. Any
+      // actual drift or failed production check remains a hard failure.
+      if (name === 'settings' && result?.status === 'unavailable') warnings.push({ check: name, note: result.error || 'Settings audit unavailable to this token' });
+      else failures.push({ check: name, error: result?.error || `${name} did not pass` });
+    }
   }
   return {
     status: failures.length ? 'failed' : 'passed',
     commit: commit || deployment?.commit || null,
     checkedAt,
     failures,
+    warnings,
     checks
   };
 }

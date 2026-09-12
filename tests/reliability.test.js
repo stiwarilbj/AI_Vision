@@ -91,6 +91,10 @@ test('Pages deployment resolver chooses the newest successful deployment', () =>
 test('health report fails closed when any mandatory check is missing or failed', () => {
   const passed = { status: 'passed' };
   assert.equal(compose({ deployment: passed, smoke: passed, settings: passed, commit: 'abc' }).status, 'passed');
+  const unavailableSettings = compose({ deployment: passed, smoke: passed, settings: { status: 'unavailable', error: '403' }, commit: 'abc' });
+  assert.equal(unavailableSettings.status, 'passed');
+  assert.deepEqual(unavailableSettings.failures, []);
+  assert.equal(unavailableSettings.warnings.length, 1);
   assert.equal(compose({ deployment: { status: 'failed' }, smoke: { status: 'failed' }, settings: { status: 'failed' }, superseded: true }).status, 'superseded');
   const failed = compose({ deployment: { status: 'failed', error: 'stale asset' }, smoke: passed, settings: null, commit: 'abc' });
   assert.equal(failed.status, 'failed');
@@ -160,6 +164,8 @@ test('reliability workflows keep deployment, health, and PR gates explicit', () 
   assert.match(health, /workflow_run:/);
   assert.match(health, /for attempt in 1 2 3/);
   assert.match(health, /manage-health-incident/);
+  assert.match(health, /playwright install --with-deps chromium/);
+  assert.match(health, /--allow-unavailable/);
   assert.match(health, /build-pages-manifest/);
   assert.match(health, /retention-days: 30/);
   assert.match(template, /rollback/i);
