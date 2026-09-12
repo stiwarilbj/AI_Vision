@@ -47,7 +47,7 @@ if (!/responseSchema/.test(worker) || !/targetSignature/.test(worker)) {
 if (packageJson.devDependencies?.['@google/adk'] !== '2.0.0') {
   throw new Error('ADK lint failed: the vendored build must remain pinned to @google/adk 2.0.0.');
 }
-if (!worker.includes("importScripts?.('src/background/adk-runtime.js')")) {
+if (!worker.includes("importScripts?.('adk-runtime.js')")) {
   throw new Error('ADK lint failed: the service worker must load the packaged browser bundle.');
 }
 if (worker.includes('127.0.0.1') || panel.includes('127.0.0.1')) {

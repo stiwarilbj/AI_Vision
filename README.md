@@ -26,6 +26,8 @@ Built with plain JavaScript, Chrome's Manifest V3 APIs, and Gemini.
 
 See the [architecture](ARCHITECTURE.md) and [security notes](SECURITY.md) for the details.
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the pull-request, browser-test, and release checklist.
+
 ## Run it locally
 
 Use Node.js 24.13 or newer:

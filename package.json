@@ -12,6 +12,9 @@
     "lint": "npm run build:adk && node --check src/background/service-worker.js && node --check src/content/capture-utils.js && node --check src/content/assistant-panel.js && node --check permission.js && node scripts/check-version.js && node scripts/check-seo.js && node scripts/lint.js",
     "package:check": "npm run build:adk && node scripts/check-package.js",
     "package": "npm run build:adk && node scripts/check-package.js && node scripts/package-extension.js",
+    "panel:check": "node scripts/check-panel-ui.cjs",
+    "extension:check": "node scripts/check-extension-browser.cjs",
+    "visual:check": "node scripts/check-visual-baselines.cjs",
     "version:check": "node scripts/check-version.js",
     "seo:check": "node scripts/check-seo.js",
     "website:check": "node scripts/check-website-ui.cjs"

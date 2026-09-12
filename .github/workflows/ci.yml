@@ -4,19 +4,36 @@ on:
   push:
   pull_request:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   checks:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # Pin third-party workflow code to the resolved v4 commits so a moving
+      # tag cannot silently change the release gate.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24.13.0
           cache: npm
       - run: npm ci
       - run: npm run check
       - run: npm audit --audit-level=high
-      - name: Install browser for website checks
+      - name: Build the release archive
+        run: npm run package
+      - name: Extract the release archive for Chromium
+        run: |
+          rm -rf /tmp/ai-vision-extension
+          mkdir -p /tmp/ai-vision-extension
+          unzip -q dist/ai-vision-extension-v2.8.zip -d /tmp/ai-vision-extension
+      - name: Install Chromium for browser checks
         run: npx playwright install --with-deps chromium
       - name: Serve GitHub Pages source
         run: python3 -m http.server 8765 --directory . > /tmp/ai-vision-http.log 2>&1 &
@@ -24,13 +41,43 @@ jobs:
         run: npm run website:check
         env:
           SITE_TEST_URL: http://127.0.0.1:8765/docs/
-          WEBSITE_REPORT: outputs/website-browser-report.json
-      - name: Save website browser report
-        # Keep the original check failure visible without masking it with a
-        # second failure when the browser check stopped before writing a report.
-        if: always() && hashFiles('outputs/website-browser-report.json') != ''
-        uses: actions/upload-artifact@v4
+          WEBSITE_REPORT: outputs/ci/website-browser-report.json
+      - name: Run panel browser checks
+        run: npm run panel:check
+        env:
+          UI_SCREENSHOTS: outputs/ci/panel
+      - name: Compare reviewed panel visual baselines
+        run: npm run visual:check
+        env:
+          PANEL_SCREENSHOTS: outputs/ci/panel
+          VISUAL_REPORT: outputs/ci/visual-report.json
+      - name: Run the packaged extension in isolated Chromium profiles
+        run: npm run extension:check
+        env:
+          EXTENSION_PATH: /tmp/ai-vision-extension
+          EXTENSION_REPORT: outputs/ci/extension-browser-report.json
+          EXTENSION_SCREENSHOTS: outputs/ci/extension-browser
+      - name: Save browser reports and screenshots
+        if: always() && hashFiles('outputs/ci/**') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: website-browser-report
-          path: outputs/website-browser-report.json
+          name: ai-vision-ci-reports
+          path: outputs/ci/
           if-no-files-found: warn
+
+  quality-gate:
+    if: always()
+    needs: checks
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Require every mandatory check
+        env:
+          CHECKS_RESULT: ${{ needs.checks.result }}
+        run: |
+          if [ "$CHECKS_RESULT" != "success" ]; then
+            echo "Mandatory CI checks finished with: $CHECKS_RESULT"
+            exit 1
+          fi
+          echo "All mandatory AI Vision checks passed."

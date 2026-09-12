@@ -763,7 +763,7 @@ test('the bundled Google ADK runtime does not request loopback permission or a c
   assert.doesNotMatch(SERVICE_WORKER_CODE, /127\.0\.0\.1/);
   assert.doesNotMatch(PANEL_CODE, /ensureAdkAccess|adkPermissionResult|127\.0\.0\.1/);
   assert.doesNotMatch(fs.readFileSync(path.join(PROJECT_ROOT, 'permission.js'), 'utf8'), /127\.0\.0\.1|adk-runtime/);
-  assert.match(SERVICE_WORKER_CODE, /src\/background\/adk-runtime\.js/);
+  assert.match(SERVICE_WORKER_CODE, /importScripts\?\.\('\s*adk-runtime\.js'/);
 });
 
 test('model discovery filters unsupported models and does not hard-code the panel list', async () => {

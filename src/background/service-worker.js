@@ -38,7 +38,9 @@ const AGENT_ROTATION_MODELS = Object.freeze([
 // available in a classic MV3 service worker; the optional call keeps the
 // policy helpers testable in the Node VM harness as well.
 try {
-  globalThis.importScripts?.('src/background/adk-runtime.js');
+  // Service-worker URLs resolve relative to this directory, so the generated
+  // runtime sits beside the worker in the release archive.
+  globalThis.importScripts?.('adk-runtime.js');
 } catch (error) {
   console.warn('AI Vision could not load the bundled Google ADK runtime:', error?.message || error);
 }

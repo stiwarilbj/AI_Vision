@@ -3,6 +3,10 @@ name: Notify IndexNow
 on:
   deployment_status:
 
+concurrency:
+  group: indexnow-${{ github.repository }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   actions: read
@@ -19,16 +23,17 @@ jobs:
       github.event.deployment.ref == 'main' &&
       github.event.repository.full_name == github.repository
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       DEPLOY_COMMIT: ${{ github.event.deployment.sha }}
     steps:
       - name: Check out the deployed commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.event.deployment.sha }}
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24.13.0
 
@@ -95,13 +100,14 @@ jobs:
           INDEXNOW_ENDPOINT: https://www.bing.com/indexnow
           INDEXNOW_LIVE_ATTEMPTS: '12'
           INDEXNOW_LIVE_DELAY_MS: '10000'
+          INDEXNOW_SUBMIT_TIMEOUT_MS: '15000'
         run: |
           mkdir -p outputs
           node scripts/notify-indexnow.js --submit --changed --output outputs/indexnow-response.json --receipt outputs/indexnow-receipt.json
 
       - name: Save IndexNow receipt
         if: always() && steps.current.outputs.superseded == 'false' && steps.changed.outputs.changed == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: indexnow-receipt
           path: |

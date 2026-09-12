@@ -8,7 +8,24 @@ const workflow = fs.readFileSync(
   'utf8',
 );
 
-test('CI only uploads a browser report when the report exists', () => {
-  assert.match(workflow, /if: always\(\) && hashFiles\('outputs\/website-browser-report\.json'\) != ''/);
+test('CI keeps the release gate reproducible and uploads browser evidence', () => {
+  assert.match(workflow, /concurrency:\n  group: ci-\$\{\{ github\.workflow \}\}-\$\{\{ github\.ref \}\}\n  cancel-in-progress: true/);
+  assert.match(workflow, /permissions:\n  contents: read/);
+  assert.match(workflow, /actions\/checkout@11d5960a326750d5838078e36cf38b85af677262/);
+  assert.match(workflow, /actions\/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020/);
+  assert.match(workflow, /actions\/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02/);
+  assert.match(workflow, /timeout-minutes: 30/);
+  assert.match(workflow, /npm audit --audit-level=high/);
+  assert.match(workflow, /npm run package/);
+  assert.match(workflow, /npm run website:check/);
+  assert.match(workflow, /npm run panel:check/);
+  assert.match(workflow, /npm run visual:check/);
+  assert.match(workflow, /npm run extension:check/);
+  assert.match(workflow, /hashFiles\('outputs\/ci\/\*\*'\) != ''/);
+  assert.match(workflow, /path: outputs\/ci\//);
+  assert.match(workflow, /quality-gate:/);
+  assert.match(workflow, /needs: checks/);
+  assert.match(workflow, /CHECKS_RESULT: \$\{\{ needs\.checks\.result \}\}/);
+  assert.match(workflow, /if \[ \"\$CHECKS_RESULT\" != \"success\" \]/);
   assert.match(workflow, /if-no-files-found: warn/);
 });
