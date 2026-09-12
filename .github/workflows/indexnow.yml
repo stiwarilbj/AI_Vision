@@ -1,7 +1,9 @@
 name: Notify IndexNow
 
 on:
-  deployment_status:
+  workflow_run:
+    workflows: ["Pages"]
+    types: [completed]
 
 concurrency:
   group: indexnow-${{ github.repository }}
@@ -13,24 +15,22 @@ permissions:
 
 jobs:
   notify:
-    # Pages must have succeeded for this repository and its main branch. The
-    # head SHA is checked again below so a delayed event cannot notify for an
-    # older deployment after main has moved on.
+    # Only a successful Pages workflow for this repository's main branch can
+    # notify Bing. Pages itself verifies the artifact before this event fires.
     if: >-
-      github.event_name == 'deployment_status' &&
-      github.event.deployment_status.state == 'success' &&
-      github.event.deployment.environment == 'github-pages' &&
-      github.event.deployment.ref == 'main' &&
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
       github.event.repository.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      DEPLOY_COMMIT: ${{ github.event.deployment.sha }}
+      DEPLOY_COMMIT: ${{ github.event.workflow_run.head_sha }}
     steps:
       - name: Check out the deployed commit
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          ref: ${{ github.event.deployment.sha }}
+          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -45,7 +45,7 @@ jobs:
           current="$(git ls-remote origin refs/heads/main | awk '{print $1}')"
           if [[ -z "$current" || "$current" != "$DEPLOY_COMMIT" ]]; then
             echo "superseded=true" >> "$GITHUB_OUTPUT"
-            echo "Pages event $DEPLOY_COMMIT is no longer the current main commit ($current); skipping IndexNow."
+            echo "Pages workflow $DEPLOY_COMMIT is no longer the current main commit ($current); skipping IndexNow."
           else
             echo "superseded=false" >> "$GITHUB_OUTPUT"
           fi
@@ -54,11 +54,9 @@ jobs:
         id: changed
         if: steps.current.outputs.superseded == 'false'
         shell: bash
-        env:
-          DEPLOY_COMMIT: ${{ github.event.deployment.sha }}
         run: |
           set -euo pipefail
-          files="$(git diff-tree --root --no-commit-id --name-only -r "$DEPLOY_COMMIT")"
+          files="$(git diff-tree --root --no-commit-id --name-only -r -m "$DEPLOY_COMMIT")"
           if printf '%s\n' "$files" | grep -q '^docs/'; then
             {
               echo 'changed=true'
@@ -75,25 +73,20 @@ jobs:
         if: steps.current.outputs.superseded == 'false' && steps.changed.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          DEPLOY_COMMIT: ${{ github.event.deployment.sha }}
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p .indexnow-previous
           previous_run="$(gh run list --workflow indexnow.yml --status completed --limit 30 --json databaseId,headSha --jq '.[] | select(.headSha == env.DEPLOY_COMMIT) | .databaseId' | head -n 1 || true)"
-          if [[ -n "$previous_run" ]]; then
-            gh run download "$previous_run" --name indexnow-receipt --dir .indexnow-previous || true
-          fi
+          if [[ -n "$previous_run" ]]; then gh run download "$previous_run" --name indexnow-receipt --dir .indexnow-previous || true; fi
           receipt="$(find .indexnow-previous -type f -name indexnow-receipt.json -print -quit || true)"
-          if [[ -n "$receipt" ]]; then
-            echo "INDEXNOW_RECEIPT_FILE=$receipt" >> "$GITHUB_ENV"
-          fi
+          if [[ -n "$receipt" ]]; then echo "INDEXNOW_RECEIPT_FILE=$receipt" >> "$GITHUB_ENV"; fi
 
       - name: Verify the deployed Pages files and notify IndexNow
         if: steps.current.outputs.superseded == 'false' && steps.changed.outputs.changed == 'true'
         env:
           WEBSITE_CHANGED: 'true'
-          INDEXNOW_DEPLOY_COMMIT: ${{ github.event.deployment.sha }}
+          INDEXNOW_DEPLOY_COMMIT: ${{ github.event.workflow_run.head_sha }}
           INDEXNOW_CHANGED_FILES: ${{ steps.changed.outputs.files }}
           INDEXNOW_KEY_FILE: docs/ai-vision-indexnow-20260910.txt
           INDEXNOW_KEY_LOCATION: https://stiwarilbj.github.io/AI_Vision/ai-vision-indexnow-20260910.txt
@@ -114,3 +107,4 @@ jobs:
             outputs/indexnow-response.json
             outputs/indexnow-receipt.json
           if-no-files-found: warn
+          retention-days: 30

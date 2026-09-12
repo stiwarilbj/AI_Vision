@@ -1,0 +1,194 @@
+name: Pages
+
+on:
+  # A Pages candidate is promoted only after the required CI workflow has
+  # completed successfully on the main branch.
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: pages-${{ github.repository }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: >-
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.repository.full_name == github.repository) ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pages: write
+    outputs:
+      candidate_sha: ${{ steps.candidate.outputs.sha }}
+    steps:
+      - name: Resolve the candidate commit
+        id: candidate
+        shell: bash
+        env:
+          WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          EVENT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          candidate="${WORKFLOW_RUN_SHA:-$EVENT_SHA}"
+          test -n "$candidate"
+          echo "sha=$candidate" >> "$GITHUB_OUTPUT"
+
+      - name: Check out the tested main commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ steps.candidate.outputs.sha }}
+          fetch-depth: 0
+
+      - name: Reject a superseded candidate
+        env:
+          CANDIDATE_SHA: ${{ steps.candidate.outputs.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          checked_out="$(git rev-parse HEAD)"
+          current="$(git ls-remote origin refs/heads/main | awk '{print $1}')"
+          test "$checked_out" = "$CANDIDATE_SHA" || { echo "Checked out $checked_out, expected $CANDIDATE_SHA"; exit 1; }
+          test "$current" = "$CANDIDATE_SHA" || { echo "Candidate $CANDIDATE_SHA was superseded by $current"; exit 1; }
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.13.0
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Install Chromium for deterministic browser checks
+        run: npx playwright install --with-deps chromium
+
+      - name: Serve the exact Pages source
+        run: python3 -m http.server 8765 --directory docs > /tmp/ai-vision-pages-http.log 2>&1 &
+
+      - name: Run website checks against the candidate artifact
+        env:
+          SITE_TEST_URL: http://127.0.0.1:8765/
+          WEBSITE_REPORT: outputs/pages/website-report.json
+          UI_SCREENSHOTS: outputs/pages/screenshots
+        run: npm run website:check
+
+      - name: Build the artifact manifest
+        env:
+          CANDIDATE_SHA: ${{ steps.candidate.outputs.sha }}
+        run: node scripts/build-pages-manifest.cjs --source docs --output outputs/pages/artifact-manifest.json --commit "$CANDIDATE_SHA"
+
+      - name: Assemble the Pages artifact
+        run: |
+          set -euo pipefail
+          rm -rf _site
+          mkdir -p _site
+          cp -R docs/. _site/
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+
+      - name: Upload the Pages artifact
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: _site
+
+      - name: Save candidate evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: pages-candidate-${{ steps.candidate.outputs.sha }}
+          path: outputs/pages/
+          if-no-files-found: warn
+          retention-days: 30
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish the tested Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+
+  verify:
+    needs: [build, deploy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the deployed commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.build.outputs.candidate_sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.13.0
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Chromium for production smoke checks
+        run: npx playwright install --with-deps chromium
+
+      - name: Rebuild the expected manifest for verification
+        env:
+          PAGES_EXPECTED_COMMIT: ${{ needs.build.outputs.candidate_sha }}
+        run: node scripts/build-pages-manifest.cjs --source docs --output outputs/pages/artifact-manifest.json --commit "$PAGES_EXPECTED_COMMIT"
+
+      - name: Verify public files and run browser smoke checks
+        id: checks
+        shell: bash
+        env:
+          SITE_LIVE_URL: ${{ needs.deploy.outputs.page_url }}
+          PAGES_EXPECTED_COMMIT: ${{ needs.build.outputs.candidate_sha }}
+          SITE_VERIFY_ATTEMPTS: '15'
+          SITE_VERIFY_DELAY_MS: '20000'
+          SITE_VERIFY_TIMEOUT_MS: '15000'
+          SITE_VERIFY_REPORT: outputs/pages/verify-report.json
+          PRODUCTION_SMOKE_REPORT: outputs/pages/production-smoke.json
+          PRODUCTION_SMOKE_SCREENSHOTS: outputs/pages/production-smoke
+        run: |
+          set +e
+          mkdir -p outputs/pages
+          node scripts/verify-deployed-site.cjs --base-url "$SITE_LIVE_URL" --source docs --manifest outputs/pages/artifact-manifest.json --commit "$PAGES_EXPECTED_COMMIT" --output "$SITE_VERIFY_REPORT"
+          verify_status=$?
+          node scripts/check-production-smoke.cjs
+          smoke_status=$?
+          if [[ "$verify_status" -eq 0 && "$smoke_status" -eq 0 ]]; then
+            echo 'status=passed' >> "$GITHUB_OUTPUT"
+          else
+            echo "status=failed" >> "$GITHUB_OUTPUT"
+            echo "Deployment verification status=$verify_status, production smoke status=$smoke_status"
+          fi
+          exit 0
+
+      - name: Save deployment verification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: pages-deployment-${{ needs.build.outputs.candidate_sha }}
+          path: outputs/pages/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Fail when deployment verification or smoke checks fail
+        if: steps.checks.outputs.status != 'passed'
+        run: exit 1

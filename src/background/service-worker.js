@@ -345,6 +345,10 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 // Read-only page context collection. Webpage strings are data, never extension
 // instructions; the agent prompt adds explicit untrusted-data boundaries.
 function extractVisiblePageSnapshot() {
+  // This function is serialized into the page by chrome.scripting.executeScript,
+  // so it cannot read service-worker constants from the outer scope.
+  const maxTabTextChars = 5000;
+  const maxInteractives = 90;
   const extensionSelector = '#ai-vision-host, #gemini-popup, #gemini-screenshot-overlay, #gemini-selection-rectangle, #gemini-temp-error, #gemini-api-key-popup';
   const isVisible = (element) => {
     if (!element || element.closest(extensionSelector)) return false;
@@ -371,12 +375,12 @@ function extractVisiblePageSnapshot() {
     }
   });
 
-  while (characterCount < MAX_TAB_TEXT_CHARS) {
+  while (characterCount < maxTabTextChars) {
     const node = walker.nextNode();
     if (!node) break;
     const text = node.textContent.replace(/\s+/g, ' ').trim();
     if (!text) continue;
-    const remaining = MAX_TAB_TEXT_CHARS - characterCount;
+    const remaining = maxTabTextChars - characterCount;
     textParts.push(text.slice(0, remaining));
     characterCount += Math.min(text.length, remaining) + 1;
   }
@@ -384,7 +388,7 @@ function extractVisiblePageSnapshot() {
   const interactiveSelector = 'a[href], button, input:not([type="hidden"]), textarea, select, [role="button"], [role="link"], [contenteditable="true"]';
   const interactives = Array.from(document.querySelectorAll(interactiveSelector))
     .filter((element) => isVisible(element) && !element.disabled && element.getAttribute('aria-disabled') !== 'true')
-    .slice(0, MAX_INTERACTIVES)
+    .slice(0, maxInteractives)
     .map((element, index) => {
       const text = (element.innerText || element.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 180);
       const ariaLabel = (element.getAttribute('aria-label') || '').slice(0, 180);
@@ -405,7 +409,7 @@ function extractVisiblePageSnapshot() {
   return {
     title: document.title,
     url: location.href,
-    text: textParts.join('\n').slice(0, MAX_TAB_TEXT_CHARS),
+    text: textParts.join('\n').slice(0, maxTabTextChars),
     interactives
   };
 }

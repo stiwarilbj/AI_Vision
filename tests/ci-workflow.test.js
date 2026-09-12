@@ -23,6 +23,9 @@ test('CI keeps the release gate reproducible and uploads browser evidence', () =
   assert.match(workflow, /npm run extension:check/);
   assert.match(workflow, /hashFiles\('outputs\/ci\/\*\*'\) != ''/);
   assert.match(workflow, /path: outputs\/ci\//);
+  assert.match(workflow, /PLAYWRIGHT_TRACE_DIR: outputs\/ci\/traces\/panel/);
+  assert.match(workflow, /VISUAL_DIFF_DIR: outputs\/ci\/visual-diffs/);
+  assert.match(workflow, /retention-days: 30/);
   assert.match(workflow, /quality-gate:/);
   assert.match(workflow, /needs: checks/);
   assert.match(workflow, /CHECKS_RESULT: \$\{\{ needs\.checks\.result \}\}/);

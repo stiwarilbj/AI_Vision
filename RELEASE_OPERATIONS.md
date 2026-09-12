@@ -1,0 +1,17 @@
+# Release operations
+
+AI Vision uses pull requests and the `quality-gate` check for every change. The repository owner may merge after the check passes; no second reviewer is required while the owner is the only collaborator. Keep the PR checklist complete and attach screenshots for interface changes.
+
+The Pages workflow builds and tests `/docs` from the candidate `main` commit, uploads the exact artifact, deploys it to the `github-pages` environment, and verifies the public URL before IndexNow runs. The workflow rejects an outdated commit. The hourly health workflow checks the latest successful deployment with synthetic browser traffic and opens one owner-assigned GitHub issue for an active failure. Scheduled Actions can be delayed or disabled after 60 days without repository activity, so GitHub notifications are an operational aid rather than an independent uptime guarantee.
+
+## Manual settings audit
+
+Run **Actions → Production health → Run workflow** (or run `node scripts/check-github-settings.cjs --repo stiwarilbj/AI_Vision` locally after `gh auth login`). The read-only audit compares branch protection, Pages source/build type/HTTPS, and the `github-pages` deployment environment with `config/github-settings.json`. Apply drift manually in repository settings, then run the audit again. The audit never writes settings and no administrator token is stored in GitHub.
+
+## Manual Gemini release check
+
+Before a release, use a separate Gemini test project and disposable key. Enter it through extension Settings while recording is disabled, use fictional pages, verify capture, explanation, extraction, follow-up, and the Browser-task approval/Stop path, then remove the key. Never put the key in commits, screenshots, traces, Actions variables, or issue text.
+
+## Rollback
+
+Create a normal revert pull request for the last verified `main` commit. Let the full CI and Pages verification gate run, merge it, and confirm the public smoke check. Do not force-push or edit production files directly. If a deployment is still propagating, wait for the bounded verifier before deciding whether a rollback is needed.

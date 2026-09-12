@@ -15,6 +15,12 @@
     "panel:check": "node scripts/check-panel-ui.cjs",
     "extension:check": "node scripts/check-extension-browser.cjs",
     "visual:check": "node scripts/check-visual-baselines.cjs",
+    "pages:manifest": "node scripts/build-pages-manifest.cjs",
+    "pages:resolve": "node scripts/resolve-pages-deployment.cjs",
+    "pages:verify": "node scripts/verify-deployed-site.cjs",
+    "health:compose": "node scripts/compose-health-report.cjs",
+    "production:smoke": "node scripts/check-production-smoke.cjs",
+    "settings:audit": "node scripts/check-github-settings.cjs",
     "version:check": "node scripts/check-version.js",
     "seo:check": "node scripts/check-seo.js",
     "website:check": "node scripts/check-website-ui.cjs"

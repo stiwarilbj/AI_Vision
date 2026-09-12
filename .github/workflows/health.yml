@@ -1,0 +1,161 @@
+name: Production health
+
+on:
+  schedule:
+    # GitHub may delay scheduled jobs and can disable them after long periods
+    # of repository inactivity; this is a synthetic check, not an uptime SLA.
+    - cron: '17 * * * *'
+  workflow_run:
+    workflows: ["Pages"]
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: health-${{ github.repository }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+  deployments: read
+  issues: write
+
+jobs:
+  health:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out the current main branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.13.0
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Resolve the latest successful Pages deployment
+        id: resolve
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p outputs/health
+          node scripts/resolve-pages-deployment.cjs --repo "$GITHUB_REPOSITORY" --output outputs/health/deployment-resolution.json
+
+      - name: Check out the deployed commit when one is available
+        env:
+          DEPLOY_SHA: ${{ steps.resolve.outputs.DEPLOY_SHA }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "$DEPLOY_SHA" ]]; then
+            git fetch --no-tags origin "$DEPLOY_SHA"
+            git checkout --detach "$DEPLOY_SHA"
+          else
+            echo 'No successful Pages deployment was resolved; health report will record this as a failure.'
+          fi
+
+      - name: Run read-only settings drift audit
+        id: settings
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p outputs/health
+          node scripts/check-github-settings.cjs --repo "$GITHUB_REPOSITORY" --report outputs/health/settings-audit.json
+
+      - name: Verify the deployed site and retry browser smoke checks
+        id: checks
+        shell: bash
+        env:
+          DEPLOY_SHA: ${{ steps.resolve.outputs.DEPLOY_SHA }}
+          SITE_LIVE_URL: https://stiwarilbj.github.io/AI_Vision/
+          SITE_VERIFY_ATTEMPTS: '3'
+          SITE_VERIFY_DELAY_MS: '20000'
+          SITE_VERIFY_TIMEOUT_MS: '15000'
+          SITE_VERIFY_REPORT: outputs/health/deployment-report.json
+          PRODUCTION_SMOKE_REPORT: outputs/health/production-smoke.json
+          PRODUCTION_SMOKE_SCREENSHOTS: outputs/health/production-smoke
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          mkdir -p outputs/health
+          if [[ -n "$DEPLOY_SHA" ]]; then
+            node scripts/build-pages-manifest.cjs --source docs --output outputs/health/artifact-manifest.json --commit "$DEPLOY_SHA"
+            node scripts/verify-deployed-site.cjs --base-url "$SITE_LIVE_URL" --source docs --manifest outputs/health/artifact-manifest.json --commit "$DEPLOY_SHA" --attempts 3 --delay-ms 20000 --output "$SITE_VERIFY_REPORT"
+            verify_status=$?
+          else
+            printf '%s\n' '{"status":"failed","error":"No successful github-pages deployment was available."}' > "$SITE_VERIFY_REPORT"
+            verify_status=1
+          fi
+
+          smoke_status=1
+          for attempt in 1 2 3; do
+            node scripts/check-production-smoke.cjs
+            smoke_status=$?
+            [[ "$smoke_status" -eq 0 ]] && break
+            [[ "$attempt" -lt 3 ]] && sleep 20
+          done
+
+          superseded=false
+          if [[ -n "$DEPLOY_SHA" ]]; then
+            node scripts/resolve-pages-deployment.cjs --repo "$GITHUB_REPOSITORY" --output outputs/health/deployment-resolution-final.json
+            resolve_status=$?
+            if [[ "$resolve_status" -eq 0 ]]; then
+              final_sha="$(node -e "const fs=require('fs'); const value=JSON.parse(fs.readFileSync('outputs/health/deployment-resolution-final.json','utf8')); process.stdout.write(value.deployment.sha)")"
+              if [[ "$final_sha" != "$DEPLOY_SHA" ]]; then
+                superseded=true
+                echo "A newer Pages deployment ($final_sha) completed while checking $DEPLOY_SHA; discarding this result."
+              fi
+            fi
+          fi
+
+          settings_status=0
+          [[ "${{ steps.settings.outcome }}" == 'success' ]] || settings_status=1
+          superseded_args=()
+          [[ "$superseded" == 'true' ]] && superseded_args=(--superseded)
+          node scripts/compose-health-report.cjs \
+            --deployment "$SITE_VERIFY_REPORT" \
+            --smoke "$PRODUCTION_SMOKE_REPORT" \
+            --settings outputs/health/settings-audit.json \
+            --commit "${DEPLOY_SHA:-unavailable}" \
+            "${superseded_args[@]}" \
+            --output outputs/health/health-report.json
+          compose_status=$?
+          if [[ "$verify_status" -eq 0 && "$smoke_status" -eq 0 && "$settings_status" -eq 0 && "$compose_status" -eq 0 ]]; then
+            echo 'status=passed' >> "$GITHUB_OUTPUT"
+          else
+            echo 'status=failed' >> "$GITHUB_OUTPUT"
+          fi
+          exit 0
+
+      - name: Open or update the single health incident
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/manage-health-incident.cjs --repo "$GITHUB_REPOSITORY" --assignee stiwarilbj --report outputs/health/health-report.json
+
+      - name: Save health reports and failure evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ai-vision-health-${{ github.run_id }}
+          path: outputs/health/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Fail the run when any health check failed
+        if: steps.checks.outputs.status != 'passed'
+        run: exit 1
