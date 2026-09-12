@@ -29,8 +29,10 @@ test('Pages manifest is deterministic, sorted, and hashes the exact source bytes
 
 test('deployed-site verification checks redirect, bytes, content types, canonical, and local assets', async () => {
   const source = tempDir('ai-vision-site-');
+  fs.mkdirSync(path.join(source, 'nested'));
   fs.writeFileSync(path.join(source, 'index.html'), '<!doctype html><html><head><link rel="canonical" href="https://example.test/site/"></head><body><img src="asset.txt"></body></html>');
   fs.writeFileSync(path.join(source, 'asset.txt'), 'fixture asset');
+  fs.writeFileSync(path.join(source, 'nested', 'child.txt'), 'nested fixture asset');
   const manifestPath = path.join(tempDir('ai-vision-manifest-'), 'manifest.json');
   const manifest = buildManifest({ source, commit: 'fixture-commit' });
   fs.writeFileSync(manifestPath, JSON.stringify(manifest));
@@ -39,7 +41,7 @@ test('deployed-site verification checks redirect, bytes, content types, canonica
     calls.push(String(url));
     const parsed = new URL(url);
     if (parsed.protocol === 'http:') return { status: 308, headers: { get: (name) => name.toLowerCase() === 'location' ? 'https://example.test/site/' : null }, async arrayBuffer() { return Buffer.from(''); } };
-    const relative = parsed.pathname.endsWith('/site/') ? 'index.html' : parsed.pathname.split('/').pop();
+    const relative = parsed.pathname.endsWith('/site/') ? 'index.html' : decodeURIComponent(parsed.pathname.split('/site/')[1]);
     const body = fs.readFileSync(path.join(source, relative));
     return {
       status: 200,
@@ -50,7 +52,7 @@ test('deployed-site verification checks redirect, bytes, content types, canonica
   const report = await verify({ baseUrl: 'https://example.test/site/', source, manifestPath, fetchImpl, attempts: 1, delayMs: 0, expectedCommit: 'fixture-commit' });
   assert.equal(report.status, 'passed');
   assert.equal(report.commit, 'fixture-commit');
-  assert.equal(calls.length, 3, 'HTTP redirect plus two exact source files were checked');
+  assert.equal(calls.length, 4, 'HTTP redirect plus all exact source files were checked');
   assert.equal(contentTypeOkay('index.html', 'text/html'), true);
   assert.equal(localTarget('../outside', 'https://example.test/site/', 'https://example.test/site/'), null);
 });
