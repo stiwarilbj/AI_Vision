@@ -72,11 +72,11 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Serve the exact Pages source
-        run: python3 -m http.server 8765 --directory docs > /tmp/ai-vision-pages-http.log 2>&1 &
+        run: python3 -m http.server 8765 --directory . > /tmp/ai-vision-pages-http.log 2>&1 &
 
       - name: Run website checks against the candidate artifact
         env:
-          SITE_TEST_URL: http://127.0.0.1:8765/
+          SITE_TEST_URL: http://127.0.0.1:8765/docs/
           WEBSITE_REPORT: outputs/pages/website-report.json
           UI_SCREENSHOTS: outputs/pages/screenshots
         run: npm run website:check
