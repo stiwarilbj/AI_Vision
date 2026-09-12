@@ -157,7 +157,11 @@ jobs:
         id: checks
         shell: bash
         env:
-          SITE_LIVE_URL: ${{ needs.deploy.outputs.page_url }}
+          # The Pages deployment action exposes its URL only on the deployment
+          # step. Keep the canonical project URL explicit across jobs so the
+          # verifier never falls back to an empty value while CDN propagation
+          # is in progress.
+          SITE_LIVE_URL: https://stiwarilbj.github.io/AI_Vision/
           PAGES_EXPECTED_COMMIT: ${{ needs.build.outputs.candidate_sha }}
           SITE_VERIFY_ATTEMPTS: '15'
           SITE_VERIFY_DELAY_MS: '20000'

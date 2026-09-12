@@ -36,7 +36,12 @@ function writeReport(report) {
       assert.equal(await page.title(), 'AI Screenshot Assistant for Chrome | AI Vision');
       assert.equal(await page.locator('h1').count(), 1);
       assert.ok((await page.locator('body').innerText()).includes('Your AI screenshot assistant for Chrome.'));
-      assert.ok(await page.locator('a[href*="chromewebstore.google.com/detail/ai-vision-gemini-screensh"]').first().isVisible());
+      const installLinks = page.locator('a[href*="chromewebstore.google.com/detail/ai-vision-gemini-screensh"]');
+      assert.ok(await installLinks.evaluateAll((elements) => elements.some((element) => {
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        return style.visibility !== 'hidden' && style.display !== 'none' && rect.width > 0 && rect.height > 0;
+      })), `homepage has no visible installation link at ${viewport.width}px`);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
       assert.equal(overflow, true, `homepage overflows at ${viewport.width}px`);
       report.viewports.push(viewport);
