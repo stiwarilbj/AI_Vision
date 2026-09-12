@@ -83,6 +83,20 @@
       z-index: 1;
     }
     .copy { align-self: center; padding-bottom: 22px; }
+    .copy h1.compact-title {
+      font-size: 58px;
+      letter-spacing: -2.8px;
+    }
+    .copy h1.compact-title.title-5 {
+      max-width: 430px;
+      font-size: 50px;
+      letter-spacing: -2.4px;
+    }
+    .copy h1.compact-title.title-4 {
+      max-width: 450px;
+      font-size: 44px;
+      letter-spacing: -2.1px;
+    }
     .eyebrow {
       margin: 0 0 18px;
       color: var(--cobalt);
@@ -170,7 +184,7 @@
     .promo-copy { position: relative; z-index: 1; max-width: 520px; }
     .promo .brand { color: #fff; margin-bottom: 48px; }
     .promo .lens-mark { background: #ffffff2b; border-color: #ffffff77; color: #fff; }
-    .promo h2 { margin: 0; max-width: 510px; font-size: 72px; line-height: .98; letter-spacing: -3px; }
+    .promo h2 { margin: 0; max-width: 540px; font-size: 60px; line-height: .98; letter-spacing: -2.8px; }
     .promo p { margin: 22px 0 0; font-size: 23px; line-height: 1.35; color: #eff8ff; }
     .promo-small {
       width: 440px;
@@ -196,19 +210,21 @@
     const slide = params.get('slide') || '1';
     const promo = params.get('promo');
     const source = {
-      '1': { title: 'Select it.\nUnderstand it.', subline: 'A clear answer, then a follow-up.', image: 'source/extension-answer.png' },
-      '2': { title: 'Turn images\ninto text.', subline: 'Readable text you can copy.', image: 'source/extension-text-extraction.png' },
-      '3': { title: 'Get the\nmain points.', subline: 'A short summary beside the page.', image: 'source/extension-page.png' },
-      '4': { title: 'Compare before\nyou choose.', subline: 'See the details that matter.', image: 'source/extension-tabs.png' },
-      '5': { title: 'Your key.\nYour first answer.', subline: 'Save once, then start with a screenshot.', image: 'source/extension-key-setup.png' }
+      '1': { title: 'Select it\nUnderstand it', subline: 'A clear answer then a follow-up', image: 'source/extension-answer.png' },
+      '2': { title: 'Turn images\ninto text', subline: 'Readable text you can copy', image: 'source/extension-text-extraction.png' },
+      '3': { title: 'Get the\nmain points', subline: 'A short summary beside the page', image: 'source/extension-page.png' },
+      '4': { title: 'Compare\nbefore you choose', subline: 'See the details that matter', image: 'source/extension-tabs.png' },
+      '5': { title: 'Your key\nYour first answer', subline: 'Save once then start with a screenshot', image: 'source/extension-key-setup.png' }
     };
     const root = document.querySelector('#art');
     if (promo === 'marquee' || promo === 'small') {
       root.className = `promo ${promo === 'small' ? 'promo-small' : ''}`;
-      root.innerHTML = `<div class="promo-copy"><div class="brand"><span class="lens-mark" aria-hidden="true"></span><span>AI Vision</span></div><h2>${promo === 'small' ? 'See it.\nAsk it.' : 'Understand what\'s\nin front of you.'}</h2><p>${promo === 'small' ? 'A friendly screenshot assistant for Chrome.' : 'Select a screenshot, ask Gemini, and keep moving.'}</p></div>`;
+      const promoTitle = promo === 'small' ? 'See it\nAsk it' : 'Understand what\'s\nin front of you';
+      root.innerHTML = `<div class="promo-copy"><div class="brand"><span class="lens-mark" aria-hidden="true"></span><span>AI Vision</span></div><h2>${promoTitle.replaceAll(/\n/g, '<br>')}</h2><p>${promo === 'small' ? 'A friendly screenshot assistant for Chrome' : 'Select a screenshot, ask Gemini, and keep moving'}</p></div>`;
     } else {
       const card = source[slide] || source['1'];
-      root.innerHTML = `<div class="brand"><span class="lens-mark" aria-hidden="true"></span><span>AI Vision</span></div><div class="content"><div class="copy"><p class="eyebrow">AI SCREENSHOT ASSISTANT · V2.8 GITHUB PREVIEW</p><h1>${card.title.replaceAll('\\n', '<br>')}</h1><p class="subline">${card.subline}</p></div><div class="capture-shell"><img class="capture" src="${card.image}" alt="Authentic AI Vision v2.8 interface preview"></div></div><p class="disclaimer"><strong>GitHub build preview</strong> · fictional material · illustrative response</p>`;
+      const titleClass = slide === '1' ? 'compact-title' : slide === '4' ? 'compact-title title-4' : slide === '5' ? 'compact-title title-5' : '';
+      root.innerHTML = `<div class="brand"><span class="lens-mark" aria-hidden="true"></span><span>AI Vision</span></div><div class="content"><div class="copy"><p class="eyebrow">AI SCREENSHOT ASSISTANT · V2.8 GITHUB PREVIEW</p><h1 class="${titleClass}">${card.title.replaceAll(/\n/g, '<br>')}</h1><p class="subline">${card.subline}</p></div><div class="capture-shell"><img class="capture" src="${card.image}" alt="Authentic AI Vision v2.8 interface preview"></div></div><p class="disclaimer"><strong>GitHub build preview</strong> · fictional material · illustrative response</p>`;
     }
   </script>
 </body>
