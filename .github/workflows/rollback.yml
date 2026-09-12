@@ -1,0 +1,58 @@
+name: Prepare Pages rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      verified_commit:
+        description: Full SHA of a previously verified github-pages deployment
+        required: true
+        type: string
+      current_ref:
+        description: Ref containing the candidate main tree (normally main)
+        required: false
+        default: main
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  deployments: read
+
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out the current main tree
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.13.0
+
+      - name: Prepare a restoration patch from a verified deployment
+        env:
+          VERIFIED_COMMIT: ${{ inputs.verified_commit }}
+          CURRENT_REF: ${{ inputs.current_ref }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          node scripts/prepare-pages-rollback.cjs \
+            --repo "$GITHUB_REPOSITORY" \
+            --commit "$VERIFIED_COMMIT" \
+            --current-ref "$CURRENT_REF" \
+            --patch outputs/rollback/docs-rollback.patch \
+            --output outputs/rollback/rollback.json
+          echo 'The artifact is read-only. Apply it on a fresh branch through a normal PR so the standard quality gate and Pages verifier can run.'
+
+      - name: Upload rollback preparation
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: rollback-preparation-${{ inputs.verified_commit }}
+          path: outputs/rollback/
+          if-no-files-found: error
+          retention-days: 30
