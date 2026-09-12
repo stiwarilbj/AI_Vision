@@ -9,6 +9,6 @@
     { "file": "source/extension-text-extraction.png", "sha256": "0d24ca96b8e6f22a0a650edfab93d221e11204a6afa182d7f3a317b78bf06b50", "kind": "fictional-text-extraction-capture" },
     { "file": "source/marquee-background.png", "sha256": "506a00dea071bd0338166fa1730017a313d365ad56772e3e2b9872ee91d465ad", "kind": "blue-promo-background" },
     { "file": "source/tile-background.png", "sha256": "38559ccc21d3caf8b08691115d7453af7e62cec4ee62890c19513980b035e04d", "kind": "blue-promo-background" },
-    { "file": "store-artwork.html", "sha256": "7c9140b8cfafbdecb3c9571ef75f9d7c438e5e00b9614c2bd82a37ecf54d0c50", "kind": "editable-composition" }
+    { "file": "store-artwork.html", "sha256": "c05d70a7c911f1f4bd223eaa989261c5536d32a7a1cee76e0cd9107b270aa5b9", "kind": "editable-composition" }
   ]
 }
