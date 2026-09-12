@@ -16,7 +16,11 @@ test('CI keeps the release gate reproducible and uploads browser evidence', () =
   assert.match(workflow, /actions\/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02/);
   assert.match(workflow, /timeout-minutes: 30/);
   assert.match(workflow, /npm audit --audit-level=high/);
+  assert.match(workflow, /Verify reviewed visual baselines before browser work/);
+  assert.match(workflow, /npm run visual:baseline-files/);
   assert.match(workflow, /npm run package/);
+  assert.match(workflow, /Verify the freshly built archive against source/);
+  assert.match(workflow, /RELEASE_ARCHIVE: dist\/ai-vision-extension-v2\.8\.zip/);
   assert.match(workflow, /npm run website:check/);
   assert.match(workflow, /npm run panel:check/);
   assert.match(workflow, /npm run visual:check/);

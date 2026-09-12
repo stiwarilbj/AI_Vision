@@ -26,8 +26,14 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm audit --audit-level=high
+      - name: Verify reviewed visual baselines before browser work
+        run: npm run visual:baseline-files
       - name: Build the release archive
         run: npm run package
+      - name: Verify the freshly built archive against source
+        run: npm run package:verify
+        env:
+          RELEASE_ARCHIVE: dist/ai-vision-extension-v2.8.zip
       - name: Extract the release archive for Chromium
         run: |
           rm -rf /tmp/ai-vision-extension
