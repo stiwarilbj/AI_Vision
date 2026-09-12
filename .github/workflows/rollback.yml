@@ -39,6 +39,7 @@ jobs:
           VERIFIED_COMMIT: ${{ inputs.verified_commit }}
           CURRENT_REF: ${{ inputs.current_ref }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           node scripts/prepare-pages-rollback.cjs \
