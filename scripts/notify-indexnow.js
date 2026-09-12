@@ -22,6 +22,7 @@ const sitemapFile = path.join(projectRoot, 'docs', 'sitemap.xml');
 const keyFile = path.join(projectRoot, 'docs', 'ai-vision-indexnow-20260910.txt');
 const keyLocation = `${siteUrl}${path.basename(keyFile)}`;
 const defaultEndpoint = 'https://www.bing.com/indexnow';
+const officialStoreUrl = 'https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk';
 
 function parseArgs(argv = process.argv.slice(2)) {
   const flags = new Set();
@@ -221,6 +222,8 @@ async function checkLive({ config = loadConfig(), fetchImpl = globalThis.fetch, 
       if (home.response.status !== 200) throw new Error(`homepage returned HTTP ${home.response.status}`);
       assertResponseContentType(home.response, config.urls[0]);
       if (!/<title>[^<]*AI Screenshot Assistant for Chrome[^<]*<\/title>/i.test(home.body)) throw new Error('homepage title was not found');
+      if (!home.body.includes(`<link rel="canonical" href="${config.urls[0]}">`)) throw new Error('homepage canonical URL was not found');
+      if (!home.body.includes(officialStoreUrl)) throw new Error('homepage installation link was not found');
       assertSameDeployedFile(config.urls[0], home.bytes);
       if (sitemap.response.status !== 200) throw new Error(`sitemap returned HTTP ${sitemap.response.status}`);
       assertResponseContentType(sitemap.response, `${siteUrl}sitemap.xml`);
@@ -374,4 +377,4 @@ async function main() {
 
 if (require.main === module) main();
 
-module.exports = { siteUrl, host, sitemapFile, keyFile, keyLocation, defaultEndpoint, parseArgs, readKey, parseSitemap, readSitemap, loadConfig, buildPayload, liveUrlForFile, expectedFileForLiveUrl, filesForHash, websiteContentHash, fetchResource, fetchText, checkLive, submitIndexNow, readReceipt, receiptFor, writeReceipt, run };
+module.exports = { siteUrl, host, sitemapFile, keyFile, keyLocation, defaultEndpoint, officialStoreUrl, parseArgs, readKey, parseSitemap, readSitemap, loadConfig, buildPayload, liveUrlForFile, expectedFileForLiveUrl, filesForHash, websiteContentHash, fetchResource, fetchText, checkLive, submitIndexNow, readReceipt, receiptFor, writeReceipt, run };

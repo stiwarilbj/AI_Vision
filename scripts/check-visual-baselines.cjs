@@ -14,7 +14,7 @@ const projectRoot = path.resolve(__dirname, '..');
 const baselineVariant = process.env.VISUAL_BASELINE_VARIANT || (process.platform === 'linux' ? 'panel-linux' : 'panel');
 const baselineDir = path.join(projectRoot, 'outputs', 'ai-vision-v28', baselineVariant);
 const candidateDir = path.resolve(projectRoot, process.env.PANEL_SCREENSHOTS || path.join('outputs', 'panel'));
-const names = ['extension-welcome.png', 'extension-capture.png', 'extension-answer.png', 'extension-settings.png', 'extension-key-setup.png'];
+const names = ['extension-welcome.png', 'extension-capture.png', 'extension-answer.png', 'extension-settings.png', 'extension-key-setup.png', 'extension-approval.png'];
 
 async function comparePng(page, baseline, candidate) {
   return page.evaluate(async ({ baseline, candidate }) => {

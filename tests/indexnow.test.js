@@ -29,6 +29,8 @@ test('sitemap parsing rejects external URLs and preserves canonical order', () =
     'https://stiwarilbj.github.io/AI_Vision/privacy.html'
   ]);
   assert.throws(() => indexnow.parseSitemap('<urlset><loc>https://example.com/</loc></urlset>'), /outside the canonical site/);
+  assert.equal(indexnow.expectedFileForLiveUrl('https://stiwarilbj.github.io/AI_Vision/%E0%A4%A'), null, 'malformed paths fail closed');
+  assert.equal(indexnow.expectedFileForLiveUrl('https://stiwarilbj.github.io/AI_Vision/../secrets.txt'), null, 'path traversal fails closed');
 });
 
 test('unchanged content is skipped and dry-run never calls fetch', async () => {
