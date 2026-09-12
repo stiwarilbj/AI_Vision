@@ -6,6 +6,7 @@ Use a branch and open a pull request for every change. `main` is protected by th
 
 ```sh
 npm ci
+npx playwright install chromium
 npm run check
 npm run panel:check
 npm run visual:check

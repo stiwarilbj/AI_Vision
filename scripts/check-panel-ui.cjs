@@ -229,6 +229,7 @@ const server = http.createServer((req, res) => {
       const stopSelector = scenario === 'approval' ? '.gemini-approval-actions button:nth-child(2)' : '.gemini-agent-cancel-button';
       const stopBounds = await (await get(stopSelector)).boundingBox();
       assert.ok(stopBounds && stopBounds.y + stopBounds.height <= 600, 'Stop stays in view on a short window');
+      if (scenario === 'approval') await screenshot('extension-approval');
       await click(stopSelector);
       await waitText('Local test task stopped.');
     }
