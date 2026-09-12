@@ -21,6 +21,7 @@
     "health:compose": "node scripts/compose-health-report.cjs",
     "production:smoke": "node scripts/check-production-smoke.cjs",
     "settings:audit": "node scripts/check-github-settings.cjs",
+    "pages:rollback": "node scripts/prepare-pages-rollback.cjs",
     "version:check": "node scripts/check-version.js",
     "seo:check": "node scripts/check-seo.js",
     "website:check": "node scripts/check-website-ui.cjs"

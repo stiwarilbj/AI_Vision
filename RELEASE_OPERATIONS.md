@@ -14,4 +14,15 @@ Before a release, use a separate Gemini test project and disposable key. Enter i
 
 ## Rollback
 
-Create a normal revert pull request for the last verified `main` commit. Let the full CI and Pages verification gate run, merge it, and confirm the public smoke check. Do not force-push or edit production files directly. If a deployment is still propagating, wait for the bounded verifier before deciding whether a rollback is needed.
+For a `/docs` restoration, run **Actions → Prepare Pages rollback** on `main` with the full SHA of a previously successful `github-pages` deployment. Download the `rollback-preparation-<sha>` artifact, inspect `rollback.json`, and check whether the patch is empty. If it contains changes, apply it to a fresh branch from `main`, then open a normal pull request:
+
+```sh
+git switch -c rollback/docs-<short-sha> main
+git apply docs-rollback.patch
+git add docs
+git commit -m "Prepare Pages rollback to <short-sha>"
+git push -u origin rollback/docs-<short-sha>
+gh pr create --title "Prepare Pages rollback to <short-sha>"
+```
+
+Let the usual `quality-gate`, Pages promotion, deployment verifier, and production smoke check run before merging. The preparation workflow only reads GitHub and writes an artifact; it never edits production. For a code-wide recovery, create a normal revert pull request for the last verified `main` commit instead. Do not force-push or edit production files directly. If a deployment is still propagating, wait for the bounded verifier before deciding whether a rollback is needed.

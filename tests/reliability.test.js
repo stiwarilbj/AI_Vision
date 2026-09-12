@@ -12,6 +12,7 @@ const { newestSuccessfulDeployment } = require('../scripts/resolve-pages-deploym
 const { compose } = require('../scripts/compose-health-report.cjs');
 const settings = require('../scripts/check-github-settings.cjs');
 const incidents = require('../scripts/manage-health-incident.cjs');
+const rollback = require('../scripts/prepare-pages-rollback.cjs');
 
 function tempDir(prefix) { return fs.mkdtempSync(path.join(os.tmpdir(), prefix)); }
 
@@ -148,9 +149,45 @@ test('health incident manager deduplicates unchanged failures and closes on reco
   assert.equal(superseded.actions.length, 0);
 });
 
+test('rollback preparation requires a verified deployment and emits a binary-safe patch manifest', () => {
+  const commit = 'a'.repeat(40);
+  const gitCalls = [];
+  const git = (args) => {
+    gitCalls.push(args);
+    if (args[0] === 'rev-parse') return `${commit}\n`;
+    if (args[0] === 'ls-tree') return 'docs\n';
+    if (args[0] === 'diff') return Buffer.from('diff --git a/docs/index.html b/docs/index.html\n');
+    throw new Error(`unexpected git call: ${args.join(' ')}`);
+  };
+  const ghCalls = [];
+  const gh = (args) => {
+    ghCalls.push(args[0]);
+    if (args[0].includes('/deployments?')) return [{ id: 41, sha: commit, ref: 'main', environment: 'github-pages', created_at: '2026-09-12T10:00:00Z' }];
+    if (args[0].includes('/deployments/41/statuses')) return [{ state: 'success', updated_at: '2026-09-12T10:01:00Z' }];
+    throw new Error(`unexpected gh call: ${args[0]}`);
+  };
+  const result = rollback.prepareRollback({ repo: 'owner/repo', commit, currentRef: 'main', git, gh });
+  assert.equal(result.status, 'passed');
+  assert.equal(result.verifiedCommit, commit);
+  assert.equal(result.deployment.id, 41);
+  assert.equal(result.patch.bytes, 47);
+  assert.equal(result.patch.empty, false);
+  assert.match(result.patch.sha256, /^[a-f0-9]{64}$/);
+  assert.deepEqual(gitCalls.map((args) => args[0]), ['rev-parse', 'ls-tree', 'diff']);
+  assert.equal(ghCalls.length, 2);
+});
+
+test('rollback preparation rejects short SHAs and commits without a successful Pages deployment', () => {
+  assert.throws(() => rollback.prepareRollback({ repo: 'owner/repo', commit: 'short', git: () => '', gh: () => [] }), /full 40-character/);
+  const commit = 'b'.repeat(40);
+  const git = (args) => args[0] === 'rev-parse' ? `${commit}\n` : args[0] === 'ls-tree' ? 'docs\n' : Buffer.from('patch');
+  assert.throws(() => rollback.prepareRollback({ repo: 'owner/repo', commit, git, gh: () => [] }), /no successful github-pages deployment/);
+});
+
 test('reliability workflows keep deployment, health, and PR gates explicit', () => {
   const pages = fs.readFileSync(path.join(projectRoot, '.github/workflows/pages.yml'), 'utf8');
   const health = fs.readFileSync(path.join(projectRoot, '.github/workflows/health.yml'), 'utf8');
+  const rollbackWorkflow = fs.readFileSync(path.join(projectRoot, '.github/workflows/rollback.yml'), 'utf8');
   const template = fs.readFileSync(path.join(projectRoot, '.github/pull_request_template.md'), 'utf8');
   assert.match(pages, /workflow_run:/);
   assert.match(pages, /workflows: \["CI"\]/);
@@ -168,5 +205,13 @@ test('reliability workflows keep deployment, health, and PR gates explicit', () 
   assert.match(health, /--allow-unavailable/);
   assert.match(health, /build-pages-manifest/);
   assert.match(health, /retention-days: 30/);
+  assert.match(rollbackWorkflow, /workflow_dispatch:/);
+  assert.match(rollbackWorkflow, /verified_commit/);
+  assert.match(rollbackWorkflow, /current_ref/);
+  assert.match(rollbackWorkflow, /prepare-pages-rollback\.cjs/);
+  assert.match(rollbackWorkflow, /actions\/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02/);
+  assert.match(rollbackWorkflow, /retention-days: 30/);
+  assert.match(rollbackWorkflow, /timeout-minutes: 10/);
+  assert.doesNotMatch(rollbackWorkflow, /^\s+push:/m);
   assert.match(template, /rollback/i);
 });
