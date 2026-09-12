@@ -57,14 +57,17 @@ async function verify({ baseUrl = process.env.SITE_LIVE_URL || 'https://stiwaril
   const base = new URL(baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`);
   assert.equal(base.protocol, 'https:', 'production site must use HTTPS');
   const sourceRoot = path.resolve(source);
-  const files = publicFiles(sourceRoot);
+  // GitHub Pages consumes `.nojekyll` as a deployment marker. It is present in
+  // the uploaded artifact but intentionally is not addressable over HTTP, so
+  // keep it in the manifest while excluding it from public byte checks.
+  const files = publicFiles(sourceRoot).filter((file) => file !== '.nojekyll');
   const expectedCommitValue = expectedCommit || process.env.GITHUB_SHA || 'unknown';
   let expectedManifest = null;
   if (manifestPath) {
     expectedManifest = JSON.parse(fs.readFileSync(path.resolve(manifestPath), 'utf8'));
     assert.equal(expectedManifest.source, 'docs', 'Pages manifest must describe the docs source');
     assert.equal(expectedManifest.commit, expectedCommitValue, 'Pages manifest commit does not match the deployed commit');
-    assert.deepEqual(expectedManifest.files.map((file) => file.path).sort(), files, 'Pages manifest file list differs from the checked-out source');
+    assert.deepEqual(expectedManifest.files.map((file) => file.path).filter((file) => file !== '.nojekyll').sort(), files, 'Pages manifest file list differs from the checked-out source');
   }
   let lastError;
   for (let attempt = 1; attempt <= Math.max(1, attempts); attempt += 1) {

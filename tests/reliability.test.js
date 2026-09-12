@@ -30,6 +30,7 @@ test('Pages manifest is deterministic, sorted, and hashes the exact source bytes
 test('deployed-site verification checks redirect, bytes, content types, canonical, and local assets', async () => {
   const source = tempDir('ai-vision-site-');
   fs.mkdirSync(path.join(source, 'nested'));
+  fs.writeFileSync(path.join(source, '.nojekyll'), 'Pages marker');
   fs.writeFileSync(path.join(source, 'index.html'), '<!doctype html><html><head><link rel="canonical" href="https://example.test/site/"></head><body><img src="asset.txt"></body></html>');
   fs.writeFileSync(path.join(source, 'asset.txt'), 'fixture asset');
   fs.writeFileSync(path.join(source, 'nested', 'child.txt'), 'nested fixture asset');
