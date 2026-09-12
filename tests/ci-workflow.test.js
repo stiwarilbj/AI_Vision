@@ -16,7 +16,7 @@ test('CI keeps the release gate reproducible and uploads browser evidence', () =
   assert.match(workflow, /actions\/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02/);
   assert.match(workflow, /timeout-minutes: 30/);
   assert.match(workflow, /npm audit --audit-level=high/);
-  assert.match(workflow, /Validate Store artwork dimensions and encoding/);
+  assert.match(workflow, /Extract the release archive for Chromium[\s\S]*Validate Store artwork dimensions and encoding/);
   assert.match(workflow, /npm run assets:check/);
   assert.match(workflow, /npm run package/);
   assert.match(workflow, /npm run website:check/);
