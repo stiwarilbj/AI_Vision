@@ -93,7 +93,9 @@ if (require.main === module) {
   const output = values.report ? path.resolve(projectRoot, values.report) : null;
   if (output) { fs.mkdirSync(path.dirname(output), { recursive: true }); fs.writeFileSync(output, `${JSON.stringify(result, null, 2)}\n`); }
   console.log(JSON.stringify(result, null, 2));
-  if (result.status !== 'passed' && !flags.has('allow-unavailable')) process.exitCode = 1;
+  // The Actions token may be unable to read administrator-only settings. Keep
+  // that limitation visible in the report, but never hide an actual drift.
+  if (result.status !== 'passed' && !(flags.has('allow-unavailable') && result.status === 'unavailable')) process.exitCode = 1;
 }
 
 module.exports = { readJson, normalizeActual, diffSettings, parseArgs, audit };
