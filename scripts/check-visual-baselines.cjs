@@ -7,7 +7,12 @@ const path = require('node:path');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 
 const projectRoot = path.resolve(__dirname, '..');
-const baselineDir = path.join(projectRoot, 'outputs', 'ai-vision-v28', 'panel');
+// Text rasterization and font metrics differ between the macOS developer
+// machine and the Ubuntu Actions runner. Keep reviewed captures for each
+// supported runner so the comparison measures layout changes rather than OS
+// font substitution. A variant can be selected explicitly for local audits.
+const baselineVariant = process.env.VISUAL_BASELINE_VARIANT || (process.platform === 'linux' ? 'panel-linux' : 'panel');
+const baselineDir = path.join(projectRoot, 'outputs', 'ai-vision-v28', baselineVariant);
 const candidateDir = path.resolve(projectRoot, process.env.PANEL_SCREENSHOTS || path.join('outputs', 'panel'));
 const names = ['extension-welcome.png', 'extension-capture.png', 'extension-answer.png', 'extension-settings.png', 'extension-key-setup.png'];
 
