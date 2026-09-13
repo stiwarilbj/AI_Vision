@@ -1,6 +1,6 @@
 # AI Vision focused community launch log
 
-**Prepared:** 2026-09-11 (America/New_York)
+**Prepared:** 2026-09-12 (America/New_York)
 **Experiment window:** 14 days after the first approved publication
 **Goal:** 50–100 additional installs over two weeks as an experiment, not a forecast.
 
@@ -24,12 +24,23 @@
 
 | Destination | Status | URL | Published at | Views / engagement |
 | --- | --- | --- | --- | --- |
-| r/chrome_extensions | Draft ready; Reddit presented a “Prove your humanity” challenge before the feed/post flow | — | — | — |
-| r/SideProject | Draft ready; page is readable but the account is not signed in | — | — | — |
-| Product Hunt | Draft ready; `/launches/new` returned 404 and showed a Sign in control | — | — | — |
+| r/chrome_extensions | Submitted; Reddit’s feed shows the post as removed by Reddit’s filters. A second earlier copy of the draft is also shown as removed; no further retries planned. | [1wevmoi](https://www.reddit.com/r/chrome_extensions/comments/1wevmoi/i_rebuilt_the_firstuse_flow_for_my/) | 2026-09-12 22:40 EDT | 1 upvote shown on the removed item; comments unavailable |
+| r/SideProject | Not published; Reddit returned “Rate limit exceeded. Please wait 516 seconds.” after the form submission attempt. | — | 2026-09-12 22:40 EDT | — |
+| r/browserextensions | Not published; Reddit returned “Rate limit exceeded. Please wait 471 seconds.” | — | 2026-09-12 22:41 EDT | — |
+| YouTube Community (@GitchubChub) | Not published; the channel’s Community page says “Posts are disabled for this channel.” The image picker also could not be completed in this session. | [Community](https://www.youtube.com/@GitchubChub/community) | 2026-09-12 22:42 EDT | — |
+| Bluesky | Awaiting account sign-in handoff; no post submitted. | — | — | — |
+| DEV | Awaiting GitHub OAuth handoff; no article submitted. | — | — | — |
+| Indie Hackers | Awaiting Google sign-in/review; no product entry submitted. | — | — | — |
+| Product Hunt | Existing AI Vision launch draft is complete and in progress; create/schedule controls are disabled, so no duplicate launch was submitted. | — | 2026-09-12 | Draft in progress |
 | Hacker News | Not submitted; human-written submission required | — | — | — |
 
-The account owner must review each destination’s current rules, sign-in state, flair/category, and final preview immediately before posting. If a destination blocks login or eligibility, keep the prepared copy and note the blocker here rather than retrying repeatedly.
+The account owner must review each destination’s current rules, sign-in state, flair/category, and final preview immediately before posting. Reddit’s current rate limit and filter removals mean the remaining Reddit copies should not be retried until the account owner confirms eligibility. If a destination blocks login or eligibility, keep the prepared copy and note the blocker here rather than retrying repeatedly.
+
+## Session notes
+
+- Posts were prepared from the factual v2.5 public-build copy. No API keys, passwords, or private account data were entered.
+- The prepared screenshots and captioned demo remain in `outputs/launch-v25/`; the image upload could not be completed through the YouTube picker.
+- Community engagement, website visits, and Store installations remain separate measurements. No install attribution is claimed from these attempts.
 
 ## Measurement rules
 
