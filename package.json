@@ -36,7 +36,7 @@
     "playwright": "1.62.1"
   },
   "overrides": {
-    "adm-zip": "0.6.0",
+    "adm-zip": "0.6.1",
     "@opentelemetry/core": "2.8.0",
     "@opentelemetry/exporter-logs-otlp-http": "0.219.0",
     "@opentelemetry/exporter-metrics-otlp-http": "0.219.0",
