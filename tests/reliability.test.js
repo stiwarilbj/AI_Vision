@@ -245,8 +245,9 @@ test('reliability workflows keep deployment, health, and PR gates explicit', () 
   assert.match(pages, /workflows: \["CI"\]/);
   assert.match(pages, /cancel-in-progress: false/);
   assert.match(pages, /git ls-remote origin refs\/heads\/main/);
-  assert.match(pages, /actions\/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b/);
-  assert.match(pages, /actions\/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e/);
+  assert.match(pages, /actions\/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9/);
+  assert.match(pages, /actions\/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346/);
+  assert.match(pages, /actions\/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d/);
   assert.match(pages, /artifact-manifest\.json/);
   assert.match(pages, /Verify public files and run browser smoke checks/);
   assert.match(health, /cron: '17 \* \* \* \*'/);
@@ -261,7 +262,7 @@ test('reliability workflows keep deployment, health, and PR gates explicit', () 
   assert.match(rollbackWorkflow, /verified_commit/);
   assert.match(rollbackWorkflow, /current_ref/);
   assert.match(rollbackWorkflow, /prepare-pages-rollback\.cjs/);
-  assert.match(rollbackWorkflow, /actions\/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02/);
+  assert.match(rollbackWorkflow, /actions\/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a/);
   assert.match(rollbackWorkflow, /retention-days: 30/);
   assert.match(rollbackWorkflow, /timeout-minutes: 10/);
   assert.doesNotMatch(rollbackWorkflow, /^\s+push:/m);
