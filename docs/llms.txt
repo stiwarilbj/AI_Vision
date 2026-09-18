@@ -32,7 +32,7 @@
 ## Versions
 
 - Published Chrome Web Store version: 2.5. These are the controls available from the official Store install.
-- GitHub-build preview: 2.8. Website screenshots labeled “v2.8 preview” describe the unreleased build and may contain newer controls.
+- GitHub-build preview: 2.8.1. Website screenshots labeled “v2.8 preview” describe the unreleased build and may contain newer controls.
 
 Last updated: 2026-09-11
 

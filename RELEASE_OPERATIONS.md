@@ -1,6 +1,6 @@
 # Release operations
 
-AI Vision uses pull requests and the `quality-gate` check for every change. The repository owner may merge after the check passes; no second reviewer is required while the owner is the only collaborator. Keep the PR checklist complete and attach screenshots for interface changes.
+AI Vision uses pull requests for changes. GitHub Actions CI checks are intentionally disabled; run the relevant local checks before merging. Keep the PR checklist complete and attach screenshots for interface changes.
 
 The Pages workflow builds and tests `/docs` from the candidate `main` commit, uploads the exact artifact, deploys it to the `github-pages` environment, and verifies the public URL before IndexNow runs. The workflow rejects an outdated commit. The hourly health workflow checks the latest successful deployment with synthetic browser traffic and opens one owner-assigned GitHub issue for an active failure. Scheduled Actions can be delayed or disabled after 60 days without repository activity, so GitHub notifications are an operational aid rather than an independent uptime guarantee.
 
@@ -25,4 +25,4 @@ git push -u origin rollback/docs-<short-sha>
 gh pr create --title "Prepare Pages rollback to <short-sha>"
 ```
 
-Let the usual `quality-gate`, Pages promotion, deployment verifier, and production smoke check run before merging. The preparation workflow only reads GitHub and writes an artifact; it never edits production. For a code-wide recovery, create a normal revert pull request for the last verified `main` commit instead. Do not force-push or edit production files directly. If a deployment is still propagating, wait for the bounded verifier before deciding whether a rollback is needed.
+Let the Pages promotion, deployment verifier, and production smoke check run after merging. The preparation workflow only reads GitHub and writes an artifact; it never edits production. For a code-wide recovery, create a normal revert pull request for the last verified `main` commit instead. Do not force-push or edit production files directly. If a deployment is still propagating, wait for the bounded verifier before deciding whether a rollback is needed.
