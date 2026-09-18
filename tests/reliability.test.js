@@ -190,19 +190,19 @@ test('rollback preparation rejects short SHAs and commits without a successful P
 test('release archive matches every allowlisted source byte and detects a stale fixture', () => {
   const result = checkArchive();
   assert.equal(result.status, 'passed');
-  assert.equal(result.version, '2.8');
+  assert.equal(result.version, '2.8.1');
   assert.equal(result.entries.length, 13);
   assert.throws(() => checkArchive({
     readEntry: (archive, entry) => entry === 'src/background/service-worker.js' ? Buffer.from('stale fixture') : readArchiveEntry(archive, entry)
   }), /Release archive is stale for src\/background\/service-worker\.js/);
 });
 
-test('root upload alias is a separately validated v2.8 package', () => {
+test('root upload alias is a separately validated v2.8.1 package', () => {
   const alias = path.join(projectRoot, 'AI_Vision_Extension_Package.zip');
   assert.ok(fs.existsSync(alias), 'The root upload alias must be present for repository handoff.');
   const result = checkArchive({ archivePath: alias });
   assert.equal(result.status, 'passed');
-  assert.equal(result.version, '2.8');
+  assert.equal(result.version, '2.8.1');
 });
 
 test('reviewed visual baseline guard catches a missing state before comparison', () => {
@@ -236,13 +236,13 @@ test('Store artwork is exact-size opaque RGB and rejects alpha PNG fixtures', ()
   assert.throws(() => inspectPng(fs.readFileSync(source).subarray(0, -20), 'truncated.png'), /truncated|IEND/);
 });
 
-test('reliability workflows keep deployment, health, and PR gates explicit', () => {
+test('reliability workflows keep deployment, health, and PR automation explicit', () => {
   const pages = fs.readFileSync(path.join(projectRoot, '.github/workflows/pages.yml'), 'utf8');
   const health = fs.readFileSync(path.join(projectRoot, '.github/workflows/health.yml'), 'utf8');
   const rollbackWorkflow = fs.readFileSync(path.join(projectRoot, '.github/workflows/rollback.yml'), 'utf8');
   const template = fs.readFileSync(path.join(projectRoot, '.github/pull_request_template.md'), 'utf8');
-  assert.match(pages, /workflow_run:/);
-  assert.match(pages, /workflows: \["CI"\]/);
+  assert.match(pages, /push:\n    branches: \[main\]/);
+  assert.doesNotMatch(pages, /workflows: \["CI"\]/);
   assert.match(pages, /cancel-in-progress: false/);
   assert.match(pages, /git ls-remote origin refs\/heads\/main/);
   assert.match(pages, /actions\/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9/);

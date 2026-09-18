@@ -1,11 +1,9 @@
 name: Pages
 
 on:
-  # A Pages candidate is promoted only after the required CI workflow has
-  # completed successfully on the main branch.
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
+  # Publish the exact main commit after it lands; CI is intentionally disabled.
+  push:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -18,10 +16,7 @@ permissions:
 jobs:
   build:
     if: >-
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.head_branch == 'main' &&
-       github.event.workflow_run.repository.full_name == github.repository) ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -35,11 +30,10 @@ jobs:
         id: candidate
         shell: bash
         env:
-          WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
           EVENT_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          candidate="${WORKFLOW_RUN_SHA:-$EVENT_SHA}"
+          candidate="$EVENT_SHA"
           test -n "$candidate"
           echo "sha=$candidate" >> "$GITHUB_OUTPUT"
 
