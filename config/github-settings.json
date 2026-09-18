@@ -1,0 +1,19 @@
+{
+  "repository": "stiwarilbj/AI_Vision",
+  "defaultBranch": "main",
+  "branchProtection": {
+    "requiredStatusChecks": ["quality-gate"],
+    "strict": true,
+    "requiredApprovingReviewCount": 0,
+    "enforceAdmins": true,
+    "allowForcePushes": false,
+    "allowDeletions": false
+  },
+  "pages": {
+    "sourceBranch": "main",
+    "sourcePath": "/docs",
+    "buildType": "workflow",
+    "httpsEnforced": true
+  },
+  "deploymentEnvironment": "github-pages"
+}

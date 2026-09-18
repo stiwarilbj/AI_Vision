@@ -4,15 +4,72 @@ on:
   push:
   pull_request:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 24.13.0
           cache: npm
+      - name: Confirm resolved Node 24 releases
+        run: node --version
       - run: npm ci
-      - run: npm run check
       - run: npm audit --audit-level=high
+      - name: Verify reviewed visual baselines before browser work
+        run: npm run visual:baseline-files
+      - name: Run the basic project check
+        run: npm run lint
+      - name: Build the release archive
+        run: npm run package
+      - name: Verify the freshly built archive against source
+        env:
+          RELEASE_ARCHIVE: dist/ai-vision-extension-v2.8.1.zip
+          RELEASE_ALIAS: AI_Vision_Extension_Package.zip
+        run: npm run package:verify
+      - name: Extract the release archive for Chromium
+        run: unzip -q dist/ai-vision-extension-v2.8.1.zip -d outputs/ci/unpacked-extension
+      - name: Validate Store artwork dimensions and encoding
+        run: npm run assets:check
+      - name: Verify the public website
+        run: npm run website:check
+      - name: Verify the panel UI
+        env:
+          PLAYWRIGHT_TRACE_DIR: outputs/ci/traces/panel
+        run: npm run panel:check
+      - name: Compare reviewed visual baselines
+        env:
+          VISUAL_DIFF_DIR: outputs/ci/visual-diffs
+        run: npm run visual:check
+      - name: Verify the extension in Chromium
+        run: npm run extension:check
+      - name: Upload browser evidence
+        if: ${{ always() && hashFiles('outputs/ci/**') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ci-browser-evidence
+          path: outputs/ci/
+          if-no-files-found: warn
+          retention-days: 30
+
+  quality-gate:
+    if: ${{ always() }}
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm quality-gate result
+        env:
+          CHECKS_RESULT: ${{ needs.checks.result }}
+        run: |
+          if [ "$CHECKS_RESULT" != "success" ]; then
+            exit 1
+          fi

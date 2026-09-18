@@ -1,12 +1,12 @@
 {
-  "name": "AI Vision: Gemini Screenshot, Webpage & Multi-Tab AI Assistant for Chrome",
+  "name": "AI Vision: AI Screenshot Assistant",
   "short_name": "AI Vision",
-  "description": "AI screenshot and browser assistant for Chrome, powered by a user-supplied Gemini API key.",
+  "description": "Explain screenshots, copy text from images, and ask Gemini follow-up questions in Chrome with your own API key.",
   "start_url": "/AI_Vision/",
   "scope": "/AI_Vision/",
   "display": "standalone",
-  "background_color": "#f7fcff",
-  "theme_color": "#eaf7ff",
+  "background_color": "#f2f9ff",
+  "theme_color": "#f2f9ff",
   "icons": [
     {
       "src": "assets/store-icon.png",

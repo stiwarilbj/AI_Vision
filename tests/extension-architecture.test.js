@@ -259,18 +259,17 @@ test('the content panel never exposes the key to normal page DOM or performs Gem
   assert.match(PANEL_CODE, /Stop Agent Mode task/);
   assert.match(PANEL_CODE, /Planner rationale:/);
   assert.match(PANEL_CODE, /id = 'gemini-primary-mode'/);
-  assert.match(PANEL_CODE, /id = 'gemini-beta-rail'/);
   assert.match(PANEL_CODE, /id = 'gemini-capture-frame'/);
   assert.match(PANEL_CODE, /Retake the screenshot/);
   assert.match(PANEL_CODE, /isAgentModeEnabled = false/);
-  assert.match(PANEL_CODE, /Beta tools/);
-  assert.match(PANEL_CODE, /aria-label', 'Open instructions'/);
   assert.match(PANEL_CODE, /aria-label', 'Open settings'/);
-  assert.match(PANEL_CODE, /setAttribute\('aria-selected',/);
+  assert.match(PANEL_CODE, /Help & shortcuts/);
+  assert.match(PANEL_CODE, /id = 'gemini-capture-behavior'/);
+  assert.match(PANEL_CODE, /Explain screenshot/);
+  assert.match(PANEL_CODE, /Drag around what you want explained/);
+  assert.match(PANEL_CODE, /id = 'gemini-request-cancel'/);
   assert.match(PANEL_CODE, /setAttribute\('role', 'switch'\)/);
   assert.match(PANEL_CSS, /max-width:\s*420px/);
-  assert.match(PANEL_CODE, /id = 'gemini-settings-store-link'/);
-  assert.match(PANEL_CODE, /Only setup: paste a key and press Save key/);
   assert.match(PANEL_CODE, /className = 'gemini-answer-actions'/);
   assert.match(PANEL_CODE, /conversationHistory: requestHistory/);
   assert.doesNotMatch(PANEL_CODE, /buildStyledPrompt/);
@@ -371,7 +370,14 @@ test('settings return only masked key status and saving is explicit', async () =
   assert.equal(harness.calls.storageAccessLevel.accessLevel, 'TRUSTED_CONTEXTS');
   assert.equal(settings.hasApiKey, true);
   assert.equal(settings.apiKeyMasked, '••••-key');
+  assert.equal(settings.geminiCaptureBehavior, 'manual');
   assert.equal(Object.prototype.hasOwnProperty.call(settings, 'geminiApiKey'), false);
+  await harness.dispatch({ action: 'saveSettings', geminiCaptureBehavior: 'auto-explain' });
+  assert.equal(harness.localValues.geminiCaptureBehavior, 'auto-explain');
+  await harness.dispatch({ action: 'saveSettings', geminiResponseStyle: 'concise' });
+  assert.equal(harness.localValues.geminiCaptureBehavior, 'auto-explain');
+  await harness.dispatch({ action: 'saveSettings', geminiCaptureBehavior: 'not-a-real-choice' });
+  assert.equal(harness.localValues.geminiCaptureBehavior, 'manual');
   await harness.dispatch({ action: 'saveSettings', apiKey: 'AIza-new-key' });
   assert.equal(harness.localValues.geminiApiKey, 'AIza-new-key');
   await harness.dispatch({ action: 'saveSettings', clearApiKey: true });
@@ -757,7 +763,7 @@ test('the bundled Google ADK runtime does not request loopback permission or a c
   assert.doesNotMatch(SERVICE_WORKER_CODE, /127\.0\.0\.1/);
   assert.doesNotMatch(PANEL_CODE, /ensureAdkAccess|adkPermissionResult|127\.0\.0\.1/);
   assert.doesNotMatch(fs.readFileSync(path.join(PROJECT_ROOT, 'permission.js'), 'utf8'), /127\.0\.0\.1|adk-runtime/);
-  assert.match(SERVICE_WORKER_CODE, /src\/background\/adk-runtime\.js/);
+  assert.match(SERVICE_WORKER_CODE, /importScripts\?\.\('\s*adk-runtime\.js'/);
 });
 
 test('model discovery filters unsupported models and does not hard-code the panel list', async () => {

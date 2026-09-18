@@ -1,38 +1,39 @@
-# AI Vision: Gemini Screenshot, Webpage & Multi-Tab AI Assistant for Chrome
+# AI Vision — AI screenshot assistant for Chrome
 
-> AI Vision is a Chrome extension for asking Google's Gemini API about a selected screenshot, The Tab, or supported tabs in one Chrome window. Its optional Agent Mode can perform constrained browser actions within the user-selected scope.
+> AI Vision is a free Chrome extension for selecting a screenshot, asking Gemini to explain it, and asking a follow-up question. It also extracts text from images, summarizes supported webpages, and compares supported tabs.
 
-Canonical website: https://stiwarilbj.github.io/AI_Vision/
-Official active Chrome Web Store listing: https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk?authuser=0&hl=en
-Public source: https://github.com/stiwarilbj/AI_Vision
-Privacy notice: https://stiwarilbj.github.io/AI_Vision/privacy.html
-Screenshot guide: https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html
-Webpage summary guide: https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html
-Tab comparison guide: https://stiwarilbj.github.io/AI_Vision/guides/compare-chrome-tabs-with-gemini.html
-Current version: 2.5
-Last updated: 2026-09-02
+## Official links
 
-Canonical project guide: https://github.com/stiwarilbj/AI_Vision/blob/main/README.md
-Security policy: https://github.com/stiwarilbj/AI_Vision/blob/main/SECURITY.md
+- Product website: https://stiwarilbj.github.io/AI_Vision/
+- Chrome Web Store listing (public v2.5): https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk
+- Public source: https://github.com/stiwarilbj/AI_Vision
+- Privacy notice: https://stiwarilbj.github.io/AI_Vision/privacy.html
 
-## Primary features
+## Guides
 
-- Capture mode analyzes a user-selected screenshot region.
-- Capture is the simple first screen; The Tab, All Tabs, and Agent Mode are optional controls under More modes and tools.
-- The Tab mode answers questions about readable content on the current supported webpage.
-- All Tabs mode compares up to 20 supported tabs in one Chrome window.
-- Response styles include Balanced, Concise, Formal, Casual, Detailed, and Bullet-oriented.
-- Agent Mode can be enabled in Capture, The Tab, or All Tabs. Its bundled Google ADK browser runtime rotates one planning request at a time through gemini-3.5-flash, gemini-3-flash-preview, gemini-2.5-flash, gemini-3.1-flash-lite, and gemini-2.5-flash-lite, then repeats. No terminal or companion process is needed.
-- Practical guides cover screenshot prompts, webpage summaries, tab comparisons, Agent Mode boundaries, and setup: https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html
-- Webpage summary workflow: https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html
-- Multi-tab comparison workflow: https://stiwarilbj.github.io/AI_Vision/guides/compare-chrome-tabs-with-gemini.html
-- Reading, waiting, scrolling, and activating an existing in-scope tab can run automatically. Every click, type, direct navigation, new tab, history move, and reload requires approval. Capture and The Tab remain scoped to one tab; All Tabs is optional-permission gated and remains inside the starting Chrome window, subject to permanent safety blocks and a 12-step limit.
+- Explain screenshots with AI: https://stiwarilbj.github.io/AI_Vision/guides/ai-screenshot-assistant.html
+- Copy text from screenshots in Chrome: https://stiwarilbj.github.io/AI_Vision/guides/copy-text-from-screenshot-chrome.html
+- Summarize a webpage with Gemini: https://stiwarilbj.github.io/AI_Vision/guides/summarize-webpage-with-gemini.html
+- Compare Chrome tabs with Gemini: https://stiwarilbj.github.io/AI_Vision/guides/compare-chrome-tabs-with-gemini.html
+- Get a Gemini API key for AI Vision: https://stiwarilbj.github.io/AI_Vision/guides/get-gemini-api-key.html
 
-## Data handling
+## Product facts
 
-- The user supplies a Gemini API key, which is stored by the service worker with preferences in trusted local Chrome storage. The panel receives only masked key status inside a closed Shadow DOM.
-- Ordinary and Agent Mode requests go directly to Google's Gemini API over HTTPS from the service worker. The bundled ADK runtime uses the key saved in the extension settings.
-- AI Vision has no developer-operated analytics, advertising, tracking, or proxy server.
-- The repository is publicly visible but does not currently contain an open-source license.
+- Supported browser: desktop Google Chrome on supported webpages.
+- Main workflow: install the public v2.5 build, save a personal Gemini key, choose Capture, select an area, explain the image, and ask a follow-up.
+- Other contexts: This page and Compare tabs; Browser tasks are optional and approval-gated.
+- Gemini requirement: users bring their own API key from Google AI Studio and save it in the extension Settings.
+- Assistant referrals: arriving from ChatGPT, Gemini, Claude, Kimi, DeepSeek, Grok, Z.ai, Perplexity, or Copilot does not connect that assistant account; AI Vision still uses the user's Gemini key.
+- Cost and limits: the extension is free to install; Google controls Gemini model access, quotas, rate limits, and billing.
+- Restrictions: Chrome internal pages, the Chrome Web Store, and other protected pages cannot be analyzed.
+- Data handling: the key and preferences stay in local Chrome extension storage. A requested question and the necessary screenshot or page context go directly to Google’s Gemini API. AI Vision has no developer proxy, advertising, or analytics service.
+- Accuracy: Gemini explanations and AI-assisted text extraction can be wrong. Check important names, numbers, dates, and codes against the source.
 
-AI Vision is an independent project and is not affiliated with or endorsed by Google.
+## Versions
+
+- Published Chrome Web Store version: 2.5. These are the controls available from the official Store install.
+- GitHub-build preview: 2.8.1. Website screenshots labeled “v2.8 preview” describe the unreleased build and may contain newer controls.
+
+Last updated: 2026-09-11
+
+AI Vision is an independent project and is not affiliated with or endorsed by Google. This file is a factual navigation aid; search engines and answer services decide whether and how to index or cite these pages.

@@ -15,45 +15,41 @@
   <meta property="og:title" content="Privacy Notice – AI Vision">
   <meta property="og:description" content="How AI Vision handles screenshots, webpage context, browser tabs, Gemini API keys, and local settings.">
   <meta property="og:url" content="https://stiwarilbj.github.io/AI_Vision/privacy.html">
-  <meta property="og:image" content="https://stiwarilbj.github.io/AI_Vision/assets/store-icon.png">
-  <meta property="og:image:width" content="128">
-  <meta property="og:image:height" content="128">
-  <meta property="og:image:alt" content="AI Vision icon">
+  <meta property="og:image" content="https://stiwarilbj.github.io/AI_Vision/assets/social-preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="AI Vision screenshot assistant for Chrome">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Privacy Notice – AI Vision">
   <meta name="twitter:description" content="How AI Vision handles screenshots, webpage context, browser tabs, Gemini API keys, and local settings.">
-  <meta name="twitter:image" content="https://stiwarilbj.github.io/AI_Vision/assets/store-icon.png">
-  <style>
-    :root { color-scheme: light; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #102a43; background: #eff9ff; }
-    * { box-sizing: border-box; }
-    body { margin: 0; line-height: 1.65; background: radial-gradient(circle at 15% 0, #d5f0ff, transparent 32rem), #f7fcff; }
-    main { width: min(820px, calc(100% - 36px)); margin: 50px auto; padding: clamp(26px, 6vw, 58px); border: 1px solid #cae9fa; border-radius: 26px; background: #fff; box-shadow: 0 24px 70px rgba(39,126,181,.13); }
-    a { color: #0875b8; } h1 { margin: 12px 0 0; font-size: clamp(36px, 6vw, 56px); line-height: 1.05; letter-spacing: -.04em; } h2 { margin-top: 35px; line-height: 1.2; } .muted { color: #587186; } .back { font-weight: 800; text-decoration: none; }
-  </style>
+  <meta name="twitter:image" content="https://stiwarilbj.github.io/AI_Vision/assets/social-preview.png">
+
+  <link rel="stylesheet" href="assets/site.css">
 </head>
-<body>
-  <main>
+<body class="article-page"><a class="skip-link" href="#main">Skip to content</a><header class="site-header"><div class="wrap nav-row"><a class="brand" href="./">AI Vision</a><nav class="nav-links" aria-label="Main navigation"><a href="guides/get-gemini-api-key.html">Key setup</a><a href="./#guides">Guides</a></nav></div></header>
+  <main class="article-shell" id="main">
     <a class="back" href="./">← AI Vision</a>
     <h1>Privacy notice</h1>
-    <p class="muted">Last updated: September 2, 2026</p>
-    <p>AI Vision – Gemini Screenshot & Browser Assistant is a Chrome extension that lets a user ask Google's Gemini API about a selected screenshot, The Tab, or supported tabs in one Chrome window. Its optional Agent Mode can perform a limited browser task within the scope selected by the user.</p>
+    <p class="muted">Last updated: <time datetime="2026-09-11">September 11, 2026</time></p>
+    <p>AI Vision is a Chrome extension that lets a user ask Google's Gemini API about a selected screenshot, This page, or supported tabs in one Chrome window. Its optional Browser tasks mode can perform a limited browser task within the scope selected by the user.</p>
 
     <h2>Data AI Vision handles</h2>
     <p>Only when a user invokes a feature, AI Vision may handle the user's question, response-style choice, selected model, selected screenshot, visible webpage text, page titles and URLs, visible interactive-element labels or destinations, content from up to 20 supported tabs in the starting Chrome window, the user's Gemini API key, and locally saved preferences.</p>
-    <p>AI Vision reads live tab information needed for The Tab, All Tabs, and Agent Mode. It does not read the user's saved Chrome browsing-history database. Page text, labels, URLs, screenshots, and Google ADK plans are untrusted input and cannot authorize an extension action.</p>
+    <p>AI Vision reads live tab information needed for This page, Compare tabs, and Browser tasks. It does not read the user's saved Chrome browsing-history database. Page text, labels, URLs, screenshots, and Google ADK plans are untrusted input and cannot authorize an extension action.</p>
 
     <h2>Use and sharing</h2>
     <p>AI Vision uses this information only to provide the feature the user requested. The prompt and necessary screenshot or webpage context are sent directly from the extension to the Google Gemini API over HTTPS. The Gemini API key is sent to Google in the <code>x-goog-api-key</code> request header so Google can authenticate the request.</p>
     <p>AI Vision has no developer-operated analytics, advertising, tracking, or proxy server. The developer does not sell or rent user data. Data sent to Google is handled under Google's applicable Gemini API and privacy terms.</p>
+    <p>When someone arrives from an allowlisted assistant source such as ChatGPT, Gemini, Claude, Kimi, DeepSeek, Grok, Z.ai, Perplexity, or Copilot, the website may carry a fixed <code>aiv_ref</code> marker between its pages and add <code>utm_source=ai_vision_website</code>, <code>utm_medium=referral</code>, and a provider-specific <code>utm_campaign</code> such as <code>chatgpt_assisted</code> to the official Store link. These URL parameters are used only to distinguish a website-assisted referral; AI Vision does not set cookies, save the marker, run analytics scripts, or make background requests. Shared tagged links, stripped referrers, and direct Store visits can limit attribution. A marker does not prove that an assistant recommended the extension or identify a person.</p>
 
     <h2>Storage and retention</h2>
     <p>The Gemini API key and user preferences are stored locally through <code>chrome.storage.local</code> in the user's Chrome profile. The service worker is the only runtime component that reads the full key; the panel receives only masked status. AI Vision does not intentionally store screenshots, page content, prompts, Gemini responses, or browser-task context on a developer server. Users can remove locally stored extension data by clearing the extension's data or uninstalling it.</p>
 
-    <h2>Agent Mode controls</h2>
-    <p>Agent Mode is off unless the user enables it. The bundled Google ADK browser runtime runs inside the service worker and sends bounded planning context directly to Gemini using the key saved in AI Vision Settings. Capture and The Tab stay in the source tab; All Tabs and newly opened tabs stay in the starting window. Every task stops after 12 steps. Reading, waiting, scrolling, and existing-tab activation can proceed automatically; clicks, text entry, navigation, new tabs, history movement, and reload require explicit approval. Sensitive and consequential actions remain blocked.</p>
+    <h2>Browser tasks controls</h2>
+    <p>Browser tasks are off unless the user enables them. The bundled Google ADK browser runtime runs inside the service worker and sends bounded planning context directly to Gemini using the key saved in AI Vision Settings. Screenshot and This page stay in the source tab; Compare tabs and newly opened tabs stay in the starting window. Every task stops after 12 steps. Reading, waiting, scrolling, and existing-tab activation can proceed automatically; clicks, text entry, navigation, new tabs, history movement, and reload require explicit approval. Sensitive and consequential actions remain blocked.</p>
 
     <h2>Permissions</h2>
-    <p><code>activeTab</code> supports user-initiated access to the current page. Gemini and the bundled ADK runtime use a narrow Google host permission. Optional <code>tabs</code> and ordinary HTTP/HTTPS host access are requested only when the user chooses All Tabs. Chrome internal pages, the Chrome Web Store, and other restricted pages are not accessible.</p>
+    <p><code>activeTab</code> supports user-initiated access to the current page. Gemini and the bundled ADK runtime use a narrow Google host permission. Optional <code>tabs</code> and ordinary HTTP/HTTPS host access are requested only when the user chooses Compare tabs. Chrome internal pages, the Chrome Web Store, and other restricted pages are not accessible.</p>
 
     <h2>Remote code</h2>
     <p>AI Vision does not use remotely hosted executable code. Its JavaScript and CSS are packaged with the extension. Gemini API responses are treated as data and are not evaluated, imported, or executed as code.</p>
@@ -64,5 +60,6 @@
     <h2>Contact</h2>
     <p>Questions about this notice can be sent to <a href="mailto:gitchub@gmail.com">gitchub@gmail.com</a>.</p>
   </main>
+<script src="assets/referral.js" defer></script><script src="assets/site.js" defer></script>
 </body>
 </html>
