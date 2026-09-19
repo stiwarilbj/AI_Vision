@@ -32,8 +32,8 @@
 ## Versions
 
 - Published Chrome Web Store version: 2.5. These are the controls available from the official Store install.
-- GitHub-build preview: 2.8.1. Website screenshots labeled “v2.8 preview” describe the unreleased build and may contain newer controls.
+- GitHub-build preview: 2.8.2. This unreleased build uses the current artwork set; website screenshots labeled “v2.8 preview” describe the earlier artwork set and may contain older controls.
 
-Last updated: 2026-09-11
+Last updated: 2026-09-19
 
 AI Vision is an independent project and is not affiliated with or endorsed by Google. This file is a factual navigation aid; search engines and answer services decide whether and how to index or cite these pages.
