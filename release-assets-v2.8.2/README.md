@@ -1,6 +1,6 @@
 # AI Vision 2.8.2 store artwork
 
-This set contains five separate Chrome Web Store screenshots for the current AI Vision release. Each composition uses a distinct blue palette, layout, background treatment, and visual rhythm while keeping the authentic extension panel capture intact.
+This set contains five separate Chrome Web Store screenshots for the current AI Vision release. Each composition uses a distinct light-blue palette, layout, background treatment, and visual rhythm while keeping the authentic extension panel capture intact.
 
 The `source/backgrounds/` files are text-free generated artwork used as compositional backdrops. The `source/ui-captures/` files are period-clean artwork-only captures from the existing browser harness; the production extension copy remains unchanged.
 
