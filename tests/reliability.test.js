@@ -190,19 +190,19 @@ test('rollback preparation rejects short SHAs and commits without a successful P
 test('release archive matches every allowlisted source byte and detects a stale fixture', () => {
   const result = checkArchive();
   assert.equal(result.status, 'passed');
-  assert.equal(result.version, '2.8.1');
+  assert.equal(result.version, '2.8.2');
   assert.equal(result.entries.length, 13);
   assert.throws(() => checkArchive({
     readEntry: (archive, entry) => entry === 'src/background/service-worker.js' ? Buffer.from('stale fixture') : readArchiveEntry(archive, entry)
   }), /Release archive is stale for src\/background\/service-worker\.js/);
 });
 
-test('root upload alias is a separately validated v2.8.1 package', () => {
+test('root upload alias is a separately validated v2.8.2 package', () => {
   const alias = path.join(projectRoot, 'AI_Vision_Extension_Package.zip');
   assert.ok(fs.existsSync(alias), 'The root upload alias must be present for repository handoff.');
   const result = checkArchive({ archivePath: alias });
   assert.equal(result.status, 'passed');
-  assert.equal(result.version, '2.8.1');
+  assert.equal(result.version, '2.8.2');
 });
 
 test('reviewed visual baseline guard catches a missing state before comparison', () => {
@@ -216,10 +216,10 @@ test('Store artwork is exact-size opaque RGB and rejects alpha PNG fixtures', ()
   assert.equal(checkSourceProvenance().status, 'passed');
   const result = checkStoreAssets();
   assert.equal(result.status, 'passed');
-  assert.equal(result.files.length, 7);
+  assert.equal(result.files.length, 5);
   const fixture = tempDir('ai-vision-artwork-');
   fs.mkdirSync(path.join(fixture, 'store-screenshots'), { recursive: true });
-  const source = path.join(projectRoot, 'release-assets-v2.8', 'store-screenshots', '01-understand-screenshot.png');
+  const source = path.join(projectRoot, 'release-assets-v2.8.2', 'store-screenshots', '01-screenshot-insight.png');
   const candidate = path.join(fixture, 'store-screenshots', 'fixture.png');
   fs.copyFileSync(source, candidate);
   const alpha = fs.readFileSync(candidate);

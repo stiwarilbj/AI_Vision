@@ -4,7 +4,7 @@ Select part of a webpage, ask Gemini what it means, and ask a follow-up. AI Visi
 
 [Add to Chrome](https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk) · [Website and guides](https://stiwarilbj.github.io/AI_Vision/)
 
-The v2.8.1 release and its release artwork are in this repository. For a ready-to-upload package, download [`AI_Vision_Extension_Package.zip`](AI_Vision_Extension_Package.zip) from the repository root. To rebuild it, run `npm run package`, then run `RELEASE_ARCHIVE=dist/ai-vision-extension-v2.8.1.zip RELEASE_ALIAS=AI_Vision_Extension_Package.zip npm run package:verify`. Use the [release checklist](RELEASE_OPERATIONS.md) before publishing a draft release.
+The v2.8.2 release and its release artwork are in this repository. For a ready-to-upload package, download [`AI_Vision_Extension_Package.zip`](AI_Vision_Extension_Package.zip) from the repository root. To rebuild it, run `npm run package`, then run `RELEASE_ARCHIVE=dist/ai-vision-extension-v2.8.2.zip RELEASE_ALIAS=AI_Vision_Extension_Package.zip npm run package:verify`. Use the [release checklist](RELEASE_OPERATIONS.md) before publishing a draft release.
 
 ## Try it
 
@@ -16,7 +16,7 @@ Need a hand with the key? Follow the [setup guide](https://stiwarilbj.github.io/
 
 Your key stays in local extension storage. Questions and selected content go directly to Google; there's no AI Vision server in between. Gemini's pricing and usage limits apply. [Privacy details](PRIVACY.md).
 
-This repository contains the **v2.8.1 release candidate**. Check the Store listing for the published version; some controls may differ.
+This repository contains the **v2.8.2 release candidate**. Check the Store listing for the published version; some controls may differ.
 
 ## How it works
 
