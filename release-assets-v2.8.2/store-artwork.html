@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Vision 2.8.2 store artwork</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; min-height: 100%; }
+    body { overflow: hidden; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .artboard { position: relative; width: 1280px; height: 800px; overflow: hidden; isolation: isolate; }
+    .artboard::before, .artboard::after { content: ""; position: absolute; pointer-events: none; z-index: -1; }
+    .brand { position: absolute; z-index: 5; top: 38px; left: 54px; display: inline-flex; align-items: center; gap: 11px; font-size: 18px; font-weight: 800; letter-spacing: -.55px; }
+    .mark { position: relative; width: 34px; height: 34px; border: 2px solid currentColor; border-radius: 12px; }
+    .mark::before { content: ""; position: absolute; inset: 8px; border: 2px solid currentColor; border-radius: 50%; }
+    .mark::after { content: ""; position: absolute; top: 4px; right: 5px; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .copy { position: absolute; z-index: 4; left: 72px; top: 214px; width: 430px; }
+    .eyebrow { margin: 0 0 20px; font-size: 13px; font-weight: 900; letter-spacing: 2.6px; line-height: 1.2; }
+    h1 { margin: 0; font-size: 72px; line-height: .91; letter-spacing: -5px; font-weight: 900; }
+    .subline { max-width: 350px; margin: 25px 0 0; font-size: 22px; line-height: 1.2; font-weight: 650; letter-spacing: -.55px; }
+    .chip { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; padding: 9px 14px; font-size: 12px; font-weight: 800; letter-spacing: .25px; }
+    .chip-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .panel { position: absolute; z-index: 3; overflow: hidden; border-radius: 28px; background: #f2f8ff; color: #163f70; box-shadow: 0 30px 70px #07132c3b, inset 0 0 0 1px #ffffffb8; }
+    .panel-head { height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 19px; border-bottom: 1px solid #bfd6ee; font-size: 16px; font-weight: 850; }
+    .panel-name { display: inline-flex; align-items: center; gap: 9px; }
+    .panel-icon { width: 27px; height: 27px; display: grid; place-items: center; border-radius: 9px; background: #d9ebff; font-size: 15px; }
+    .panel-tools { display: inline-flex; align-items: center; gap: 10px; font-size: 18px; }
+    .panel-close { width: 29px; height: 29px; display: grid; place-items: center; border: 1px solid #bad3ee; border-radius: 10px; background: #fff; }
+    .panel-body { padding: 20px; }
+    .select-row { display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 650; }
+    .select { min-width: 142px; padding: 11px 14px; border: 1px solid #b8d3ee; border-radius: 12px; background: #fff; font-size: 13px; font-weight: 800; }
+    .mock-button { display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; padding: 11px 15px; font-size: 12px; font-weight: 850; }
+    .primary { background: #236ac1; color: #fff; }
+    .secondary { border: 1px solid #b9d2ec; background: #fff; color: #163f70; }
+    .panel-card { border: 1px solid #b8d3ee; border-radius: 17px; background: #fff; }
+    .tiny-label { font-size: 11px; font-weight: 800; letter-spacing: .45px; color: #557595; }
+    .mini-text { font-size: 13px; line-height: 1.35; font-weight: 650; }
+
+    .slide-1 { background: radial-gradient(circle at 82% 18%, #7138e8 0, #31137f 26%, transparent 52%), linear-gradient(135deg, #080d2e 0%, #151051 45%, #201369 100%); color: #f6f5ff; }
+    .slide-1::before { width: 660px; height: 660px; right: -210px; bottom: -330px; border: 1px solid #37e7ff8f; border-radius: 50%; box-shadow: 0 0 0 36px #37e7ff17, 0 0 0 72px #37e7ff0e; }
+    .slide-1::after { width: 270px; height: 270px; left: 670px; top: -150px; border: 1px solid #d79cff7d; border-radius: 50%; }
+    .slide-1 .brand { color: #fff; }
+    .slide-1 .mark { color: #42e9ff; box-shadow: 0 0 25px #42e9ff9c; }
+    .slide-1 .eyebrow { color: #50eaff; }
+    .slide-1 .subline { color: #c9c7f4; }
+    .slide-1 .chip { margin-top: 31px; background: #ffffff16; color: #7df3ff; box-shadow: inset 0 0 0 1px #6df0ff3d; }
+    .slide-1 .panel { top: 83px; right: 82px; width: 484px; height: 654px; transform: rotate(2deg); box-shadow: 0 35px 90px #00000066, 0 0 0 10px #5b37d63d; }
+    .slide-1 .panel-body { padding: 19px; }
+    .slide-1 .capture-card { position: relative; height: 230px; margin-top: 18px; padding: 16px; overflow: hidden; border: 1px solid #b6d4f1; border-radius: 18px; background: #fff; }
+    .slide-1 .capture-card::after { content: ""; position: absolute; left: 49px; right: 40px; top: 32px; bottom: 31px; border: 2px solid #27dff4; border-radius: 15px; box-shadow: 0 0 20px #27dff4a8, inset 0 0 20px #27dff42c; }
+    .slide-1 .chart-title { position: relative; z-index: 1; font-size: 14px; font-weight: 850; color: #294e78; }
+    .slide-1 .chart { position: absolute; left: 34px; right: 34px; bottom: 25px; height: 121px; display: flex; align-items: end; gap: 18px; padding: 0 13px; border-bottom: 1px solid #c4dced; background: repeating-linear-gradient(to top, transparent 0, transparent 29px, #e1edf7 30px); }
+    .slide-1 .bar { width: 48px; border-radius: 9px 9px 0 0; background: linear-gradient(180deg, #55e7f6, #6550ef); box-shadow: 0 0 17px #51eaf99e; }
+    .slide-1 .bar:nth-child(1) { height: 38px; } .slide-1 .bar:nth-child(2) { height: 66px; } .slide-1 .bar:nth-child(3) { height: 94px; } .slide-1 .bar:nth-child(4) { height: 112px; }
+    .slide-1 .answer-card { margin-top: 17px; padding: 17px; }
+    .slide-1 .answer-card strong { display: block; margin: 9px 0 12px; font-size: 19px; line-height: 1.1; color: #113c6e; }
+    .slide-1 .answer-actions { display: flex; gap: 9px; margin-top: 16px; }
+    .slide-1 .followup { margin-top: 15px; padding: 14px 17px 12px; height: 96px; }
+    .slide-1 .followup .mock-button { float: right; margin-top: 20px; }
+
+    .slide-2 { background: radial-gradient(circle at 16% 19%, #fff2ce 0, transparent 22%), linear-gradient(130deg, #ff7a67 0%, #ef5c80 50%, #b23774 100%); color: #351a30; }
+    .slide-2::before { width: 750px; height: 260px; left: -130px; bottom: -98px; background: #ffd27d73; border-radius: 50%; transform: rotate(-15deg); }
+    .slide-2::after { width: 340px; height: 340px; right: -60px; top: -180px; border: 28px solid #ffc9b14c; border-radius: 50%; }
+    .slide-2 .brand { color: #fff9ee; } .slide-2 .mark { color: #ffe19b; }
+    .slide-2 .copy { left: 71px; top: 182px; width: 425px; } .slide-2 .eyebrow { color: #ffe8ae; }
+    .slide-2 .subline { color: #fff0df; } .slide-2 .chip { margin-top: 30px; background: #fff4d52e; color: #fff5d3; }
+    .slide-2 .source-card { position: absolute; left: 508px; top: 156px; z-index: 2; width: 280px; height: 350px; transform: rotate(-10deg); padding: 24px; border: 10px solid #fff5e3; border-radius: 30px; background: linear-gradient(145deg, #563457, #1f2549); box-shadow: 0 32px 50px #64234467; }
+    .slide-2 .source-card::before { content: ""; position: absolute; inset: 20px; border: 1px solid #ffbe7c8f; border-radius: 17px; }
+    .slide-2 .source-card .scan-mark { position: absolute; left: 42px; right: 42px; top: 73px; height: 2px; background: #ffb94b; box-shadow: 0 0 18px #ffb94b; }
+    .slide-2 .source-card .scan-text { position: relative; z-index: 1; margin-top: 71px; color: #ffe6bc; font-size: 18px; font-weight: 850; letter-spacing: 2px; line-height: 1.65; }
+    .slide-2 .source-card .scan-text span { display: block; color: #ff9787; font-size: 13px; letter-spacing: 1px; }
+    .slide-2 .ocr-card { position: absolute; z-index: 3; top: 112px; right: 78px; width: 414px; height: 500px; padding: 0; border: 8px solid #fff8ea; border-radius: 30px; background: #fff8ea; transform: rotate(4deg); box-shadow: 0 34px 60px #6d234968; }
+    .slide-2 .ocr-card .panel-head { height: 59px; border-color: #f2d3c4; background: #fff8ea; color: #512b45; }
+    .slide-2 .ocr-card .panel-icon { background: #ffd7be; } .slide-2 .ocr-card .panel-body { padding: 17px; }
+    .slide-2 .ocr-image { height: 113px; padding: 17px; border-radius: 16px; background: repeating-linear-gradient(168deg, #ffd6c1 0 8px, #fff0dc 8px 16px); color: #863d58; font-size: 15px; font-weight: 850; }
+    .slide-2 .ocr-image strong { display: block; font-size: 22px; color: #542645; } .slide-2 .ocr-result { margin-top: 14px; padding: 16px; border: 1px solid #edc5b5; border-radius: 16px; background: #fff; }
+    .slide-2 .ocr-result .tiny-label { color: #b6545b; } .slide-2 .ocr-lines { margin: 12px 0 16px; display: grid; gap: 8px; font-size: 14px; font-weight: 750; color: #552c4b; }
+    .slide-2 .ocr-lines span { display: flex; justify-content: space-between; padding-bottom: 7px; border-bottom: 1px solid #f1ddd5; } .slide-2 .ocr-lines i { color: #e56165; font-style: normal; }
+    .slide-2 .ocr-card .mock-button { width: 100%; background: #d94e67; color: #fff; }
+
+    .slide-3 { background: linear-gradient(140deg, #082c2a 0%, #0d6454 48%, #79d6a0 100%); color: #f4fff9; }
+    .slide-3::before { width: 610px; height: 610px; right: -250px; top: -290px; border: 1px solid #c7ffe47c; border-radius: 50%; box-shadow: 0 0 0 42px #c7ffe41a, 0 0 0 84px #c7ffe40d; }
+    .slide-3::after { width: 480px; height: 220px; left: -80px; bottom: -96px; background: #c2f8bf45; border-radius: 50%; transform: rotate(12deg); }
+    .slide-3 .brand { color: #effff7; } .slide-3 .mark { color: #c1ffd2; } .slide-3 .copy { left: 76px; top: 205px; } .slide-3 .eyebrow { color: #b9ffd5; } .slide-3 .subline { color: #d6f8e5; } .slide-3 .chip { margin-top: 30px; background: #ffffff1c; color: #dbffe9; }
+    .slide-3 .article-window { position: absolute; z-index: 2; top: 104px; left: 492px; width: 420px; height: 560px; padding: 19px; border-radius: 30px; background: #f4fffa; color: #174c42; transform: rotate(-5deg); box-shadow: 0 35px 65px #073a3280; }
+    .slide-3 .article-window::after { content: ""; position: absolute; left: 36px; right: 36px; bottom: 34px; height: 120px; border-radius: 18px; background: linear-gradient(140deg, #4cc794, #b8f2c7); opacity: .55; }
+    .slide-3 .browser-bar { height: 33px; display: flex; align-items: center; gap: 5px; border-bottom: 1px solid #bedfd0; } .slide-3 .browser-dot { width: 8px; height: 8px; border-radius: 50%; background: #87c6aa; }
+    .slide-3 .article-title { margin: 28px 19px 21px; font-size: 28px; line-height: 1; letter-spacing: -1.5px; font-weight: 900; } .slide-3 .article-tag { margin: 0 19px 14px; color: #48a879; font-size: 11px; font-weight: 900; letter-spacing: 1.5px; }
+    .slide-3 .article-lines { display: grid; gap: 12px; margin: 0 19px; } .slide-3 .article-lines span { height: 9px; border-radius: 99px; background: #cce8d9; } .slide-3 .article-lines span:nth-child(2) { width: 84%; } .slide-3 .article-lines span:nth-child(3) { width: 92%; } .slide-3 .article-lines span:nth-child(4) { width: 67%; }
+    .slide-3 .summary-panel { position: absolute; z-index: 3; top: 137px; right: 86px; width: 416px; height: 520px; border-radius: 30px; background: #f2fffa; color: #174c42; transform: rotate(5deg); box-shadow: 0 34px 65px #073a3280; overflow: hidden; }
+    .slide-3 .summary-panel .panel-head { background: #ddf8e8; border-color: #b5e4c9; color: #174c42; } .slide-3 .summary-panel .panel-icon { background: #b7efca; } .slide-3 .summary-panel .panel-body { padding: 19px; }
+    .slide-3 .summary-hero { padding: 19px; border-radius: 18px; background: #fff; border: 1px solid #bde4cf; } .slide-3 .summary-hero strong { display: block; margin-bottom: 10px; font-size: 21px; line-height: 1.05; } .slide-3 .summary-hero span { font-size: 13px; font-weight: 650; color: #4c776d; }
+    .slide-3 .takeaways { margin-top: 14px; display: grid; gap: 11px; } .slide-3 .takeaway { display: flex; gap: 10px; align-items: center; padding: 13px; border-radius: 14px; background: #e1f7ea; font-size: 13px; font-weight: 750; } .slide-3 .takeaway b { width: 23px; height: 23px; display: grid; place-items: center; border-radius: 8px; background: #1d9a68; color: #fff; }
+    .slide-3 .summary-panel .mock-button { width: 100%; margin-top: 14px; background: #1d9a68; color: #fff; }
+
+    .slide-4 { background: radial-gradient(circle at 86% 14%, #4266ff 0, transparent 30%), linear-gradient(135deg, #101d62 0%, #1a3ea1 54%, #4e75e8 100%); color: #fbfdff; }
+    .slide-4::before { width: 800px; height: 300px; left: 310px; bottom: -180px; background: #ffe36f40; border-radius: 50%; transform: rotate(-10deg); } .slide-4::after { width: 260px; height: 260px; left: -90px; top: 490px; border: 2px dashed #8ca4ff7d; border-radius: 50%; }
+    .slide-4 .brand { color: #fff; } .slide-4 .mark { color: #ffe572; } .slide-4 .copy { left: 72px; top: 168px; width: 380px; } .slide-4 .eyebrow { color: #ffe572; } .slide-4 .subline { color: #d8e1ff; } .slide-4 .chip { margin-top: 29px; background: #ffffff19; color: #ffe572; }
+    .slide-4 .tabs-fan { position: absolute; z-index: 2; top: 93px; right: 78px; width: 665px; height: 211px; }
+    .slide-4 .tab { position: absolute; top: 0; width: 270px; height: 188px; padding: 18px; border: 2px solid #ffffffbb; border-radius: 22px; background: #f4f8ff; color: #17336d; box-shadow: 0 20px 35px #07174d59; } .slide-4 .tab:nth-child(1) { left: 40px; transform: rotate(-11deg); background: #d9e5ff; } .slide-4 .tab:nth-child(2) { left: 198px; top: 9px; transform: rotate(-1deg); background: #fff9dc; } .slide-4 .tab:nth-child(3) { left: 354px; top: 2px; transform: rotate(10deg); background: #e5f7ff; }
+    .slide-4 .tab-top { display: flex; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid #a8bee6; font-size: 11px; font-weight: 900; } .slide-4 .tab-body { margin-top: 18px; display: grid; gap: 10px; } .slide-4 .tab-body span { display: block; height: 8px; border-radius: 99px; background: #aac1eb; } .slide-4 .tab-body span:nth-child(2) { width: 73%; } .slide-4 .tab-body span:nth-child(3) { width: 88%; }
+    .slide-4 .compare-board { position: absolute; z-index: 3; top: 322px; right: 92px; width: 600px; height: 364px; padding: 23px; border-radius: 28px; background: #f7fbff; color: #17336d; box-shadow: 0 30px 60px #07174d6e; } .slide-4 .compare-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 17px; } .slide-4 .compare-head strong { font-size: 19px; } .slide-4 .compare-head .select { min-width: 118px; padding: 9px 11px; color: #17336d; }
+    .slide-4 .compare-row { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; align-items: center; min-height: 55px; border-top: 1px solid #d3e0f0; font-size: 12px; font-weight: 750; } .slide-4 .compare-row:first-of-type { border-top: 0; color: #5a7195; font-size: 10px; letter-spacing: .65px; } .slide-4 .compare-row span:not(:first-child) { padding-left: 12px; } .slide-4 .yes { color: #18875e; } .slide-4 .maybe { color: #d08b19; }
+
+    .slide-5 { background: radial-gradient(circle at 83% 18%, #5b2c21 0, transparent 27%), linear-gradient(140deg, #12151e 0%, #252a36 55%, #11131a 100%); color: #fbfaf6; }
+    .slide-5::before { width: 830px; height: 830px; right: -350px; bottom: -515px; border: 1px solid #ff9d4e8a; border-radius: 50%; box-shadow: 0 0 0 40px #ff9d4e18, 0 0 0 80px #ff9d4e0d; } .slide-5::after { width: 330px; height: 330px; left: -180px; top: 120px; border: 1px solid #8f9bb46e; border-radius: 50%; }
+    .slide-5 .brand { color: #fff9ed; } .slide-5 .mark { color: #ffad61; } .slide-5 .copy { left: 72px; top: 207px; width: 390px; } .slide-5 .eyebrow { color: #ffae66; } .slide-5 .subline { color: #c7cad4; } .slide-5 .chip { margin-top: 30px; background: #ffad611f; color: #ffbd7d; }
+    .slide-5 .route { position: absolute; z-index: 1; left: 448px; top: 122px; width: 285px; height: 531px; border-left: 2px solid #ff9c4e; border-bottom: 2px solid #ff9c4e; border-radius: 0 0 0 140px; transform: skewY(-7deg); opacity: .75; } .slide-5 .route::before, .slide-5 .route::after { content: ""; position: absolute; width: 18px; height: 18px; border: 4px solid #ffb16c; border-radius: 50%; background: #1c202b; box-shadow: 0 0 18px #ff9c4e; } .slide-5 .route::before { top: 4px; left: -10px; } .slide-5 .route::after { right: -10px; bottom: -10px; }
+    .slide-5 .task-stack { position: absolute; z-index: 2; left: 500px; top: 110px; width: 227px; display: grid; gap: 13px; } .slide-5 .task-step { padding: 14px; border: 1px solid #79808f; border-radius: 16px; background: #2e3441d9; color: #d9dce4; font-size: 12px; font-weight: 800; box-shadow: 0 10px 20px #090b10a8; } .slide-5 .task-step.active { border-color: #ffad61; color: #fff1df; transform: translateX(22px); } .slide-5 .task-step b { display: block; margin-bottom: 7px; color: #ffad61; font-size: 10px; letter-spacing: 1px; }
+    .slide-5 .approval-panel { position: absolute; z-index: 4; top: 142px; right: 81px; width: 390px; height: 503px; overflow: hidden; border-radius: 30px; background: #f4f7fb; color: #18395f; transform: rotate(3deg); box-shadow: 0 32px 65px #090b10a8, 0 0 0 8px #ffad6122; } .slide-5 .approval-panel .panel-head { border-color: #d1d9e5; } .slide-5 .approval-panel .panel-icon { background: #ffe0c2; color: #a55522; } .slide-5 .approval-panel .panel-body { padding: 18px; } .slide-5 .approval-note { padding: 13px; border: 1px solid #a8c9ed; border-radius: 13px; background: #e8f2ff; font-size: 12px; font-weight: 700; line-height: 1.4; } .slide-5 .approval-card { margin-top: 14px; padding: 18px; border: 1px solid #c1d0e2; border-radius: 18px; background: #fff; } .slide-5 .approval-card strong { display: block; margin-bottom: 9px; font-size: 17px; } .slide-5 .approval-card p { margin: 0; font-size: 13px; line-height: 1.35; font-weight: 650; } .slide-5 .approval-actions { display: flex; gap: 10px; margin-top: 21px; } .slide-5 .approval-actions .primary { background: #ea772e; } .slide-5 .approval-actions .secondary { color: #173d67; }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  </style>
+</head>
+<body>
+  <main id="art" class="artboard" aria-label="AI Vision Chrome extension store screenshot"></main>
+  <script>
+    const slide = new URLSearchParams(location.search).get('slide') || '1';
+    const mark = '<span class="mark" aria-hidden="true"></span>';
+    const brand = `<div class="brand">${mark}<span>AI Vision</span></div>`;
+    const panelHead = (mode, icon = '◉') => `<div class="panel-head"><span class="panel-name"><span class="panel-icon">${icon}</span>AI Vision</span><span class="panel-tools"><span>⚙</span><span class="panel-close">×</span></span></div><div class="panel-body"><div class="select-row"><span>Ask about</span><span class="select">${mode}</span></div>`;
+    const endPanel = '</div></div>';
+    const slides = {
+      '1': `<section class="slide-1 artboard">${brand}<div class="copy"><p class="eyebrow">SCREENSHOT INSIGHT</p><h1>See it<br>Understand it</h1><p class="subline">Ask Gemini what the pixels mean</p><span class="chip"><i class="chip-dot"></i>VISUAL ANSWERS</span></div><div class="panel">${panelHead('Screenshot', '◉')}<div class="capture-card"><span class="chart-title">WEEKLY READING</span><div class="chart"><i class="bar"></i><i class="bar"></i><i class="bar"></i><i class="bar"></i></div></div><div class="panel-card answer-card"><span class="tiny-label">GEMINI ANSWER</span><strong>Reading climbs from 40 to 100 pages</strong><span class="mini-text">The biggest lift appears in week three</span><div class="answer-actions"><span class="mock-button secondary">Copy answer</span><span class="mock-button primary">Ask follow up</span></div></div><div class="panel-card followup"><span class="tiny-label">ASK A FOLLOW UP</span><span class="mock-button primary">Ask Gemini</span></div>${endPanel}</div></section>`,
+      '2': `<section class="slide-2 artboard">${brand}<div class="copy"><p class="eyebrow">OCR POWER</p><h1>Images into<br>editable text</h1><p class="subline">Turn locked pixels into useful words</p><span class="chip"><i class="chip-dot"></i>IMAGE TO TEXT</span></div><div class="source-card"><div class="scan-mark"></div><div class="scan-text">Q4 PLAN<span>WEEKLY READING</span><span>40 60 90 100</span></div></div><div class="ocr-card">${panelHead('Screenshot', '▣')}<div class="ocr-image"><strong>WEEKLY READING</strong>Numbers hidden in an image</div><div class="ocr-result"><span class="tiny-label">EXTRACTED TEXT</span><div class="ocr-lines"><span>Week 1 <i>40 pages</i></span><span>Week 2 <i>60 pages</i></span><span>Week 3 <i>90 pages</i></span><span>Week 4 <i>100 pages</i></span></div><span class="mock-button">Copy text</span></div>${endPanel}</div></section>`,
+      '3': `<section class="slide-3 artboard">${brand}<div class="copy"><p class="eyebrow">WEBPAGE TLDR</p><h1>Long page<br>Short answer</h1><p class="subline">Scan a page and keep the signal</p><span class="chip"><i class="chip-dot"></i>SMART SUMMARIES</span></div><div class="article-window"><div class="browser-bar"><i class="browser-dot"></i><i class="browser-dot"></i><i class="browser-dot"></i></div><div class="article-tag">READING NOTES</div><div class="article-title">Climate systems<br>in clear view</div><div class="article-lines"><span></span><span></span><span></span><span></span></div></div><div class="summary-panel">${panelHead('This page', '≡')}<div class="summary-hero"><strong>Main point</strong><span>The article maps how small shifts can change a larger system</span></div><div class="takeaways"><div class="takeaway"><b>1</b><span>Find the signal fast</span></div><div class="takeaway"><b>2</b><span>Keep the useful context</span></div><div class="takeaway"><b>3</b><span>Ask a sharper follow up</span></div></div><span class="mock-button">Ask a follow up</span>${endPanel}</div></section>`,
+      '4': `<section class="slide-4 artboard">${brand}<div class="copy"><p class="eyebrow">MULTI TAB RESEARCH</p><h1>Compare tabs<br>Find clarity</h1><p class="subline">Bring the useful details together</p><span class="chip"><i class="chip-dot"></i>UP TO 20 TABS</span></div><div class="tabs-fan"><div class="tab"><div class="tab-top"><span>DAYLIGHT 18</span><span>◌</span></div><div class="tab-body"><span></span><span></span><span></span></div></div><div class="tab"><div class="tab-top"><span>CLOUDPACK 22</span><span>◌</span></div><div class="tab-body"><span></span><span></span><span></span></div></div><div class="tab"><div class="tab-top"><span>TRAVEL KIT</span><span>◌</span></div><div class="tab-body"><span></span><span></span><span></span></div></div></div><div class="compare-board"><div class="compare-head"><strong>Useful details</strong><span class="select">All tabs</span></div><div class="compare-row"><span>DETAIL</span><span>DAYLIGHT</span><span>CLOUDPACK</span><span>TRAVEL KIT</span></div><div class="compare-row"><span>Weight</span><span>250 g</span><span>310 g</span><span>280 g</span></div><div class="compare-row"><span>Laptop sleeve</span><span class="yes">Included</span><span class="maybe">Missing</span><span class="yes">Included</span></div><div class="compare-row"><span>Rain cover</span><span class="maybe">Missing</span><span class="yes">Included</span><span class="maybe">Missing</span></div><span class="mock-button primary">Ask Gemini</span></div></section>`,
+      '5': `<section class="slide-5 artboard">${brand}<div class="copy"><p class="eyebrow">BROWSER TASKS</p><h1>Your browser<br>Your command</h1><p class="subline">Keep every action in your hands</p><span class="chip"><i class="chip-dot"></i>APPROVAL GATED</span></div><div class="route"></div><div class="task-stack"><div class="task-step"><b>STEP ONE</b>Read the page</div><div class="task-step active"><b>STEP TWO</b>Ask before action</div><div class="task-step"><b>STEP THREE</b>Continue with control</div></div><div class="approval-panel">${panelHead('Screenshot', '✦')}<div class="approval-note">Browser tasks use the screenshot and act only in this page</div><div class="approval-card"><strong>Approval required</strong><p>AI Vision wants to click Example page action</p><div class="approval-actions"><span class="mock-button primary">Approve</span><span class="mock-button secondary">Stop task</span></div></div></div></section>`
+    };
+    const rendered = document.createRange().createContextualFragment(slides[slide] || slides['1']);
+    rendered.firstElementChild.id = 'art';
+    document.querySelector('#art').replaceWith(rendered);
+  </script>
+</body>
+</html>

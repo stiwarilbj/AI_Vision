@@ -1,14 +1,14 @@
 {
   "name": "ai-vision-chrome-extension",
-  "version": "2.8.1",
+  "version": "2.8.2",
   "private": true,
-  "description": "AI Vision Chrome extension with a bundled Google ADK browser agent",
+  "description": "Gemini AI screenshot assistant, OCR image-to-text, webpage summarizer & multi-tab research copilot for Chrome with your own API key",
   "engines": {
     "node": ">=24.13.0"
   },
   "scripts": {
     "build:adk": "node scripts/build-adk-runtime.js",
-    "check": "npm run build:adk && node --check src/background/service-worker.js && node --check src/content/capture-utils.js && node --check src/content/assistant-panel.js && node --check permission.js && node scripts/check-version.js && node scripts/check-seo.js && node scripts/lint.js && node scripts/check-package.js && npm run visual:baseline-files && npm run package:verify && node --test",
+    "check": "npm run build:adk && node --check src/background/service-worker.js && node --check src/content/capture-utils.js && node --check src/content/assistant-panel.js && node --check permission.js && node scripts/check-version.js && node scripts/check-seo.js && node scripts/lint.js && node scripts/check-package.js && npm run visual:baseline-files && npm run artwork:check && npm run package:verify && node --test",
     "lint": "npm run build:adk && node --check src/background/service-worker.js && node --check src/content/capture-utils.js && node --check src/content/assistant-panel.js && node --check permission.js && node scripts/check-version.js && node scripts/check-seo.js && node scripts/lint.js",
     "package:check": "npm run build:adk && node scripts/check-package.js && npm run visual:baseline-files",
     "package": "npm run build:adk && node scripts/check-package.js && node scripts/package-extension.js",
@@ -28,7 +28,8 @@
     "website:check": "node scripts/check-website-ui.cjs",
     "visual:baseline-files": "node scripts/check-visual-baseline-files.cjs",
     "artwork:render": "node scripts/render-store-artwork.cjs",
-    "assets:check": "node scripts/check-store-assets.cjs"
+    "assets:check": "node scripts/check-store-assets.cjs",
+    "artwork:check": "node scripts/check-store-screenshots.cjs"
   },
   "devDependencies": {
     "@google/adk": "2.0.0",

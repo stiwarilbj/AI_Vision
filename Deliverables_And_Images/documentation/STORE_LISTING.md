@@ -1,8 +1,8 @@
-# Chrome Web Store copy – version 2.8.1 package (public listing currently v2.5)
+# Chrome Web Store copy – version 2.8.2 package (public listing currently v2.5)
 
 Official active listing (public v2.5): https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk
 
-Prepared public-v2.5 capture set: `outputs/ai-vision-v28/store-assets/public-v25/`. These 1280×800 captures were taken from the public listing and show Capture, Settings, and The Tab controls. They are the conservative listing assets to use while the package remains v2.8 preview-only.
+Prepared v2.8.2 capture set: `outputs/ai-vision-v282/store-assets/`. These five 1280×800 captures show the extension’s screenshot, OCR, webpage summary, multi-tab research, and Browser task approval workflows.
 
 ## Title from package
 
@@ -10,7 +10,7 @@ AI Vision: Gemini Screenshot, Webpage & Multi-Tab AI Assistant for Chrome
 
 ## Summary from package
 
-Gemini AI screenshot OCR, image-to-text extractor, webpage summarizer & multi-tab assistant for Chrome v2.8.1 with your own API key.
+Gemini AI screenshot assistant, OCR image-to-text, webpage summarizer & multi-tab research copilot for Chrome with your own API key
 
 ## Category
 
@@ -20,12 +20,12 @@ Workflow & Planning
 
 Turn what you see on screen into instant answers, extracted text, and actionable research with Google Gemini AI.
 
-AI Vision (v2.8.1) is an all-in-one multimodal AI screenshot assistant, image OCR text grabber, webpage summarizer, and multi-tab research copilot for Google Chrome. Powered directly by Google Gemini models (Gemini 1.5 Flash, 1.5 Pro, and Gemini 2.0 Flash) using your own personal Google AI Studio API key, AI Vision lets you analyze visual content, extract unselectable text, summarize long-form articles, and synthesize information across multiple open tabs in real time.
+AI Vision (v2.8.2) is an all-in-one multimodal AI screenshot assistant, image OCR text grabber, webpage summarizer, and multi-tab research copilot for Google Chrome. Powered directly by Google Gemini models using your own personal Google AI Studio API key, AI Vision lets you analyze visual content, extract unselectable text, summarize long-form articles, and synthesize information across multiple open tabs in real time.
 
 No monthly subscriptions, no third-party data tracking, and no copy-pasting between browser windows. Just snap, ask, and get intelligent answers.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🌟 WHAT'S NEW IN VERSION 2.8.1
+🌟 WHAT'S NEW IN VERSION 2.8.2
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Enhanced Gemini 2.0 & 1.5 multimodal vision reasoning for charts, diagrams, and code snippets.
 • Accelerated Image-to-Text OCR: higher accuracy on small, blurry, rotated, or low-contrast text.
