@@ -1,6 +1,6 @@
 # Release operations
 
-AI Vision uses pull requests for changes. GitHub Actions CI checks are intentionally disabled; run the relevant local checks before merging. Keep the PR checklist complete and attach screenshots for interface changes.
+AI Vision accepts authorized direct commits to `main`; pull requests are optional. Required GitHub Actions CI checks are disabled, so run the relevant local checks before publishing. Keep the release checklist complete and attach screenshots for interface changes.
 
 The Pages workflow builds and tests `/docs` from the candidate `main` commit, uploads the exact artifact, deploys it to the `github-pages` environment, and verifies the public URL before IndexNow runs. The workflow rejects an outdated commit. The hourly health workflow checks the latest successful deployment with synthetic browser traffic and opens one owner-assigned GitHub issue for an active failure. Scheduled Actions can be delayed or disabled after 60 days without repository activity, so GitHub notifications are an operational aid rather than an independent uptime guarantee.
 
