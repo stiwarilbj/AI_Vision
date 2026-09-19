@@ -1,6 +1,8 @@
 # AI Vision 2.8.2 store artwork
 
-This set contains five separate Chrome Web Store screenshots for the current AI Vision release. Each composition uses the extension workflow as its subject, with a distinct palette, layout, and visual rhythm.
+This set contains five separate Chrome Web Store screenshots for the current AI Vision release. Each composition uses a distinct blue palette, layout, background treatment, and visual rhythm while keeping the authentic extension panel capture intact.
+
+The `source/backgrounds/` files are text-free generated artwork used as compositional backdrops. The `source/ui-captures/` files are period-clean artwork-only captures from the existing browser harness; the production extension copy remains unchanged.
 
 ## Render
 
@@ -20,4 +22,4 @@ The renderer uses Chromium and writes five opaque 24-bit RGB PNGs to `store-scre
 - `store-screenshots/04-tab-comparison.png` — 1280×800
 - `store-screenshots/05-browser-tasks.png` — 1280×800
 
-The screenshots use short period-free copy, rounded interface cards, full backgrounds, and no release labels or disclaimers.
+The screenshots use short period-free copy, rounded interface cards, full backgrounds, and no release labels or disclaimers. Previous v2.8 artwork remains in `release-assets-v2.8/`.
