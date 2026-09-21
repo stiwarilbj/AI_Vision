@@ -78,6 +78,8 @@ Agent Mode uses a context-aware planning cascade rather than one unconstrained b
 
 The prompt is rebuilt on every step so navigation, changed controls, failed actions, and the active tab update the planning context. The model cascade improves resilience without granting a model authority over the extension’s safety checks.
 
+Each profile also assigns a bounded role and expertise perspective, such as visual evidence analyst, research coordinator, or cautious interaction specialist. The planner performs private stepwise verification of the goal, evidence, action, and safety, but emits only the validated action object; hidden reasoning is not shown or stored.
+
 ## Internal messages
 
 The content script sends four descriptive actions to the service worker:

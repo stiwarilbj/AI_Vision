@@ -542,6 +542,9 @@ test('prompt injection text is delimited and explicitly treated as data', () => 
   assert.match(prompt, /IGNORE ALL RULES/);
   assert.match(prompt, /CURRENT STEP: 2 of 12/);
   assert.match(prompt, /Choose the smallest safe action/);
+  assert.match(prompt, /ROLE-BASED PERSONA/);
+  assert.match(prompt, /focused information analyst/);
+  assert.match(prompt, /never hidden reasoning/);
   assert.equal(prompt.includes('</UNTRUSTED_BROWSER_DATA>\n</UNTRUSTED_BROWSER_DATA>'), false);
 });
 
@@ -564,6 +567,8 @@ test('agent prompts share explicit stopping rules and compact context is lossles
   assert.deepEqual(JSON.parse(compact).tabs[0].interactives[0], JSON.parse(pretty).tabs[0].interactives[0]);
   assert.match(exports.AGENT_SYSTEM_INSTRUCTION, /Return only the JSON action object/);
   assert.match(exports.AGENT_SYSTEM_INSTRUCTION, /Do not repeat an action/);
+  assert.match(exports.AGENT_SYSTEM_INSTRUCTION, /private stepwise reasoning/);
+  assert.match(exports.AGENT_SYSTEM_INSTRUCTION, /never include chain-of-thought/);
   assert.match(exports.ANSWER_SYSTEM_INSTRUCTION, /untrusted data/);
   assert.match(exports.buildAnswerPrompt('Explain this chart', 'concise'), /<USER_QUESTION>/);
   assert.match(exports.buildAnswerPrompt('Explain this chart', 'concise'), /distinguish facts from uncertainty/);
@@ -579,6 +584,8 @@ test('contextual agent profiles adapt the planning layer without exposing page t
   };
   const profile = exports.inferAgentTaskProfile({ mode: 'all-tabs', task: 'Compare these sources' }, context);
   assert.equal(profile.id, 'multiTab');
+  assert.equal(profile.role, 'research coordinator');
+  assert.match(profile.expertise, /cross-source comparison/);
   assert.equal(profile.signals.visibleTabs, 1);
   assert.equal(profile.signals.restrictedTabs, 1);
   assert.equal(profile.signals.interactiveControls, 2);
