@@ -67,6 +67,17 @@ service-worker.js enforces tab/window scope before every agent action
 
 The source tab is the tab where the user opened AI Vision. Agent Mode checks its scope before every step and stops after 12 steps.
 
+### Layered Agent planning
+
+Agent Mode uses a context-aware planning cascade rather than one unconstrained browser prompt:
+
+- **Grounding layer:** derives a small task profile from the selected mode, capture state, tab counts, visible controls, and recent action results.
+- **Structured planner layer:** the bundled Google ADK planner receives that profile and the current snapshot, then returns exactly one schema-validated action.
+- **Recovery planner layer:** if the bundled planner is temporarily unavailable, a direct Gemini request uses the same contextual prompt and action schema.
+- **Deterministic safety layer:** the extension rechecks scope, live targets, safe URLs, sensitive fields, and approval requirements before Chrome receives an action.
+
+The prompt is rebuilt on every step so navigation, changed controls, failed actions, and the active tab update the planning context. The model cascade improves resilience without granting a model authority over the extension’s safety checks.
+
 ## Internal messages
 
 The content script sends four descriptive actions to the service worker:

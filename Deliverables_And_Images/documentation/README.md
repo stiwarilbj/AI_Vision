@@ -76,6 +76,8 @@ Agent Mode can be turned on or off directly below the mode selector and stays se
 
 Every Agent Mode task stops after no more than 12 steps.
 
+Agent Mode uses layered, context-aware planning: a task profile grounds each step in the selected mode and current page state, the bundled ADK planner proposes one structured action, and a direct Gemini recovery planner is available for transient runtime failures. The extension’s deterministic scope and approval checks remain authoritative.
+
 AI Vision blocks password, payment, authentication-code, purchase, deletion, publication, upload, sign-in, legal-acceptance, and similar sensitive actions. Review the browser state before continuing any task that requires user takeover.
 
 ## Permissions

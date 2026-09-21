@@ -569,6 +569,26 @@ test('agent prompts share explicit stopping rules and compact context is lossles
   assert.match(exports.buildAnswerPrompt('Explain this chart', 'concise'), /distinguish facts from uncertainty/);
 });
 
+test('contextual agent profiles adapt the planning layer without exposing page text', () => {
+  const { exports } = createServiceWorkerHarness();
+  const context = {
+    tabs: [
+      { active: true, restricted: false, interactives: [{}, {}] },
+      { active: false, restricted: true, interactives: [{}, {}, {}] }
+    ]
+  };
+  const profile = exports.inferAgentTaskProfile({ mode: 'all-tabs', task: 'Compare these sources' }, context);
+  assert.equal(profile.id, 'multiTab');
+  assert.equal(profile.signals.visibleTabs, 1);
+  assert.equal(profile.signals.restrictedTabs, 1);
+  assert.equal(profile.signals.interactiveControls, 2);
+  assert.equal(profile.signals.activeTabIndex, 0);
+  const summary = exports.formatAgentContextSummary({ mode: 'all-tabs', task: 'Compare these sources' }, context, ['click: blocked']);
+  assert.match(summary, /multi-tab research/);
+  assert.match(summary, /prior failure signal: yes/);
+  assert.doesNotMatch(summary, /secret page text/);
+});
+
 test('context serialization enforces a total budget and safe URL form', () => {
   const { exports } = createServiceWorkerHarness();
   const context = {
@@ -649,6 +669,7 @@ test('Capture Agent Mode is asynchronous, scoped, and carries the capture', asyn
   assert.equal(complete.summary, 'Task complete');
   assert.deepEqual(calls.queriedWindows, []);
   assert.equal(calls.adkCalls.some((request) => request.imageData === 'selected-capture'), true);
+  assert.equal(calls.adkCalls[0].temperature, 0.45);
   assert.equal(calls.sentMessages.filter(({ message }) => message.action === 'agentModeProgress').every(({ message }) => message.taskId === response.taskId), true);
 });
 
