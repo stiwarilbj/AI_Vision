@@ -10,7 +10,8 @@ const MAX_CONVERSATION_TOTAL_CHARS = 12000;
 const MAX_ACTION_TEXT_CHARS = 4000;
 const MAX_NAVIGATION_URL_CHARS = 2000;
 const MAX_IMAGE_DATA_CHARS = 8000000;
-const DEFAULT_MODEL = 'gemini-3.5-flash';
+const DEFAULT_MODEL = 'gemini-3.5-flash-lite';
+const DEFAULT_THEME = 'sky-glass';
 const DEFAULT_TEMPERATURE = 1;
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 const ALL_TABS_ORIGINS = ['http://*/*', 'https://*/*'];
@@ -48,6 +49,14 @@ try {
 const VALID_MODES = new Set(['capture', 'tab', 'all-tabs']);
 const VALID_RESPONSE_STYLES = new Set(['balanced', 'concise', 'formal', 'casual', 'detailed', 'bullets']);
 const VALID_CAPTURE_BEHAVIORS = new Set(['manual', 'auto-explain']);
+const VALID_THEMES = new Set([
+  'sky-glass',
+  'ice-prism',
+  'mint-aurora',
+  'pistachio-clay',
+  'peach-flow',
+  'rose-sheen'
+]);
 const VALID_AGENT_ACTIONS = new Set(['click', 'type', 'scroll', 'navigate', 'activate_tab', 'open_tab', 'go_back', 'go_forward', 'reload', 'wait', 'done']);
 const MUTATING_AGENT_ACTIONS = new Set(['click', 'type', 'navigate', 'open_tab', 'go_back', 'go_forward', 'reload']);
 const NAVIGATION_AGENT_ACTIONS = new Set(['navigate', 'open_tab', 'go_back', 'go_forward', 'reload']);
@@ -171,6 +180,19 @@ function normalizeCaptureBehavior(behavior) {
   return VALID_CAPTURE_BEHAVIORS.has(behavior) ? behavior : 'manual';
 }
 
+function normalizeTheme(theme) {
+  return VALID_THEMES.has(theme) ? theme : DEFAULT_THEME;
+}
+
+function normalizeReviewPromptState(result = {}) {
+  const lastShownAt = Number(result.geminiReviewPromptLastShownAt);
+  return {
+    geminiReviewPromptLastShownAt: Number.isFinite(lastShownAt) && lastShownAt > 0 ? lastShownAt : 0,
+    geminiReviewPromptDismissed: result.geminiReviewPromptDismissed === true,
+    geminiReviewPromptCompleted: result.geminiReviewPromptCompleted === true
+  };
+}
+
 function maskApiKey(key) {
   if (typeof key !== 'string' || key.trim() === '') return '';
   const value = key.trim();
@@ -184,6 +206,8 @@ function normalizeSettings(result = {}) {
     geminiMode: normalizeMode(result.geminiMode),
     geminiResponseStyle: normalizeResponseStyle(result.geminiResponseStyle),
     geminiCaptureBehavior: normalizeCaptureBehavior(result.geminiCaptureBehavior),
+    geminiTheme: normalizeTheme(result.geminiTheme),
+    ...normalizeReviewPromptState(result),
     geminiAgentMode: result.geminiAgentMode === true
       || (result.geminiAgentMode === undefined && result.geminiAutoBrowse === true),
     hasApiKey: typeof result.geminiApiKey === 'string' && result.geminiApiKey.trim() !== '',
@@ -199,6 +223,10 @@ async function getStoredSettings() {
     'geminiMode',
     'geminiResponseStyle',
     'geminiCaptureBehavior',
+    'geminiTheme',
+    'geminiReviewPromptLastShownAt',
+    'geminiReviewPromptDismissed',
+    'geminiReviewPromptCompleted',
     'geminiAgentMode',
     'geminiAutoBrowse'
   ]);
@@ -210,6 +238,25 @@ async function getStoredApiKey() {
   const key = typeof result.geminiApiKey === 'string' ? result.geminiApiKey.trim() : '';
   if (!key) throw new Error('Please set your Gemini API key in Settings.');
   return key;
+}
+
+async function saveReviewPromptState(request = {}) {
+  const current = await chrome.storage.local.get([
+    'geminiReviewPromptLastShownAt',
+    'geminiReviewPromptDismissed',
+    'geminiReviewPromptCompleted'
+  ]);
+  const state = normalizeReviewPromptState(current);
+  if (request.status === 'shown') {
+    const shownAt = Number(request.lastShownAt);
+    state.geminiReviewPromptLastShownAt = Number.isFinite(shownAt) && shownAt > 0 ? shownAt : Date.now();
+  } else if (request.status === 'dismissed') {
+    state.geminiReviewPromptDismissed = true;
+  } else if (request.status === 'completed') {
+    state.geminiReviewPromptCompleted = true;
+  }
+  await chrome.storage.local.set(state);
+  return state;
 }
 
 function reserveAdkModel() {
@@ -246,7 +293,8 @@ async function saveSettings(request = {}) {
     'geminiMode',
     'geminiResponseStyle',
     'geminiAgentMode',
-    'geminiCaptureBehavior'
+    'geminiCaptureBehavior',
+    'geminiTheme'
   ]);
   const values = {
     geminiModel: normalizeModel(request.geminiModel ?? current.geminiModel),
@@ -254,6 +302,7 @@ async function saveSettings(request = {}) {
     geminiMode: normalizeMode(request.geminiMode ?? current.geminiMode),
     geminiResponseStyle: normalizeResponseStyle(request.geminiResponseStyle ?? current.geminiResponseStyle),
     geminiCaptureBehavior: normalizeCaptureBehavior(request.geminiCaptureBehavior ?? current.geminiCaptureBehavior),
+    geminiTheme: normalizeTheme(request.geminiTheme ?? current.geminiTheme),
     geminiAgentMode: request.geminiAgentMode ?? (current.geminiAgentMode === true)
   };
 
@@ -1610,6 +1659,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return saveSettings(request);
       case 'getAvailableModels':
         return listAvailableModels();
+      case 'saveReviewPromptState':
+        return saveReviewPromptState(request);
       case 'ensureAllTabsAccess':
         return openAllTabsPermissionPage(sender);
       case 'permissionPageResult':
@@ -1661,6 +1712,9 @@ if (typeof module !== 'undefined') {
     isTrustedSender,
     normalizeConversationHistory,
     normalizeCaptureBehavior,
+    normalizeTheme,
+    normalizeReviewPromptState,
+    saveReviewPromptState,
     normalizeLaunchOptions,
     openAssistantInTab,
     createContextMenu,

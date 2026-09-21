@@ -3,25 +3,90 @@
     // receives a boolean and a masked key suffix for settings display.
     let hasApiKey = false;
     let apiKeyMasked = "";
-    const DEFAULT_MODEL = "gemini-3.5-flash";
+    const DEFAULT_MODEL = "gemini-3.5-flash-lite";
+    const DEFAULT_THEME = "sky-glass";
     const DEFAULT_MODE = "capture";
     const DEFAULT_RESPONSE_STYLE = "balanced";
     const DEFAULT_CAPTURE_BEHAVIOR = "manual";
     const EXPLAIN_CAPTURE_QUERY = 'Explain the captured content and what it means.';
     const STORE_URL = "https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk";
+    const STORE_REVIEW_URL = `${STORE_URL}/reviews`;
+    const REVIEW_PROMPT_INTERVAL_MS = 2 * 24 * 60 * 60 * 1000;
     const GITHUB_URL = "https://github.com/stiwarilbj/AI_Vision";
+    const MODEL_CHOICES = Object.freeze([
+        { value: "gemini-3.7-flash", label: "gemini-3.7-flash" },
+        { value: "gemini-3.6-flash", label: "gemini-3.6-flash" },
+        { value: "gemini-3.5-flash", label: "gemini-3.5-flash" },
+        { value: "gemini-3.5-flash-lite", label: "gemini-3.5-flash-lite" },
+        { value: "gemini-flash-lite-latest", label: "gemini-flash-lite-latest" },
+        { value: "gemini-3.1-flash-lite", label: "gemini-3.1-flash-lite" },
+        { value: "gemini-3-flash-preview", label: "gemini-3-flash-preview" },
+        { value: "gemini-2.5-flash", label: "gemini-2.5-flash" },
+        { value: "gemini-2.5-flash-lite", label: "gemini-2.5-flash-lite" }
+    ]);
+    const THEME_CHOICES = Object.freeze([
+        {
+            value: "sky-glass",
+            label: "Sky glass",
+            color: "Blue",
+            description: "Soft glass and airy glow",
+            effects: "Gradients, mesh gradients, glassmorphism, aurora glow, pastel blur, radial vignette"
+        },
+        {
+            value: "ice-prism",
+            label: "Ice prism",
+            color: "Blue",
+            description: "Frosted light and prism shine",
+            effects: "Iridescent sheen, frosted translucency, prismatic refraction, soft holographic, subtle light leak, gradients"
+        },
+        {
+            value: "mint-aurora",
+            label: "Mint aurora",
+            color: "Green",
+            description: "Mint mesh and liquid flow",
+            effects: "Mesh gradients, aurora glow, liquid color flow, pearlescent wash, pastel blur, minimal neumorphism"
+        },
+        {
+            value: "pistachio-clay",
+            label: "Pistachio clay",
+            color: "Green",
+            description: "Pastel clay and gentle depth",
+            effects: "Claymorphism, frosted translucency, vibrant color cloud, duotone wash, radial vignette, soft light leak"
+        },
+        {
+            value: "peach-flow",
+            label: "Peach flow",
+            color: "Red",
+            description: "Peach blend and light leaks",
+            effects: "Sunset bleed, color splash, silky fluid flow, glassmorphism, gradients, subtle light leak"
+        },
+        {
+            value: "rose-sheen",
+            label: "Rose sheen",
+            color: "Red",
+            description: "Rose refraction and soft shine",
+            effects: "Mesh gradients, iridescent sheen, prismatic refraction, frosted translucency, pearlescent wash, aurora glow"
+        }
+    ]);
+    const THEME_VALUES = new Set(THEME_CHOICES.map((theme) => theme.value));
     const launchOptions = (() => {
         const value = globalThis.__aiVisionLaunchOptions;
         try { delete globalThis.__aiVisionLaunchOptions; } catch (_) { globalThis.__aiVisionLaunchOptions = null; }
         return value && typeof value === 'object' ? value : {};
     })();
     let selectedModel = DEFAULT_MODEL;
+    let selectedTheme = DEFAULT_THEME;
     let responseTemperature = 1;
     let selectedMode = DEFAULT_MODE;
     let selectedResponseStyle = DEFAULT_RESPONSE_STYLE;
     let captureBehavior = DEFAULT_CAPTURE_BEHAVIOR;
     let isAgentModeEnabled = false;
     let availableModels = [];
+    let reviewPromptState = {
+        lastShownAt: 0,
+        dismissed: false,
+        completed: false
+    };
     let keyConnectionState = 'unknown';
     let keyConnectionError = '';
 
@@ -115,6 +180,7 @@
             action: 'saveSettings',
             ...extra,
             geminiModel: selectedModel,
+            geminiTheme: selectedTheme,
             geminiTemperature: responseTemperature,
             geminiResponseStyle: selectedResponseStyle,
             geminiCaptureBehavior: captureBehavior
@@ -138,6 +204,7 @@
         selectedModel = typeof result?.geminiModel === 'string' && result.geminiModel
             ? result.geminiModel
             : DEFAULT_MODEL;
+        selectedTheme = THEME_VALUES.has(result?.geminiTheme) ? result.geminiTheme : DEFAULT_THEME;
         responseTemperature = validateTemperature(result?.geminiTemperature)
             ? Number(result.geminiTemperature)
             : 1;
@@ -154,7 +221,26 @@
         hasApiKey = result?.hasApiKey === true;
         apiKeyMasked = result?.apiKeyMasked || '';
         keyConnectionState = hasApiKey ? 'saved' : 'missing';
-        availableModels = [selectedModel];
+        availableModels = MODEL_CHOICES.map(({ value }) => value);
+        reviewPromptState = {
+            lastShownAt: Number(result?.geminiReviewPromptLastShownAt) || 0,
+            dismissed: result?.geminiReviewPromptDismissed === true,
+            completed: result?.geminiReviewPromptCompleted === true
+        };
+    }
+
+    function shouldShowReviewPrompt() {
+        if (reviewPromptState.dismissed || reviewPromptState.completed) return false;
+        return reviewPromptState.lastShownAt <= 0
+            || Date.now() - reviewPromptState.lastShownAt >= REVIEW_PROMPT_INTERVAL_MS;
+    }
+
+    async function saveReviewPromptState(status) {
+        const lastShownAt = status === 'shown' ? Date.now() : reviewPromptState.lastShownAt;
+        if (status === 'shown') reviewPromptState.lastShownAt = lastShownAt;
+        if (status === 'dismissed') reviewPromptState.dismissed = true;
+        if (status === 'completed') reviewPromptState.completed = true;
+        await sendWorkerMessage({ action: 'saveReviewPromptState', status, lastShownAt });
     }
 
     async function refreshAvailableModels() {
@@ -164,15 +250,20 @@
             if (!Array.isArray(modelResult?.models) || !modelResult.models.length) {
                 throw new Error('No compatible Gemini models are available for this key. Check your project in Google AI Studio.');
             }
-            if (Array.isArray(modelResult?.models)) availableModels = modelResult.models;
+            if (Array.isArray(modelResult?.models)) {
+                availableModels = Array.from(new Set([
+                    ...MODEL_CHOICES.map(({ value }) => value),
+                    ...modelResult.models,
+                    selectedModel
+                ]));
+            }
             if (hasApiKey) keyConnectionState = 'connected';
         } catch (error) {
             if (hasApiKey) keyConnectionState = 'saved';
             keyConnectionError = error.message || 'Could not reach Gemini. Check your connection and try again.';
             return availableModels;
         }
-        if (availableModels.length && !availableModels.includes(selectedModel)) selectedModel = availableModels[0];
-        if (!availableModels.length) availableModels = [selectedModel];
+        if (!availableModels.length) availableModels = MODEL_CHOICES.map(({ value }) => value);
         return availableModels;
     }
 
@@ -507,6 +598,7 @@
             
             popup = document.createElement('div');
             popup.id = 'gemini-popup';
+            popup.dataset.theme = selectedTheme;
             popup.tabIndex = -1;
             popup.setAttribute('role', 'dialog');
             popup.setAttribute('aria-modal', 'false');
@@ -659,7 +751,100 @@
             agentModeRow.appendChild(agentModeCopy);
             agentModeRow.appendChild(agentModeDescription);
             agentModeRow.appendChild(agentModeToggle);
+
+            const reviewPrompt = document.createElement('section');
+            reviewPrompt.id = 'gemini-review-prompt';
+            reviewPrompt.setAttribute('aria-labelledby', 'gemini-review-title');
+            let reviewPromptOpen = shouldShowReviewPrompt();
+
+            const reviewPromptActions = document.createElement('div');
+            reviewPromptActions.className = 'gemini-review-prompt-actions';
+            const reviewDontShowButton = document.createElement('button');
+            reviewDontShowButton.type = 'button';
+            reviewDontShowButton.id = 'gemini-review-dont-show';
+            reviewDontShowButton.className = 'gemini-review-dont-show';
+            reviewDontShowButton.textContent = "Don't Show";
+            reviewDontShowButton.setAttribute('aria-label', "Don't show review requests again");
+            const reviewCloseButton = document.createElement('button');
+            reviewCloseButton.type = 'button';
+            reviewCloseButton.id = 'gemini-review-close';
+            reviewCloseButton.className = 'gemini-review-close';
+            reviewCloseButton.innerHTML = iconSvg('close');
+            reviewCloseButton.title = 'Close review request';
+            reviewCloseButton.setAttribute('aria-label', 'Close review request');
+            reviewPromptActions.append(reviewDontShowButton, reviewCloseButton);
+
+            const reviewTitle = document.createElement('h2');
+            reviewTitle.id = 'gemini-review-title';
+            reviewTitle.textContent = 'Hey, real quick...';
+
+            const reviewLead = document.createElement('p');
+            reviewLead.className = 'gemini-review-lead';
+            reviewLead.append('When you get a second, will you ');
+            const reviewLeadLink = document.createElement('a');
+            reviewLeadLink.className = 'gemini-review-link';
+            reviewLeadLink.href = STORE_REVIEW_URL;
+            reviewLeadLink.target = '_blank';
+            reviewLeadLink.rel = 'noreferrer';
+            reviewLeadLink.textContent = 'leave me a review?';
+            reviewLead.appendChild(reviewLeadLink);
+
+            const reviewMeme = document.createElement('img');
+            reviewMeme.className = 'gemini-review-meme';
+            reviewMeme.src = chrome.runtime.getURL
+                ? chrome.runtime.getURL('extension-assets/review-meme.png')
+                : 'extension-assets/review-meme.png';
+            reviewMeme.alt = 'You and me handshake meme';
+
+            const reviewBody = document.createElement('p');
+            reviewBody.className = 'gemini-review-body';
+            reviewBody.textContent = "Otherwise, next time you hear that sweet ding, you're gonna think about me... sitting here waiting for that review.";
+
+            const reviewQuestion = document.createElement('p');
+            reviewQuestion.className = 'gemini-review-question';
+            reviewQuestion.textContent = 'Deal?';
+
+            const reviewDealLink = document.createElement('a');
+            reviewDealLink.className = 'gemini-review-deal';
+            reviewDealLink.href = STORE_REVIEW_URL;
+            reviewDealLink.target = '_blank';
+            reviewDealLink.rel = 'noreferrer';
+            reviewDealLink.textContent = '🤝 Deal';
+
+            reviewPrompt.append(reviewPromptActions, reviewTitle, reviewLead, reviewMeme, reviewBody, reviewQuestion, reviewDealLink);
+
+            function setReviewPromptOpen(isOpen) {
+                reviewPromptOpen = isOpen;
+                reviewPrompt.hidden = !isOpen;
+                content.classList.toggle('gemini-review-open', isOpen);
+            }
+
+            function focusWorkspace() {
+                const focusTarget = composer.hidden ? primaryModeButton : queryInput;
+                focusTarget?.focus();
+            }
+
+            reviewCloseButton.onclick = () => {
+                setReviewPromptOpen(false);
+                renderSelectedMode();
+                focusWorkspace();
+            };
+            reviewDontShowButton.onclick = () => {
+                setReviewPromptOpen(false);
+                void saveReviewPromptState('dismissed').catch(() => {});
+                renderSelectedMode();
+                focusWorkspace();
+            };
+            const completeReviewPrompt = () => {
+                void saveReviewPromptState('completed').catch(() => {});
+            };
+            reviewLeadLink.addEventListener('click', completeReviewPrompt);
+            reviewDealLink.addEventListener('click', completeReviewPrompt);
+
+            content.appendChild(reviewPrompt);
             content.appendChild(workspace);
+            setReviewPromptOpen(reviewPromptOpen);
+            if (reviewPromptOpen) void saveReviewPromptState('shown').catch(() => {});
             
             const instructionsPanel = document.createElement('details');
             instructionsPanel.id = 'gemini-instructions-panel';
@@ -836,26 +1021,39 @@
             const modelGroup = document.createElement('div');
             modelGroup.className = 'settings-group';
             const modelLabel = document.createElement('label');
-            modelLabel.textContent = 'Model';
+            modelLabel.textContent = 'Gemini model';
             modelLabel.htmlFor = 'gemini-model-select';
             const modelSelect = document.createElement('select');
             modelSelect.id = 'gemini-model-select';
             modelSelect.setAttribute('aria-label', 'Gemini model');
+            const modelHint = document.createElement('small');
+            modelHint.className = 'gemini-field-hint';
+            modelHint.textContent = 'Choose any model from the full list. Flash Lite is selected by default.';
             
             function renderModelOptions() {
                 if (!modelSelect?.isConnected && !popup) return;
-                modelSelect.replaceChildren(...availableModels.map((model) => {
+                const models = Array.from(new Set([
+                    ...MODEL_CHOICES.map(({ value }) => value),
+                    ...availableModels,
+                    selectedModel
+                ]));
+                modelSelect.replaceChildren(...models.map((model) => {
                     const option = document.createElement('option');
                     option.value = model;
-                    option.textContent = model;
+                    const choice = MODEL_CHOICES.find(({ value }) => value === model);
+                    option.textContent = model === DEFAULT_MODEL
+                        ? `${choice?.label || model} · Default`
+                        : choice?.label || model;
                     option.selected = model === selectedModel;
                     return option;
                 }));
+                modelSelect.value = selectedModel;
             }
             renderModelOptions();
             
             modelGroup.appendChild(modelLabel);
             modelGroup.appendChild(modelSelect);
+            modelGroup.appendChild(modelHint);
 
             const responseStyleGroup = document.createElement('div');
             responseStyleGroup.className = 'settings-group';
@@ -922,6 +1120,56 @@
             optionalSettings.appendChild(optionalSettingsSummary);
             optionalSettings.appendChild(compactSettingsGrid);
             optionalSettings.appendChild(tempGroup);
+
+            const themeGroup = document.createElement('section');
+            themeGroup.className = 'settings-group gemini-theme-group';
+            const themeHeading = document.createElement('div');
+            themeHeading.className = 'gemini-theme-heading';
+            const themeLabel = document.createElement('strong');
+            themeLabel.textContent = 'Appearance';
+            const themeHint = document.createElement('small');
+            themeHint.className = 'gemini-field-hint';
+            themeHint.textContent = 'Pick a light style for your AI Vision panel';
+            themeHeading.append(themeLabel, themeHint);
+            const themeGrid = document.createElement('div');
+            themeGrid.className = 'gemini-theme-grid';
+            const themeButtons = [];
+            THEME_CHOICES.forEach((theme) => {
+                const themeButton = document.createElement('button');
+                themeButton.type = 'button';
+                themeButton.className = 'gemini-theme-option';
+                themeButton.dataset.theme = theme.value;
+                themeButton.title = theme.effects;
+                themeButton.setAttribute('aria-label', `Use ${theme.label} ${theme.color} theme`);
+                const swatch = document.createElement('span');
+                swatch.className = 'gemini-theme-swatch';
+                swatch.setAttribute('aria-hidden', 'true');
+                const themeCopy = document.createElement('span');
+                themeCopy.className = 'gemini-theme-copy';
+                const themeName = document.createElement('strong');
+                themeName.textContent = theme.label;
+                const themeDescription = document.createElement('small');
+                themeDescription.textContent = `${theme.color} · ${theme.description}`;
+                themeCopy.append(themeName, themeDescription);
+                themeButton.append(swatch, themeCopy);
+                themeButton.onclick = () => {
+                    selectedTheme = theme.value;
+                    popup.dataset.theme = selectedTheme;
+                    renderThemeChoices();
+                    void saveSettings().catch((error) => showUserError(error.message));
+                };
+                themeButtons.push(themeButton);
+                themeGrid.appendChild(themeButton);
+            });
+            function renderThemeChoices() {
+                themeButtons.forEach((button) => {
+                    const isSelected = button.dataset.theme === selectedTheme;
+                    button.classList.toggle('selected', isSelected);
+                    button.setAttribute('aria-pressed', String(isSelected));
+                });
+            }
+            renderThemeChoices();
+            themeGroup.append(themeHeading, themeGrid);
 
             const captureBehaviorGroup = document.createElement('fieldset');
             captureBehaviorGroup.id = 'gemini-capture-behavior';
@@ -1011,6 +1259,7 @@
             settingsPanel.appendChild(apiKeyGroup);
             settingsPanel.appendChild(captureBehaviorGroup);
             settingsPanel.appendChild(optionalSettings);
+            settingsPanel.appendChild(themeGroup);
             settingsPanel.appendChild(agentModeRow);
             settingsPanel.appendChild(settingsFooter);
             settingsPanel.appendChild(instructionsPanel);

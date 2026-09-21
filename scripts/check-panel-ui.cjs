@@ -36,7 +36,7 @@ const server = http.createServer((req, res) => {
     if (!details.open) details.querySelector('summary').click();
   });
 
-  async function open(scenario = '') {
+  async function open(scenario = '', closeReviewPrompt = true) {
     if (traceContext) {
       await traceContext.tracing.stop({ path: path.resolve(process.env.PLAYWRIGHT_TRACE_DIR, `panel-${traceIndex++}.zip`) }).catch(() => {});
       traceContext = null;
@@ -60,6 +60,7 @@ const server = http.createServer((req, res) => {
     });
     await page.goto(`${url}?scenario=${scenario}`);
     await page.waitForFunction(() => window.__panelTestRoot?.querySelector('#gemini-primary-mode'));
+    if (closeReviewPrompt && await visible('#gemini-review-prompt')) await click('#gemini-review-close');
   }
 
   async function captureArea() {
@@ -79,8 +80,21 @@ const server = http.createServer((req, res) => {
   }
 
   try {
-    await open();
+    await open('', false);
     assert.equal(await page.evaluate(() => document.querySelector('#ai-vision-host').shadowRoot), null);
+    assert.equal(await visible('#gemini-review-prompt'), true);
+    assert.match(await text('#gemini-review-prompt'), /Hey, real quick/);
+    assert.match(await text('#gemini-review-prompt'), /When you get a second, will you leave me a review\?/);
+    assert.match(await text('#gemini-review-prompt'), /Otherwise, next time you hear that sweet ding, you're gonna think about me/);
+    assert.match(await text('#gemini-review-prompt'), /Deal\?/);
+    assert.equal(await (await get('.gemini-review-meme')).getAttribute('src').then(value => value.includes('extension-assets/review-meme.png')), true);
+    assert.match(await (await get('.gemini-review-link')).getAttribute('href'), /\/reviews$/);
+    await page.waitForFunction(() => window.__aiVisionTestSettings.geminiReviewPromptLastShownAt > 0);
+    await screenshot('review-prompt');
+    await click('#gemini-review-close');
+    assert.equal(await visible('#gemini-review-prompt'), false);
+    assert.equal(await page.evaluate(() => window.__aiVisionTestSettings.geminiReviewPromptDismissed), false);
+    assert.equal(await page.evaluate(() => window.__aiVisionTestSettings.geminiReviewPromptCompleted), false);
     assert.equal(await visible('#gemini-popup-composer'), false);
     assert.equal(await visible('#gemini-more-actions'), false);
     assert.equal(await visible('#gemini-agent-mode-row'), false);
@@ -149,8 +163,30 @@ const server = http.createServer((req, res) => {
     assert.match(await text('#gemini-instructions-panel'), /Help & shortcuts/);
     await click('#gemini-optional-settings summary');
     assert.equal(await visible('#gemini-model-select'), true);
+    assert.deepEqual(await page.evaluate(() => Array.from(window.__panelTestRoot.querySelector('#gemini-model-select').options).map(option => option.value)), [
+      'gemini-3.7-flash',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-3.5-flash-lite',
+      'gemini-flash-lite-latest',
+      'gemini-3.1-flash-lite',
+      'gemini-3-flash-preview',
+      'gemini-2.5-flash',
+      'gemini-2.5-flash-lite'
+    ]);
+    assert.equal(await page.evaluate(() => window.__panelTestRoot.querySelector('#gemini-model-select').value), 'gemini-3.5-flash-lite');
+    assert.equal(await page.evaluate(() => window.__panelTestRoot.querySelectorAll('.gemini-theme-option').length), 6);
+    await page.evaluate(() => window.__panelTestRoot.querySelector('.gemini-theme-option[data-theme="ice-prism"]').click());
+    assert.equal(await page.evaluate(() => window.__panelTestRoot.querySelector('#gemini-popup').dataset.theme), 'ice-prism');
+    await page.evaluate(() => window.__panelTestRoot.querySelector('.gemini-theme-option[data-theme="sky-glass"]').click());
     await screenshot('extension-settings');
     await click('.gemini-done-button');
+
+    await open('review-dismiss', false);
+    assert.equal(await visible('#gemini-review-prompt'), true);
+    await click('#gemini-review-dont-show');
+    await page.waitForFunction(() => window.__aiVisionTestSettings.geminiReviewPromptDismissed === true);
+    assert.equal(await visible('#gemini-review-prompt'), false);
 
     for (const width of [390, 768, 1024, 1440]) {
       await page.setViewportSize({ width, height: width === 390 ? 640 : 768 });

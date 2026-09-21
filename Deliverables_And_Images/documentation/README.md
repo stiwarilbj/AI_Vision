@@ -4,15 +4,16 @@ Ask Gemini about a screenshot, The Tab you are viewing, or every supported tab i
 
 [Install AI Vision from the Chrome Web Store](https://chromewebstore.google.com/detail/ai-vision-screenshot-ask/ghmmlbclopoakmjjbkkmoefjldgjimgk) · [Get a Gemini API key](https://aistudio.google.com/app/apikey)
 
-## What version 2.0 adds
+## What AI Vision includes
 
 - Capture mode: drag over part of a webpage and ask a question about the image.
 - The Tab mode: ask about readable content on the current webpage.
 - All Tabs mode: summarize or compare supported tabs in the current Chrome window.
 - Agent Mode in every mode: let AI Vision click, type, scroll, and navigate automatically, with its scope determined by Capture, The Tab, or All Tabs and sensitive actions blocked.
 - Response styles: Balanced, Concise, Formal, Casual, Detailed, and Bullet-oriented.
-- Five Gemini model choices, with `gemini-3.5-flash` selected by default.
-- A fixed 500 × 500 light-blue interface, plus in-app links for ratings and GitHub source.
+- Nine Gemini model choices, with `gemini-3.5-flash-lite` selected by default.
+- Six light appearance presets across blue, green, and red palettes, with Sky glass selected by default.
+- A compact light interface, plus in-app links for ratings and GitHub source.
 
 ## Project structure
 
@@ -34,11 +35,15 @@ For a visual smoke test, serve the project root and open `tests/manual/assistant
 
 ## Gemini models
 
-1. `gemini-3.5-flash` (default)
-2. `gemini-3-flash-preview`
-3. `gemini-2.5-flash`
-4. `gemini-3.1-flash-lite`
-5. `gemini-2.5-flash-lite`
+1. `gemini-3.7-flash`
+2. `gemini-3.6-flash`
+3. `gemini-3.5-flash`
+4. `gemini-3.5-flash-lite` (default)
+5. `gemini-flash-lite-latest`
+6. `gemini-3.1-flash-lite`
+7. `gemini-3-flash-preview`
+8. `gemini-2.5-flash`
+9. `gemini-2.5-flash-lite`
 
 Model availability and API pricing are controlled by Google. If Google has not enabled a selected model for your API key, choose another model in Settings.
 
@@ -47,7 +52,7 @@ Model availability and API pricing are controlled by Google. If Google has not e
 1. Install the extension from the Chrome Web Store, or load this folder as an unpacked extension from `chrome://extensions` with Developer mode enabled.
 2. Open [Google AI Studio](https://aistudio.google.com/app/apikey) and create a Gemini API key.
 3. Open AI Vision, select Settings, paste the key, and save it.
-4. Choose a model, temperature, and response style. These settings remain selected until you change them.
+4. Choose a model, light appearance, temperature, and response style. These settings remain selected until you change them.
 
 The API key is stored in `chrome.storage.local` in the browser profile. Requests are sent directly from the extension to Google's Gemini API over HTTPS; AI Vision does not use a developer-operated proxy server.
 

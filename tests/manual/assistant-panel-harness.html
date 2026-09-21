@@ -22,7 +22,11 @@
     if (scenario === 'page') window.__aiVisionLaunchOptions = { mode: 'tab' };
     if (scenario === 'tabs') window.__aiVisionLaunchOptions = { mode: 'all-tabs' };
     window.__aiVisionTestSettings = {
-      geminiModel: 'gemini-3.5-flash',
+      geminiModel: 'gemini-3.5-flash-lite',
+      geminiTheme: 'sky-glass',
+      geminiReviewPromptLastShownAt: 0,
+      geminiReviewPromptDismissed: false,
+      geminiReviewPromptCompleted: false,
       geminiTemperature: 1,
       geminiMode: 'tab',
       geminiResponseStyle: 'balanced',
@@ -66,11 +70,18 @@
             if (scenario === 'invalid-key') return { error: 'Gemini rejected this API key. Replace it in Settings.' };
             if (scenario === 'quota-key') return { error: 'Gemini rate limit or quota reached. Wait a moment or check your Google AI Studio limits.' };
             if (scenario === 'empty-models') return { models: [] };
-            return { models: ['gemini-3.5-flash'] };
+            return { models: ['gemini-3.5-flash-lite'] };
+          }
+          if (request.action === 'saveReviewPromptState') {
+            if (request.status === 'shown') window.__aiVisionTestSettings.geminiReviewPromptLastShownAt = request.lastShownAt || Date.now();
+            if (request.status === 'dismissed') window.__aiVisionTestSettings.geminiReviewPromptDismissed = true;
+            if (request.status === 'completed') window.__aiVisionTestSettings.geminiReviewPromptCompleted = true;
+            return window.__aiVisionTestSettings;
           }
           if (request.action === 'saveSettings') {
             Object.assign(window.__aiVisionTestSettings, {
               geminiModel: request.geminiModel,
+              geminiTheme: request.geminiTheme,
               geminiTemperature: request.geminiTemperature,
               geminiMode: request.geminiMode,
               geminiResponseStyle: request.geminiResponseStyle,

@@ -29,7 +29,7 @@
 .gemini-brand-icon { display: grid; place-items: center; width: 30px; height: 30px; background: #cfe7ff; border-radius: 10px; color: #215f9f; }
 #gemini-popup .gemini-header-action, #gemini-popup-close { width: 34px; min-height: 34px; padding: 7px; border: 0; background: transparent; }
 #gemini-popup .gemini-header-action.active { background: #cfe7ff; }
-#gemini-popup-content { overflow-y: auto; overscroll-behavior: contain; min-height: 0; padding: 20px; scrollbar-width: thin; }
+#gemini-popup-content { overflow-y: auto; overscroll-behavior: contain; min-width: 0; min-height: 0; padding: 20px; scrollbar-width: thin; }
 #gemini-workspace { display: flex; flex-direction: column; gap: 16px; }
 #gemini-mode-rail { display: flex; align-items: center; gap: 10px; align-self: flex-start; color: var(--muted); font-size: 12px; }
 #gemini-popup select { max-width: 100%; min-width: 0; padding: 8px 30px 8px 12px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: #fff; }
@@ -71,7 +71,7 @@
 .gemini-answer-actions { margin-top: 16px; padding-top: 12px; border-top: 1px solid #e1edf8; }
 .gemini-mode-note { padding: 10px 12px; border: 1px solid #91b8dc; border-radius: 10px; font-size: 12px; color: var(--ink); background: #dfedfc; }
 #gemini-settings-panel { display: none; }
-#gemini-settings-panel.show { display: grid; gap: 18px; }
+#gemini-settings-panel.show { display: grid; gap: 18px; min-width: 0; }
 .gemini-panel-open #gemini-workspace { display: none; }
 .gemini-setup-intro { display: grid; gap: 6px; }
 .gemini-setup-intro strong { font-size: 22px; line-height: 1.25; letter-spacing: -.6px; }
@@ -98,6 +98,7 @@
 .gemini-temperature-scale { color: var(--muted); font-size: 12px; }
 #gemini-temperature-input { width: 100%; accent-color: var(--blue); }
 .gemini-settings-footer { display: flex; gap: 8px; }
+.gemini-settings-footer span { min-width: 0; }
 #gemini-agent-mode-row { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; }
 .gemini-agent-mode-copy { display: flex; align-items: center; gap: 8px; }
 .gemini-beta-tool-copy { display: flex; gap: 8px; align-items: center; }
@@ -193,4 +194,258 @@
   .gemini-selection-help strong, .gemini-selection-help span { white-space: normal; }
   #gemini-capture-frame.has-capture { grid-template-columns: 1fr; }
   #gemini-popup #gemini-primary-mode + #gemini-explain-capture { justify-self: stretch; }
+}
+
+/* Light appearance presets: every theme keeps the panel airy while changing
+   its layered gradient, glass, glow, and surface treatment. */
+#gemini-popup {
+  --ink: #173b62;
+  --muted: #6483a4;
+  --blue: #6aa9dd;
+  --blue-hover: #4e91c9;
+  --button-ink: #14385d;
+  --line: #c9e4f5;
+  --theme-panel: #f2faff;
+  --theme-card: rgba(255, 255, 255, .76);
+  --theme-backdrop: linear-gradient(145deg, #effaff 0%, #d9f2ff 52%, #eef8ff 100%);
+  --theme-orb: radial-gradient(circle at 8% 5%, #ffffffd9 0 11%, transparent 36%), radial-gradient(circle at 94% 86%, #bcecff99 0 7%, transparent 30%);
+  --theme-pattern: radial-gradient(circle at 72% 24%, #ffffff91 0 1px, transparent 2px);
+  background: var(--theme-backdrop);
+  border-color: var(--line);
+  box-shadow: 0 20px 70px #3b83b33d, 0 3px 12px #3b83b31a;
+  isolation: isolate;
+}
+#gemini-popup::before,
+#gemini-popup::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+#gemini-popup::before {
+  background: var(--theme-orb);
+  filter: blur(18px);
+  opacity: .9;
+}
+#gemini-popup::after {
+  background-image: var(--theme-pattern);
+  background-size: 18px 18px;
+  opacity: .42;
+}
+#gemini-popup > * { position: relative; z-index: 1; }
+
+#gemini-popup[data-theme="sky-glass"] {
+  --theme-panel: #f2faff;
+  --theme-card: rgba(255, 255, 255, .72);
+  --theme-backdrop: linear-gradient(145deg, #effaff 0%, #d8f1ff 53%, #f0f8ff 100%);
+  --theme-orb: radial-gradient(circle at 7% 8%, #ffffffee 0 12%, transparent 38%), radial-gradient(circle at 91% 85%, #9de2ffab 0 8%, transparent 31%), radial-gradient(circle at 70% 28%, #d5f7ffb8 0 4%, transparent 26%);
+  --theme-pattern: radial-gradient(circle at 30% 42%, #ffffffa8 0 1px, transparent 2px);
+}
+#gemini-popup[data-theme="ice-prism"] {
+  --theme-panel: #f4fbff;
+  --theme-card: rgba(255, 255, 255, .78);
+  --theme-backdrop: linear-gradient(120deg, #f7fdff 0%, #dff2ff 38%, #edf4ff 68%, #e4fbff 100%);
+  --theme-orb: radial-gradient(circle at 92% 10%, #d8f6ffed 0 13%, transparent 38%), radial-gradient(circle at 9% 88%, #b9d7ffb8 0 8%, transparent 33%), conic-gradient(from 18deg at 44% 45%, #ffffff00, #b7f4ff55, #c6c2ff38, #ffffff00 64%);
+  --theme-pattern: repeating-linear-gradient(118deg, #ffffff38 0 2px, transparent 2px 17px);
+}
+#gemini-popup[data-theme="mint-aurora"] {
+  --ink: #1d4c55;
+  --muted: #638c91;
+  --blue: #72c5b0;
+  --blue-hover: #50a998;
+  --line: #c8eee3;
+  --theme-panel: #f2fffb;
+  --theme-card: rgba(255, 255, 255, .75);
+  --theme-backdrop: linear-gradient(150deg, #f2fffc 0%, #d8f7ed 46%, #effbff 100%);
+  --theme-orb: radial-gradient(circle at 10% 18%, #ffffffed 0 12%, transparent 37%), radial-gradient(circle at 91% 82%, #a9f1d4b8 0 9%, transparent 32%), radial-gradient(circle at 56% 4%, #d5ffffc4 0 5%, transparent 25%);
+  --theme-pattern: radial-gradient(circle at 72% 58%, #ffffffa8 0 1px, transparent 2px);
+}
+#gemini-popup[data-theme="pistachio-clay"] {
+  --ink: #3e5a45;
+  --muted: #779080;
+  --blue: #9bc99e;
+  --blue-hover: #7bae82;
+  --line: #d7eacc;
+  --theme-panel: #f7fff2;
+  --theme-card: rgba(255, 255, 255, .8);
+  --theme-backdrop: linear-gradient(140deg, #fafff4 0%, #e6f6d8 48%, #effff8 100%);
+  --theme-orb: radial-gradient(circle at 90% 14%, #fffde8e8 0 13%, transparent 37%), radial-gradient(circle at 8% 86%, #c8efc2b8 0 10%, transparent 34%), radial-gradient(circle at 55% 46%, #ffffff8a 0 4%, transparent 28%);
+  --theme-pattern: repeating-linear-gradient(26deg, #ffffff35 0 2px, transparent 2px 22px);
+}
+#gemini-popup[data-theme="peach-flow"] {
+  --ink: #68424b;
+  --muted: #a17b84;
+  --blue: #e4a48f;
+  --blue-hover: #c98676;
+  --line: #f1d5ca;
+  --theme-panel: #fff9f6;
+  --theme-card: rgba(255, 255, 255, .78);
+  --theme-backdrop: linear-gradient(145deg, #fff9f6 0%, #ffe6df 44%, #fff3dc 100%);
+  --theme-orb: radial-gradient(circle at 10% 10%, #fffef1ed 0 13%, transparent 37%), radial-gradient(circle at 92% 84%, #ffc7b5b8 0 10%, transparent 33%), radial-gradient(circle at 56% 28%, #ffe3c7b8 0 5%, transparent 25%);
+  --theme-pattern: radial-gradient(circle at 30% 62%, #ffffffb3 0 1px, transparent 2px);
+}
+#gemini-popup[data-theme="rose-sheen"] {
+  --ink: #63445d;
+  --muted: #9a7892;
+  --blue: #d59ec3;
+  --blue-hover: #b87da9;
+  --line: #efd6e8;
+  --theme-panel: #fff8fd;
+  --theme-card: rgba(255, 255, 255, .8);
+  --theme-backdrop: linear-gradient(132deg, #fff9fd 0%, #f8e5f4 43%, #e5f4ff 100%);
+  --theme-orb: radial-gradient(circle at 91% 8%, #ffe7f4e8 0 13%, transparent 38%), radial-gradient(circle at 9% 88%, #d7e8ffb8 0 9%, transparent 33%), conic-gradient(from 210deg at 46% 46%, #ffffff00, #ffd1eb45, #d5efff50, #ffffff00 62%);
+  --theme-pattern: repeating-linear-gradient(118deg, #ffffff35 0 2px, transparent 2px 20px);
+}
+
+#gemini-popup #gemini-popup-header,
+#gemini-popup #gemini-popup-content { background: transparent; border-color: var(--line); }
+#gemini-popup button,
+#gemini-popup select,
+#gemini-popup input,
+#gemini-popup textarea { border-color: var(--line); background: var(--theme-card); color: var(--ink); }
+#gemini-popup button:hover { background: #ffffffc9; border-color: var(--blue); }
+#gemini-popup select { box-shadow: 0 4px 16px #7aa9c31a; }
+#gemini-popup .gemini-brand-icon,
+#gemini-popup .gemini-header-action.active { background: #ffffffb3; color: var(--ink); }
+#gemini-popup .gemini-lens { background: #ffffffa8; color: var(--blue-hover); box-shadow: 8px 8px 0 #ffffff80; }
+#gemini-popup #gemini-primary-mode,
+#gemini-popup #gemini-popup-send,
+#gemini-popup .gemini-done-button,
+#gemini-popup .gemini-approve-button {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: var(--button-ink);
+  box-shadow: 0 8px 18px #6aa9dd29;
+}
+#gemini-popup #gemini-primary-mode:hover,
+#gemini-popup #gemini-popup-send:hover,
+#gemini-popup .gemini-done-button:hover,
+#gemini-popup .gemini-approve-button:hover { background: var(--blue-hover); border-color: var(--blue-hover); }
+#gemini-popup :is(.gemini-api-key-card, .gemini-get-key-guide, #gemini-popup-composer, #gemini-popup-response-area, #gemini-custom-question, #gemini-more-actions, #gemini-instructions-panel, .gemini-capture-behavior-choice) {
+  background: var(--theme-card);
+  border-color: var(--line);
+  box-shadow: 0 8px 24px #7aa9c314;
+}
+#gemini-popup .gemini-mode-note,
+#gemini-popup .gemini-get-key-guide { background: #ffffff91; border-color: var(--line); }
+#gemini-popup .gemini-capture-behavior-choice.selected { background: #ffffffb8; border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue), 0 8px 20px #7aa9c31a; }
+#gemini-popup .gemini-beta-tool-copy small { background: #ffffffa8; }
+#gemini-popup .gemini-switch { background: #ffffffb8; border-color: var(--line); }
+#gemini-popup .gemini-switch.active { background: var(--blue); }
+#gemini-popup .gemini-api-key-field { border-color: var(--line); background: #ffffff9c; }
+#gemini-popup .gemini-api-key-visibility { background: transparent; }
+#gemini-popup .gemini-field-hint { color: var(--muted); font-size: 11px; line-height: 1.4; }
+#gemini-popup .gemini-settings-footer { color: var(--muted); }
+#gemini-popup .gemini-settings-footer svg { color: var(--blue-hover); }
+
+/* The model list is intentionally native and compact so every model remains
+   easy to scan and select without a second modal or a hidden advanced path. */
+#gemini-popup #gemini-model-select { min-height: 42px; font-size: 13px; font-weight: 650; }
+#gemini-popup .gemini-theme-group { gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 18px; background: #ffffff55; }
+#gemini-popup .gemini-theme-heading { display: grid; gap: 2px; }
+#gemini-popup .gemini-theme-heading strong { font-size: 14px; }
+#gemini-popup .gemini-theme-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+#gemini-popup .gemini-theme-option {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; justify-content: stretch; gap: 8px;
+  min-width: 0; min-height: 58px; padding: 8px; border-radius: 14px; text-align: left; background: #ffffff75;
+}
+#gemini-popup .gemini-theme-option.selected { border-color: var(--blue); background: #ffffffc2; box-shadow: inset 0 0 0 1px var(--blue), 0 6px 16px #7aa9c31f; }
+#gemini-popup .gemini-theme-swatch { width: 32px; height: 32px; border-radius: 11px; border: 1px solid #ffffffd9; box-shadow: inset 0 0 0 1px #6d9dbb29, 0 3px 9px #6d9dbb26; }
+#gemini-popup .gemini-theme-copy { display: grid; gap: 2px; min-width: 0; }
+#gemini-popup .gemini-theme-copy strong { overflow: hidden; color: var(--ink); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+#gemini-popup .gemini-theme-copy small { overflow: hidden; color: var(--muted); font-size: 10px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+#gemini-popup .gemini-theme-option[data-theme="sky-glass"] .gemini-theme-swatch { background: linear-gradient(135deg, #effaff, #83d5ff 52%, #d5f2ff); }
+#gemini-popup .gemini-theme-option[data-theme="ice-prism"] .gemini-theme-swatch { background: linear-gradient(125deg, #f6fdff, #b5e8ff 42%, #d5d9ff 72%, #ecffff); }
+#gemini-popup .gemini-theme-option[data-theme="mint-aurora"] .gemini-theme-swatch { background: radial-gradient(circle at 70% 20%, #e6ffff, transparent 40%), linear-gradient(145deg, #f2fffc, #8de0c0 56%, #d4f6ff); }
+#gemini-popup .gemini-theme-option[data-theme="pistachio-clay"] .gemini-theme-swatch { background: linear-gradient(145deg, #fbfff3, #c2eaa9 58%, #edfff6); }
+#gemini-popup .gemini-theme-option[data-theme="peach-flow"] .gemini-theme-swatch { background: linear-gradient(145deg, #fffaf2, #ffc5b2 56%, #ffe6bd); }
+#gemini-popup .gemini-theme-option[data-theme="rose-sheen"] .gemini-theme-swatch { background: linear-gradient(135deg, #fff8fd, #efb9dc 48%, #cdeaff); }
+
+/* Review request: the artwork stays dominant while the panel header and its
+   close control keep the normal assistant one click away. */
+#gemini-popup-content.gemini-review-open #gemini-workspace { display: none; }
+#gemini-popup #gemini-review-prompt {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--theme-card);
+  box-shadow: 0 12px 30px #6c9fc326, inset 0 1px 0 #ffffffb8;
+}
+#gemini-popup #gemini-review-prompt[hidden] { display: none !important; }
+#gemini-popup .gemini-review-prompt-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; min-height: 28px; }
+#gemini-popup .gemini-review-dont-show {
+  min-height: 28px;
+  padding: 5px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 650;
+}
+#gemini-popup .gemini-review-dont-show:hover { background: #ffffff9e; color: var(--ink); }
+#gemini-popup .gemini-review-close {
+  width: 30px;
+  min-height: 30px;
+  padding: 6px;
+  border-radius: 10px;
+  background: #ffffff91;
+}
+#gemini-popup .gemini-review-close svg { width: 15px; height: 15px; }
+#gemini-popup #gemini-review-title {
+  margin: -2px 0 0;
+  color: var(--ink);
+  font-size: 27px;
+  line-height: 1.15;
+  text-align: center;
+  letter-spacing: -.8px;
+}
+#gemini-popup .gemini-review-lead,
+#gemini-popup .gemini-review-body,
+#gemini-popup .gemini-review-question { margin: 0; color: var(--ink); text-align: center; }
+#gemini-popup .gemini-review-lead { font-size: 16px; line-height: 1.4; }
+#gemini-popup .gemini-review-link { color: var(--blue-hover); font-weight: 750; text-underline-offset: 3px; }
+#gemini-popup .gemini-review-meme {
+  display: block;
+  width: min(100%, 310px);
+  height: auto;
+  max-height: 274px;
+  margin: 0 auto;
+  border: 1px solid #ffffffd4;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 10px 22px #527d9b24;
+  object-fit: contain;
+}
+#gemini-popup .gemini-review-body { max-width: 360px; margin-inline: auto; color: var(--muted); font-size: 13px; line-height: 1.45; }
+#gemini-popup .gemini-review-question { font-size: 15px; }
+#gemini-popup .gemini-review-deal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  min-height: 44px;
+  min-width: 132px;
+  padding: 10px 20px;
+  border: 1px solid var(--blue);
+  border-radius: 14px;
+  background: var(--blue);
+  box-shadow: 0 8px 18px #6aa9dd29;
+  color: var(--button-ink);
+  font-size: 17px;
+  font-weight: 750;
+  text-decoration: none;
+}
+#gemini-popup .gemini-review-deal:hover { border-color: var(--blue-hover); background: var(--blue-hover); }
+
+@media (max-width: 480px) {
+  #gemini-popup .gemini-theme-grid { grid-template-columns: 1fr; }
+  #gemini-popup #gemini-review-prompt { gap: 12px; padding: 12px; border-radius: 18px; }
+  #gemini-popup #gemini-review-title { font-size: 24px; }
+  #gemini-popup .gemini-review-lead { font-size: 15px; }
+  #gemini-popup .gemini-review-meme { width: min(100%, 270px); max-height: 232px; }
 }

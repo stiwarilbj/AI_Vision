@@ -191,7 +191,7 @@ test('release archive matches every allowlisted source byte and detects a stale 
   const result = checkArchive();
   assert.equal(result.status, 'passed');
   assert.equal(result.version, '2.8.2');
-  assert.equal(result.entries.length, 13);
+  assert.equal(result.entries.length, 14);
   assert.throws(() => checkArchive({
     readEntry: (archive, entry) => entry === 'src/background/service-worker.js' ? Buffer.from('stale fixture') : readArchiveEntry(archive, entry)
   }), /Release archive is stale for src\/background\/service-worker\.js/);

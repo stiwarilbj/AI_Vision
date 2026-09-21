@@ -80,7 +80,7 @@ async function installWorkerFixtures(worker) {
       const method = String(options.method || 'GET').toUpperCase();
       globalThis.__aiVisionTestFetchCalls.push({ url: String(url), method, body: options.body || null });
       if (method === 'GET') {
-        return new Response(JSON.stringify({ models: [{ name: 'models/gemini-3.5-flash', supportedGenerationMethods: ['generateContent'] }] }), { status: 200, headers: { 'content-type': 'application/json' } });
+        return new Response(JSON.stringify({ models: [{ name: 'models/gemini-3.5-flash-lite', supportedGenerationMethods: ['generateContent'] }] }), { status: 200, headers: { 'content-type': 'application/json' } });
       }
       let requestBody = {};
       try { requestBody = JSON.parse(options.body || '{}'); } catch (_) { /* keep the deterministic default */ }
@@ -93,7 +93,7 @@ async function installWorkerFixtures(worker) {
     return true;
   });
   await worker.evaluate(async () => {
-    await chrome.storage.local.set({ geminiApiKey: 'fixture-key', geminiModel: 'gemini-3.5-flash', geminiCaptureBehavior: 'manual' });
+    await chrome.storage.local.set({ geminiApiKey: 'fixture-key', geminiModel: 'gemini-3.5-flash-lite', geminiTheme: 'sky-glass', geminiCaptureBehavior: 'manual' });
   });
 }
 

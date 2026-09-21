@@ -52,7 +52,8 @@
     {
       "resources": [
         "src/content/assistant-panel.css",
-        "extension-assets/ai-vision-mascot.png"
+        "extension-assets/ai-vision-mascot.png",
+        "extension-assets/review-meme.png"
       ],
       "matches": [
         "http://*/*",

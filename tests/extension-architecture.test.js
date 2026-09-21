@@ -49,7 +49,11 @@ function createServiceWorkerHarness({
   ]).map((tab) => [tab.id, { ...tab }]));
   const localValues = {
     geminiApiKey: 'test-key',
-    geminiModel: 'gemini-3.5-flash',
+    geminiModel: 'gemini-3.5-flash-lite',
+    geminiTheme: 'sky-glass',
+    geminiReviewPromptLastShownAt: 0,
+    geminiReviewPromptDismissed: false,
+    geminiReviewPromptCompleted: false,
     geminiTemperature: 1,
     geminiMode: 'tab',
     geminiResponseStyle: 'balanced',
@@ -162,7 +166,10 @@ function createServiceWorkerHarness({
       return typeof next === 'function' ? next(url, options) : next;
     }
     if (String(url).endsWith('/models')) {
-      return responseForJson({ models: [{ name: 'models/gemini-3.5-flash', supportedGenerationMethods: ['generateContent'] }] });
+      return responseForJson({ models: [
+        { name: 'models/gemini-3.5-flash-lite', supportedGenerationMethods: ['generateContent'] },
+        { name: 'models/gemini-3.5-flash', supportedGenerationMethods: ['generateContent'] }
+      ] });
     }
     return responseForJson({ candidates: [{ content: { parts: [{ text: '{"action":"done","summary":"Task complete"}' }] } }] });
   }
@@ -371,17 +378,42 @@ test('settings return only masked key status and saving is explicit', async () =
   assert.equal(settings.hasApiKey, true);
   assert.equal(settings.apiKeyMasked, '••••-key');
   assert.equal(settings.geminiCaptureBehavior, 'manual');
+  assert.equal(settings.geminiModel, 'gemini-3.5-flash-lite');
+  assert.equal(settings.geminiTheme, 'sky-glass');
+  assert.equal(settings.geminiReviewPromptLastShownAt, 0);
+  assert.equal(settings.geminiReviewPromptDismissed, false);
+  assert.equal(settings.geminiReviewPromptCompleted, false);
   assert.equal(Object.prototype.hasOwnProperty.call(settings, 'geminiApiKey'), false);
   await harness.dispatch({ action: 'saveSettings', geminiCaptureBehavior: 'auto-explain' });
   assert.equal(harness.localValues.geminiCaptureBehavior, 'auto-explain');
   await harness.dispatch({ action: 'saveSettings', geminiResponseStyle: 'concise' });
   assert.equal(harness.localValues.geminiCaptureBehavior, 'auto-explain');
+  await harness.dispatch({ action: 'saveSettings', geminiTheme: 'mint-aurora' });
+  assert.equal(harness.localValues.geminiTheme, 'mint-aurora');
+  await harness.dispatch({ action: 'saveSettings', geminiTheme: 'not-a-real-theme' });
+  assert.equal(harness.localValues.geminiTheme, 'sky-glass');
   await harness.dispatch({ action: 'saveSettings', geminiCaptureBehavior: 'not-a-real-choice' });
   assert.equal(harness.localValues.geminiCaptureBehavior, 'manual');
   await harness.dispatch({ action: 'saveSettings', apiKey: 'AIza-new-key' });
   assert.equal(harness.localValues.geminiApiKey, 'AIza-new-key');
   await harness.dispatch({ action: 'saveSettings', clearApiKey: true });
   assert.equal(Object.prototype.hasOwnProperty.call(harness.localValues, 'geminiApiKey'), false);
+});
+
+test('review prompt state repeats by timestamp until completed or dismissed', async () => {
+  const harness = createServiceWorkerHarness();
+  const shownAt = 123456789;
+  await harness.dispatch({ action: 'saveReviewPromptState', status: 'shown', lastShownAt: shownAt });
+  assert.equal(harness.localValues.geminiReviewPromptLastShownAt, shownAt);
+  await harness.dispatch({ action: 'saveReviewPromptState', status: 'completed' });
+  assert.equal(harness.localValues.geminiReviewPromptCompleted, true);
+  await harness.dispatch({ action: 'saveReviewPromptState', status: 'dismissed' });
+  assert.equal(harness.localValues.geminiReviewPromptDismissed, true);
+  assert.equal(JSON.stringify(harness.exports.normalizeReviewPromptState({ geminiReviewPromptLastShownAt: 'invalid' })), JSON.stringify({
+    geminiReviewPromptLastShownAt: 0,
+    geminiReviewPromptDismissed: false,
+    geminiReviewPromptCompleted: false
+  }));
 });
 
 test('untrusted senders are rejected before privileged actions', async () => {
@@ -766,8 +798,10 @@ test('the bundled Google ADK runtime does not request loopback permission or a c
   assert.match(SERVICE_WORKER_CODE, /importScripts\?\.\('\s*adk-runtime\.js'/);
 });
 
-test('model discovery filters unsupported models and does not hard-code the panel list', async () => {
-  assert.doesNotMatch(PANEL_CODE, /const MODELS/);
+test('model discovery filters unsupported models while the panel keeps its complete selectable fallback list', async () => {
+  assert.match(PANEL_CODE, /gemini-3\.7-flash/);
+  assert.match(PANEL_CODE, /gemini-3\.5-flash-lite/);
+  assert.match(PANEL_CODE, /gemini-flash-lite-latest/);
   assert.match(SERVICE_WORKER_CODE, /supportedGenerationMethods/);
   assert.match(SERVICE_WORKER_CODE, /getAvailableModels/);
   const harness = createServiceWorkerHarness({ fetchResponses: [responseForJson({ models: [
