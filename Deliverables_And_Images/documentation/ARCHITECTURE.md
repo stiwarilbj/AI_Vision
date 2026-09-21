@@ -76,7 +76,7 @@ Agent Mode uses a context-aware planning cascade rather than one unconstrained b
 - **Recovery planner layer:** if the bundled planner is temporarily unavailable, a direct Gemini request uses the same contextual prompt and action schema.
 - **Deterministic safety layer:** the extension rechecks scope, live targets, safe URLs, sensitive fields, and approval requirements before Chrome receives an action.
 
-The prompt is rebuilt on every step so navigation, changed controls, failed actions, and the active tab update the planning context. The model cascade improves resilience without granting a model authority over the extension’s safety checks.
+The prompt is rebuilt on every step so navigation, changed controls, failed actions, and the active tab update the planning context. This forms a bounded prompt chain: one stage returns one action, the validated action result becomes the next stage’s input, and a fresh browser snapshot is collected before the next prompt. Ambiguous, multi-source, or previously failed stages use three independent structured candidates and select the most frequent evidence-supported action; simple stages stay single-pass for speed. The model cascade improves resilience without granting a model authority over the extension’s safety checks.
 
 Each profile also assigns a bounded role and expertise perspective, such as visual evidence analyst, research coordinator, or cautious interaction specialist. The planner performs private stepwise verification of the goal, evidence, action, and safety, but emits only the validated action object; hidden reasoning is not shown or stored.
 

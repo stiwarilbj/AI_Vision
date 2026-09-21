@@ -76,7 +76,7 @@ Agent Mode can be turned on or off directly below the mode selector and stays se
 
 Every Agent Mode task stops after no more than 12 steps.
 
-Agent Mode uses layered, context-aware planning: a task profile grounds each step in the selected mode and current page state, the bundled ADK planner proposes one structured action, and a direct Gemini recovery planner is available for transient runtime failures. The extension’s deterministic scope and approval checks remain authoritative.
+Agent Mode uses layered, context-aware planning: a task profile grounds each step in the selected mode and current page state, the bundled ADK planner proposes one structured action, and a direct Gemini recovery planner is available for transient runtime failures. Each step is a bounded prompt-chain stage whose validated action result feeds the next prompt alongside a fresh browser snapshot. Ambiguous, multi-source, or failed stages compare three independent structured candidates and select the most frequent evidence-supported action; simple stages remain single-pass for speed. The extension’s deterministic scope and approval checks remain authoritative.
 
 Task profiles provide bounded role-based expertise for visual analysis, research comparison, navigation, reading, or careful interaction. The planner verifies each action privately and returns only the structured action result.
 

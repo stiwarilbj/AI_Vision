@@ -545,6 +545,10 @@ test('prompt injection text is delimited and explicitly treated as data', () => 
   assert.match(prompt, /ROLE-BASED PERSONA/);
   assert.match(prompt, /focused information analyst/);
   assert.match(prompt, /never hidden reasoning/);
+  assert.match(prompt, /PROMPT CHAIN/);
+  assert.match(prompt, /<PREVIOUS_STAGE_OUTPUT>/);
+  assert.match(prompt, /SELF-CONSISTENCY/);
+  assert.match(prompt, /most frequent or evidence-supported safe action/);
   assert.equal(prompt.includes('</UNTRUSTED_BROWSER_DATA>\n</UNTRUSTED_BROWSER_DATA>'), false);
 });
 
@@ -569,6 +573,8 @@ test('agent prompts share explicit stopping rules and compact context is lossles
   assert.match(exports.AGENT_SYSTEM_INSTRUCTION, /Do not repeat an action/);
   assert.match(exports.AGENT_SYSTEM_INSTRUCTION, /private stepwise reasoning/);
   assert.match(exports.AGENT_SYSTEM_INSTRUCTION, /never include chain-of-thought/);
+  assert.match(exports.AGENT_SYSTEM_INSTRUCTION, /compare independent candidate actions/);
+  assert.match(exports.AGENT_SYSTEM_INSTRUCTION, /prompt chaining/);
   assert.match(exports.ANSWER_SYSTEM_INSTRUCTION, /untrusted data/);
   assert.match(exports.buildAnswerPrompt('Explain this chart', 'concise'), /<USER_QUESTION>/);
   assert.match(exports.buildAnswerPrompt('Explain this chart', 'concise'), /distinguish facts from uncertainty/);
@@ -594,6 +600,53 @@ test('contextual agent profiles adapt the planning layer without exposing page t
   assert.match(summary, /multi-tab research/);
   assert.match(summary, /prior failure signal: yes/);
   assert.doesNotMatch(summary, /secret page text/);
+});
+
+test('self-consistency uses adaptive candidate counts and selects the strongest consensus', () => {
+  const { exports } = createServiceWorkerHarness();
+  const context = {
+    tabs: [{
+      active: true,
+      restricted: false,
+      interactives: [{ index: 0, signature: 'button||Continue' }]
+    }]
+  };
+  assert.equal(exports.getAgentSelfConsistencyCandidateCount({ task: 'Click Continue', mode: 'tab' }, context, []), 1);
+  assert.equal(exports.getAgentSelfConsistencyCandidateCount({ task: 'Compare these tabs', mode: 'all-tabs' }, { ...context, tabs: [...context.tabs, { restricted: false, interactives: [] }] }, []), 3);
+  assert.equal(exports.getAgentSelfConsistencyCandidateCount({ task: 'Click Continue', mode: 'tab', selfConsistency: true }, context, []), 3);
+  assert.equal(exports.getAgentSelfConsistencyCandidateCount({ task: 'Click Continue', mode: 'tab', selfConsistency: false }, context, ['click: failed']), 1);
+
+  const candidates = [
+    { provider: 'google-adk', decision: { action: 'click', tabIndex: 0, elementIndex: 0, targetSignature: 'button||Continue' } },
+    { provider: 'google-adk', decision: { action: 'click', tabIndex: 0, elementIndex: 0, targetSignature: 'button||Continue', reason: 'same target' } },
+    { provider: 'google-adk', decision: { action: 'wait' } }
+  ];
+  const selected = exports.selectSelfConsistentDecision(candidates, { mode: 'tab' }, context, []);
+  assert.equal(selected.decision.action, 'click');
+  assert.equal(selected.votes, 2);
+  assert.equal(selected.candidateCount, 3);
+  assert.equal(selected.reliabilityScore > 0, true);
+});
+
+test('ambiguous Agent Mode stages compare candidates before executing the selected action', async () => {
+  const harness = createServiceWorkerHarness({
+    adkResponses: [
+      { action: 'scroll', tabIndex: 0, direction: 'down' },
+      { action: 'scroll', tabIndex: 0, direction: 'down' },
+      { action: 'wait' },
+      { action: 'done', summary: 'Comparison complete' }
+    ]
+  });
+  const response = await harness.dispatch({ action: 'startAgentTask', task: 'Compare the open tabs', mode: 'all-tabs' });
+  const complete = await waitForMessage(harness.calls, 'agentModeComplete');
+  assert.equal(complete.summary, 'Comparison complete');
+  assert.equal(harness.calls.adkCalls.length >= 4, true);
+  assert.equal(harness.calls.adkCalls.slice(0, 3).every(({ prompt }) => /INDEPENDENT SELF-CONSISTENCY CANDIDATE/.test(prompt)), true);
+  const progress = harness.calls.sentMessages.find(({ message }) => message.action === 'agentModeProgress' && message.selfConsistency === true);
+  assert.equal(progress.message.selfConsistencyCandidates, 3);
+  assert.equal(progress.message.selfConsistencyVotes, 2);
+  assert.match(progress.message.message, /prompt chain stage 1/);
+  assert.match(response.taskId, /^agent-/);
 });
 
 test('context serialization enforces a total budget and safe URL form', () => {
