@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AI Vision assistant panel harness</title>
-  <link rel="stylesheet" href="../../src/content/assistant-panel.css?v=2.8-release">
+  <link rel="stylesheet" href="../../src/content/assistant-panel.css?v=2.10-release">
   <style>
     body { min-height: 100vh; margin: 0; padding: 48px; box-sizing: border-box; font: 16px/1.5 system-ui, sans-serif; background: #f4f9ff; color: #16324f; }
     main { max-width: 680px; }
@@ -24,7 +24,9 @@
     window.__aiVisionTestSettings = {
       geminiModel: 'gemini-3.5-flash-lite',
       geminiTheme: 'sky-glass',
-      geminiReviewPromptLastShownAt: 0,
+      geminiReviewPromptLastShownAt: ['due', 'inactive'].includes(scenario)
+        ? Date.now() - (scenario === 'inactive' ? 5 : 2) * 24 * 60 * 60 * 1000
+        : 0,
       geminiReviewPromptDismissed: false,
       geminiReviewPromptCompleted: false,
       geminiTemperature: 1,
@@ -148,7 +150,7 @@
       }
     };
   </script>
-  <script src="../../src/content/capture-utils.js?v=2.8-release"></script>
-  <script src="../../src/content/assistant-panel.js?v=2.8-release"></script>
+  <script src="../../src/content/capture-utils.js?v=2.10-release"></script>
+  <script src="../../src/content/assistant-panel.js?v=2.10-release"></script>
 </body>
 </html>

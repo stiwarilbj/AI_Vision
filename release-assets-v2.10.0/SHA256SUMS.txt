@@ -1,0 +1,5 @@
+651952643b5a33c608e0a373121e8f724dbcca6bb2c8596fc3b577682beb8ea4  store-screenshots/01-screenshot-insight.png
+de7305f67846bcc1436a0530f4f2f33d414af827c04f22e6fb364e2294c5565a  store-screenshots/02-ocr-text.png
+75096b08dac29f6c91916eed676caaf4d283d568e0994c770e85eba26f28afe2  store-screenshots/03-webpage-summary.png
+df918920508520d20a0fa59ca11b169ad3439adbc1fbba58d97c042efe277c30  store-screenshots/04-tab-comparison.png
+a50362cf119dab78cc336fd2544d818df7c438662e51125c63df4dc2ebe56897  store-screenshots/05-browser-tasks.png

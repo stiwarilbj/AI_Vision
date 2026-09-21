@@ -5,7 +5,7 @@ const path = require('node:path');
 const zlib = require('node:zlib');
 
 const projectRoot = path.resolve(__dirname, '..');
-const artworkRoot = path.join(projectRoot, 'release-assets-v2.8.2');
+const artworkRoot = path.join(projectRoot, 'release-assets-v2.10.0');
 const specs = [
   { file: 'store-screenshots/01-screenshot-insight.png', width: 1280, height: 800 },
   { file: 'store-screenshots/02-ocr-text.png', width: 1280, height: 800 },
@@ -79,7 +79,7 @@ function inspectPng(buffer, relativePath) {
 function checkSourceProvenance({ root = artworkRoot, manifestPath = path.join(root, 'source-manifest.json') } = {}) {
   assert.ok(fs.existsSync(manifestPath), `Missing reviewed source manifest: ${manifestPath}`);
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  assert.equal(manifest.version, '2.8.2', 'Source manifest must target v2.8.2.');
+  assert.equal(manifest.version, '2.10.0', 'Source manifest must target v2.10.0.');
   assert.ok(Array.isArray(manifest.files) && manifest.files.length > 0, 'Source manifest must list reviewed files.');
   for (const item of manifest.files) {
     const file = path.join(root, item.file);

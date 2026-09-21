@@ -74,6 +74,20 @@
         try { delete globalThis.__aiVisionLaunchOptions; } catch (_) { globalThis.__aiVisionLaunchOptions = null; }
         return value && typeof value === 'object' ? value : {};
     })();
+    const SESSION_STATE_KEY = '__aiVisionConversationSession';
+    const sessionState = (() => {
+        const existing = globalThis[SESSION_STATE_KEY];
+        if (existing && typeof existing === 'object' && Array.isArray(existing.answerHistory)) return existing;
+        const fresh = {
+            answerHistory: [],
+            selectedAnswerId: null,
+            nextAnswerSequence: 0,
+            capturedImageData: null,
+            selectedMode: DEFAULT_MODE
+        };
+        globalThis[SESSION_STATE_KEY] = fresh;
+        return fresh;
+    })();
     let selectedModel = DEFAULT_MODEL;
     let selectedTheme = DEFAULT_THEME;
     let responseTemperature = 1;
@@ -352,7 +366,9 @@
 
         let overlay, selectionRectDiv, startX, startY, isSelecting = false;
         let capturePopupDisplay = null;
-        let capturedImageData = null;
+        let capturedImageData = typeof sessionState.capturedImageData === 'string'
+            ? sessionState.capturedImageData
+            : null;
         let popup, queryInput, responseArea, sendButton;
         let activeAgentTaskId = null;
         let activeRequestId = null;
@@ -360,20 +376,83 @@
         let lastRequestHistory = [];
         let lastSubmittedQuery = '';
         let lastResponseText = '';
+        let answerHistory = Array.isArray(sessionState.answerHistory)
+            ? sessionState.answerHistory.filter((entry) => entry && typeof entry.id === 'string' && typeof entry.query === 'string' && typeof entry.answer === 'string')
+            : [];
+        let selectedAnswerId = typeof sessionState.selectedAnswerId === 'string'
+            ? sessionState.selectedAnswerId
+            : null;
+        let answerSequence = Number.isSafeInteger(sessionState.nextAnswerSequence)
+            ? sessionState.nextAnswerSequence
+            : 0;
+        let retrySourceId = null;
+        let historyBar = null;
+        let historySummary = null;
+        let historyList = null;
         let panelGeneration = 0;
         let captureAttemptGeneration = 0;
         let pendingAutomaticExplanation = false;
         let refreshModeControls = () => {};
+        let refreshConversationDisplay = () => {};
+        let showReviewPromptAfterSuccess = () => {};
+
+        function syncSessionState() {
+            sessionState.answerHistory = answerHistory;
+            sessionState.selectedAnswerId = selectedAnswerId;
+            sessionState.nextAnswerSequence = answerSequence;
+            sessionState.capturedImageData = capturedImageData;
+            sessionState.selectedMode = selectedMode;
+        }
+
+        function getAnswerEntry(entryId) {
+            return answerHistory.find((entry) => entry.id === entryId) || null;
+        }
+
+        function getAnswerAncestry(entryId) {
+            const ancestry = [];
+            const visited = new Set();
+            let current = getAnswerEntry(entryId);
+            while (current && !visited.has(current.id)) {
+                visited.add(current.id);
+                ancestry.unshift(current);
+                current = current.parentId ? getAnswerEntry(current.parentId) : null;
+            }
+            return ancestry;
+        }
+
+        function buildConversationHistory(parentId) {
+            return getAnswerAncestry(parentId).flatMap((entry) => [
+                { role: 'user', text: entry.query },
+                { role: 'model', text: entry.answer }
+            ]);
+        }
+
+        function createAnswerEntry(query, answer, parentId, mode) {
+            answerSequence += 1;
+            return {
+                id: `answer-${Date.now()}-${answerSequence}`,
+                parentId: getAnswerEntry(parentId) ? parentId : null,
+                query,
+                answer,
+                mode,
+                createdAt: Date.now()
+            };
+        }
 
         function resetConversation() {
+            answerHistory = [];
+            selectedAnswerId = null;
+            retrySourceId = null;
             conversationHistory = [];
             lastRequestHistory = [];
             lastSubmittedQuery = '';
             lastResponseText = '';
+            syncSessionState();
             if (responseArea) {
                 responseArea.replaceChildren();
                 responseArea.classList.remove('error', 'automation');
             }
+            refreshConversationDisplay();
         }
 
         // Capture selection
@@ -490,6 +569,7 @@
                         if (croppedDataUrl) {
                             resetConversation();
                             capturedImageData = croppedDataUrl.split(',')[1];
+                            syncSessionState();
                             pendingAutomaticExplanation = captureBehavior === 'auto-explain'
                                 && selectedMode === 'capture'
                                 && !isAgentModeEnabled
@@ -712,8 +792,10 @@
                 modeSelect.appendChild(option);
             });
             modeSelect.onchange = () => {
+                const nextMode = modeSelect.value;
                 resetConversation();
-                selectedMode = modeSelect.value;
+                selectedMode = nextMode;
+                syncSessionState();
                 renderSelectedMode();
             };
             modeRail.appendChild(modeSelect);
@@ -755,7 +837,7 @@
             const reviewPrompt = document.createElement('section');
             reviewPrompt.id = 'gemini-review-prompt';
             reviewPrompt.setAttribute('aria-labelledby', 'gemini-review-title');
-            let reviewPromptOpen = shouldShowReviewPrompt();
+            let reviewPromptOpen = false;
 
             const reviewPromptActions = document.createElement('div');
             reviewPromptActions.className = 'gemini-review-prompt-actions';
@@ -819,6 +901,12 @@
                 content.classList.toggle('gemini-review-open', isOpen);
             }
 
+            showReviewPromptAfterSuccess = async () => {
+                if (!popup || !shouldShowReviewPrompt()) return;
+                await saveReviewPromptState('shown').catch(() => {});
+                if (popup) setReviewPromptOpen(true);
+            };
+
             function focusWorkspace() {
                 const focusTarget = composer.hidden ? primaryModeButton : queryInput;
                 focusTarget?.focus();
@@ -837,6 +925,9 @@
             };
             const completeReviewPrompt = () => {
                 void saveReviewPromptState('completed').catch(() => {});
+                setReviewPromptOpen(false);
+                renderSelectedMode();
+                focusWorkspace();
             };
             reviewLeadLink.addEventListener('click', completeReviewPrompt);
             reviewDealLink.addEventListener('click', completeReviewPrompt);
@@ -844,7 +935,6 @@
             content.appendChild(reviewPrompt);
             content.appendChild(workspace);
             setReviewPromptOpen(reviewPromptOpen);
-            if (reviewPromptOpen) void saveReviewPromptState('shown').catch(() => {});
             
             const instructionsPanel = document.createElement('details');
             instructionsPanel.id = 'gemini-instructions-panel';
@@ -1447,6 +1537,17 @@
                     return button;
                 }));
             }
+
+            historyBar = document.createElement('details');
+            historyBar.id = 'gemini-answer-history';
+            historyBar.hidden = true;
+            historySummary = document.createElement('summary');
+            historySummary.id = 'gemini-answer-history-summary';
+            historySummary.setAttribute('aria-label', 'Browse answer history');
+            historyList = document.createElement('div');
+            historyList.className = 'gemini-answer-history-list';
+            historyBar.append(historySummary, historyList);
+            workspace.appendChild(historyBar);
             
             responseArea = document.createElement('div');
             responseArea.id = 'gemini-popup-response-area';
@@ -1494,8 +1595,9 @@
 
             function renderSelectedMode() {
                 const isCaptureActive = selectedMode === 'capture';
-                const readyToAsk = !isCaptureActive || Boolean(capturedImageData) || textQuestionEnabled || isAgentModeEnabled;
-                const hasAnswer = Boolean(responseArea?.querySelector('.gemini-answer-text'));
+                const hasAnswer = Boolean(responseArea?.querySelector('.gemini-answer-text'))
+                    || Boolean(selectedAnswerId && getAnswerEntry(selectedAnswerId));
+                const readyToAsk = !isCaptureActive || Boolean(capturedImageData) || textQuestionEnabled || isAgentModeEnabled || hasAnswer;
                 workspace.classList.toggle('ready', readyToAsk);
                 workspaceTitle.textContent = isCaptureActive
                     ? capturedImageData ? hasAnswer ? 'Your answer' : 'Ready when you are.' : readyToAsk ? 'What’s on your mind?' : 'Pick what you want to understand.'
@@ -1530,13 +1632,13 @@
                             ? 'Using the area you captured'
                             : 'Select an area for image-aware answers';
                 } else if (selectedMode === 'tab') {
-                    queryInput.placeholder = 'Ask about this webpage';
+                    queryInput.placeholder = hasAnswer ? 'Ask a follow-up' : 'Ask about this webpage';
                     agentModeDescription.textContent = 'Can read, navigate, and act in This page';
                     textOnlyMessage.textContent = isAgentModeEnabled
                         ? 'Browser tasks can read and act only in This page'
                         : 'Reads supported content from this page';
                 } else {
-                    queryInput.placeholder = 'Ask across your Chrome tabs';
+                    queryInput.placeholder = hasAnswer ? 'Ask a follow-up' : 'Ask across your Chrome tabs';
                     agentModeDescription.textContent = 'Can search, switch tabs, and act in this window';
                     textOnlyMessage.textContent = isAgentModeEnabled
                         ? 'Browser tasks can search and act only in this Chrome window'
@@ -1554,6 +1656,19 @@
                     sendButton.innerHTML = `${iconSvg(icon)}<span>${isAgentModeEnabled ? label : 'Ask Gemini'}</span>`;
                 }
             }
+            refreshConversationDisplay = () => {
+                const selectedEntry = getAnswerEntry(selectedAnswerId);
+                if (selectedEntry) {
+                    renderAnswerEntry(selectedEntry, { scroll: false });
+                } else {
+                    renderHistorySelector();
+                    if (responseArea) {
+                        responseArea.replaceChildren();
+                        responseArea.classList.remove('error', 'automation');
+                    }
+                    refreshModeControls();
+                }
+            };
             refreshModeControls = renderSelectedMode;
             
             popup.appendChild(header);
@@ -1578,6 +1693,11 @@
             });
             enablePanelDragging(popup, header);
             renderSelectedMode();
+            if (getAnswerEntry(selectedAnswerId)) {
+                renderAnswerEntry(getAnswerEntry(selectedAnswerId), { scroll: false });
+            } else {
+                renderHistorySelector();
+            }
             const launchQuery = typeof launchOptions.query === 'string' ? launchOptions.query.trim() : '';
             const shouldAutoSubmit = launchOptions.autoSubmit === true && launchQuery !== '';
             launchOptions.query = '';
@@ -1628,7 +1748,7 @@
             if (uiHost) uiHost.remove();
             uiHost = null;
             uiShadowRoot = null;
-            capturedImageData = null;
+            syncSessionState();
         }
 
         // Request state and progress rendering
@@ -1665,54 +1785,111 @@
             if (!copied) throw new Error('Copy is unavailable in this page.');
         }
 
-        function renderAnswer(text) {
-            lastResponseText = text;
-            responseArea.textContent = '';
+        function renderHistorySelector() {
+            if (!historyBar || !historySummary || !historyList) return;
+            const selectedIndex = answerHistory.findIndex((entry) => entry.id === selectedAnswerId);
+            if (!answerHistory.length || selectedIndex < 0) {
+                historyBar.hidden = true;
+                historyList.replaceChildren();
+                return;
+            }
+            historyBar.hidden = false;
+            historySummary.textContent = `Answer history · ${answerHistory.length} ${answerHistory.length === 1 ? 'answer' : 'answers'} · Viewing ${selectedIndex + 1}`;
+            historyList.replaceChildren(...answerHistory.map((entry, index) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'gemini-answer-history-item';
+                button.dataset.answerId = entry.id;
+                button.setAttribute('aria-pressed', String(entry.id === selectedAnswerId));
+                button.title = entry.query;
+                if (entry.id === selectedAnswerId) button.classList.add('selected');
+                const number = document.createElement('span');
+                number.className = 'gemini-answer-history-number';
+                number.textContent = String(index + 1);
+                const preview = document.createElement('span');
+                preview.className = 'gemini-answer-history-preview';
+                preview.textContent = entry.query.replace(/\s+/g, ' ').trim().slice(0, 96);
+                button.append(number, preview);
+                button.onclick = () => {
+                    selectedAnswerId = entry.id;
+                    retrySourceId = null;
+                    conversationHistory = buildConversationHistory(selectedAnswerId).slice(-6).map((message) => ({ ...message }));
+                    queryInput.value = '';
+                    syncSessionState();
+                    renderAnswerEntry(entry, { scroll: false });
+                    historyBar.open = false;
+                    queryInput.focus();
+                };
+                return button;
+            }));
+        }
+
+        function renderAnswerEntry(entry, { scroll = true } = {}) {
+            if (!responseArea || !entry) return;
+            selectedAnswerId = entry.id;
+            lastResponseText = entry.answer;
+            lastSubmittedQuery = entry.query;
+            responseArea.replaceChildren();
             responseArea.classList.remove('error', 'automation');
 
-            const answerText = document.createElement('div');
-            answerText.className = 'gemini-answer-text';
-            answerText.textContent = text;
             const questionEcho = document.createElement('p');
             questionEcho.className = 'gemini-question-echo';
-            questionEcho.textContent = lastSubmittedQuery;
-            responseArea.appendChild(questionEcho);
-            responseArea.parentNode.insertBefore(responseArea, uiQuery('#gemini-popup-composer'));
+            questionEcho.textContent = entry.query;
+            const answerText = document.createElement('div');
+            answerText.className = 'gemini-answer-text';
+            answerText.textContent = entry.answer;
+            responseArea.append(questionEcho, answerText);
 
             const actions = document.createElement('div');
             actions.className = 'gemini-answer-actions';
-            const actionDefinitions = [
-                ['copy', 'Copy answer', async (button) => {
-                    const original = button.innerHTML;
-                    try {
-                        await copyAnswerText(lastResponseText);
-                        button.textContent = 'Copied';
-                        setTimeout(() => { if (button.isConnected) button.innerHTML = original; }, 1200);
-                    } catch (error) {
-                        showUserError(error.message || 'The answer could not be copied.');
+            const copyButton = document.createElement('button');
+            copyButton.type = 'button';
+            copyButton.innerHTML = `${iconSvg('copy')}<span>Copy answer</span>`;
+            copyButton.onclick = async () => {
+                const original = copyButton.innerHTML;
+                try {
+                    await copyAnswerText(entry.answer);
+                    copyButton.textContent = 'Copied';
+                    setTimeout(() => { if (copyButton.isConnected) copyButton.innerHTML = original; }, 1200);
+                } catch (error) {
+                    showUserError(error.message || 'The answer could not be copied.');
+                }
+            };
+            const retryButton = document.createElement('button');
+            retryButton.type = 'button';
+            retryButton.innerHTML = `${iconSvg('retry')}<span>Retry</span>`;
+            retryButton.onclick = () => {
+                retrySourceId = entry.id;
+                queryInput.value = entry.query;
+                textQuestionEnabled = true;
+                refreshModeControls();
+                // Let the previous request's completion finish restoring the composer
+                // before starting the retry, so a late disabled-state update cannot
+                // swallow the retry action.
+                const startRetryWhenIdle = () => {
+                    if (!popup) return;
+                    if (sendButton?.disabled) {
+                        setTimeout(startRetryWhenIdle, 0);
+                        return;
                     }
-                }],
-                ['retry', 'Retry', () => {
-                    conversationHistory = lastRequestHistory.map((message) => ({ ...message }));
-                    queryInput.value = lastSubmittedQuery;
                     void submitUserRequest();
-                }]
-            ];
-            actionDefinitions.forEach(([icon, label, handler]) => {
-                const button = document.createElement('button');
-                button.type = 'button';
-                button.innerHTML = `${iconSvg(icon)}<span>${label}</span>`;
-                button.onclick = () => handler(button);
-                actions.appendChild(button);
-            });
-
-            responseArea.appendChild(answerText);
+                };
+                setTimeout(startRetryWhenIdle, 0);
+            };
+            actions.append(copyButton, retryButton);
             responseArea.appendChild(actions);
+
+            if (historyBar?.parentNode) historyBar.parentNode.insertBefore(historyBar, uiQuery('#gemini-popup-composer'));
+            if (responseArea.parentNode) responseArea.parentNode.insertBefore(responseArea, uiQuery('#gemini-popup-composer'));
             textQuestionEnabled = true;
+            syncSessionState();
+            renderHistorySelector();
             refreshModeControls();
-            requestAnimationFrame(() => {
-                if (responseArea?.isConnected) responseArea.scrollIntoView({ block: 'nearest' });
-            });
+            if (scroll) {
+                requestAnimationFrame(() => {
+                    if (responseArea?.isConnected) responseArea.scrollIntoView({ block: 'nearest' });
+                });
+            }
         }
 
         function renderAgentProgress(step = 1, message = 'Understanding your task', planner = {}) {
@@ -1881,7 +2058,12 @@
 
             const requestMode = selectedMode;
             const shouldRunAgent = isAgentModeEnabled;
-            const requestHistory = conversationHistory.slice(-6).map((message) => ({ ...message }));
+            const retrySource = retrySourceId ? getAnswerEntry(retrySourceId) : null;
+            const parentAnswerId = retrySource ? retrySource.parentId : selectedAnswerId;
+            const requestHistory = buildConversationHistory(parentAnswerId)
+                .slice(-6)
+                .map((message) => ({ ...message }));
+            retrySourceId = null;
             let agentStarted = false;
             let requestId = null;
             const requestGeneration = panelGeneration;
@@ -1949,7 +2131,8 @@
                     conversationHistory: requestHistory
                 });
                 if (requestGeneration !== panelGeneration || !popup || activeRequestId !== requestId) return;
-                const responseText = stripLightMarkdown(result?.text || 'Gemini returned an empty response.');
+                const responseText = stripLightMarkdown(typeof result?.text === 'string' ? result.text : '');
+                if (!responseText.trim()) throw new Error('Gemini returned an empty response.');
                 lastRequestHistory = requestHistory;
                 lastSubmittedQuery = queryText;
                 conversationHistory = [
@@ -1957,8 +2140,13 @@
                     { role: 'user', text: queryText },
                     { role: 'model', text: responseText }
                 ].slice(-6);
+                const answerEntry = createAnswerEntry(queryText, responseText, parentAnswerId, requestMode);
+                answerHistory.push(answerEntry);
+                selectedAnswerId = answerEntry.id;
+                syncSessionState();
                 queryInput.value = '';
-                renderAnswer(responseText);
+                renderAnswerEntry(answerEntry);
+                void showReviewPromptAfterSuccess();
             } catch (error) {
                 if (popup && responseArea && (!requestId || activeRequestId === requestId)) renderRequestError(error, queryText);
             } finally {
@@ -2171,9 +2359,23 @@
                 const launchState = globalThis.aiVisionCaptureUtils?.resolvePanelLaunchState
                     ? globalThis.aiVisionCaptureUtils.resolvePanelLaunchState(launchOptions)
                     : { mode: DEFAULT_MODE, agentMode: false };
-                selectedMode = launchState.mode;
+                const launchQuery = typeof launchOptions.query === 'string' ? launchOptions.query.trim() : '';
+                const shouldAutoSubmit = launchOptions.autoSubmit === true && launchQuery !== '';
+                const startsNewConversation = launchState.mode !== DEFAULT_MODE || Boolean(launchQuery) || shouldAutoSubmit;
+                if (startsNewConversation) {
+                    capturedImageData = null;
+                    resetConversation();
+                }
+                const restoreSession = answerHistory.length > 0
+                    && launchOptions.mode === DEFAULT_MODE
+                    && !launchQuery
+                    && !shouldAutoSubmit;
+                selectedMode = restoreSession && typeof sessionState.selectedMode === 'string'
+                    ? sessionState.selectedMode
+                    : launchState.mode;
                 isAgentModeEnabled = launchState.agentMode;
                 if (launchOptions.autoSubmit === true) isAgentModeEnabled = false;
+                syncSessionState();
                 openSelectedMode();
             } catch (error) {
                 console.error('Error during initialization:', error);

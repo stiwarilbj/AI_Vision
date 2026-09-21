@@ -5,7 +5,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const { checkSourceProvenance } = require('./check-store-assets.cjs');
 
 const projectRoot = path.resolve(__dirname, '..');
-const artworkRoot = path.join(projectRoot, 'release-assets-v2.8.2');
+const artworkRoot = path.join(projectRoot, 'release-assets-v2.10.0');
 const htmlPath = path.join(artworkRoot, 'store-artwork.html');
 const outputs = [
   ['?slide=1', 'store-screenshots/01-screenshot-insight.png', 1280, 800],
@@ -14,7 +14,7 @@ const outputs = [
   ['?slide=4', 'store-screenshots/04-tab-comparison.png', 1280, 800],
   ['?slide=5', 'store-screenshots/05-browser-tasks.png', 1280, 800]
 ];
-const outputRoot = path.join(projectRoot, 'outputs', 'ai-vision-v282');
+const outputRoot = path.join(projectRoot, 'outputs', 'ai-vision-v210');
 const outputStoreRoot = path.join(outputRoot, 'store-assets');
 
 async function render() {
@@ -41,6 +41,6 @@ async function render() {
   }
 }
 
-if (require.main === module) render().then(() => console.log(`Rendered ${outputs.length} AI Vision v2.8.2 artwork files and a contact sheet.`)).catch(error => { console.error(error); process.exitCode = 1; });
+if (require.main === module) render().then(() => console.log(`Rendered ${outputs.length} AI Vision v2.10.0 artwork files and a contact sheet.`)).catch(error => { console.error(error); process.exitCode = 1; });
 
 module.exports = { outputs, render };

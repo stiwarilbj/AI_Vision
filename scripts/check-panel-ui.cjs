@@ -80,21 +80,9 @@ const server = http.createServer((req, res) => {
   }
 
   try {
-    await open('', false);
+    await open('');
     assert.equal(await page.evaluate(() => document.querySelector('#ai-vision-host').shadowRoot), null);
-    assert.equal(await visible('#gemini-review-prompt'), true);
-    assert.match(await text('#gemini-review-prompt'), /Hey, real quick/);
-    assert.match(await text('#gemini-review-prompt'), /When you get a second, will you leave me a review\?/);
-    assert.match(await text('#gemini-review-prompt'), /Otherwise, next time you hear that sweet ding, you're gonna think about me/);
-    assert.match(await text('#gemini-review-prompt'), /Deal\?/);
-    assert.equal(await (await get('.gemini-review-meme')).getAttribute('src').then(value => value.includes('extension-assets/review-meme.png')), true);
-    assert.match(await (await get('.gemini-review-link')).getAttribute('href'), /\/reviews$/);
-    await page.waitForFunction(() => window.__aiVisionTestSettings.geminiReviewPromptLastShownAt > 0);
-    await screenshot('review-prompt');
-    await click('#gemini-review-close');
-    assert.equal(await visible('#gemini-review-prompt'), false);
-    assert.equal(await page.evaluate(() => window.__aiVisionTestSettings.geminiReviewPromptDismissed), false);
-    assert.equal(await page.evaluate(() => window.__aiVisionTestSettings.geminiReviewPromptCompleted), false);
+    assert.equal(await visible('#gemini-review-prompt'), false, 'review waits for a successful answer');
     assert.equal(await visible('#gemini-popup-composer'), false);
     assert.equal(await visible('#gemini-more-actions'), false);
     assert.equal(await visible('#gemini-agent-mode-row'), false);
@@ -119,6 +107,20 @@ const server = http.createServer((req, res) => {
     await waitText('The selected chart rises from 40 to 100 pages.');
     assert.equal((await requests()).length, 1);
     assert.ok((await requests())[0].captureImageData);
+    await page.waitForFunction(() => window.__panelTestRoot.querySelector('#gemini-review-prompt')?.getClientRects().length > 0);
+    assert.match(await text('#gemini-review-prompt'), /Hey, real quick/);
+    assert.match(await text('#gemini-review-prompt'), /When you get a second, will you leave me a review\?/);
+    assert.match(await text('#gemini-review-prompt'), /Otherwise, next time you hear that sweet ding, you're gonna think about me/);
+    assert.match(await text('#gemini-review-prompt'), /Deal\?/);
+    assert.equal(await (await get('.gemini-review-meme')).getAttribute('src').then(value => value.includes('extension-assets/review-meme.png')), true);
+    assert.match(await (await get('.gemini-review-link')).getAttribute('href'), /\/reviews$/);
+    await page.waitForFunction(() => window.__aiVisionTestSettings.geminiReviewPromptLastShownAt > 0);
+    await screenshot('review-prompt');
+    await click('#gemini-review-close');
+    assert.equal(await visible('#gemini-review-prompt'), false);
+    assert.equal(await visible('#gemini-popup-response-area'), true, 'closing the review restores the answer');
+    assert.equal(await page.evaluate(() => window.__aiVisionTestSettings.geminiReviewPromptDismissed), false);
+    assert.equal(await page.evaluate(() => window.__aiVisionTestSettings.geminiReviewPromptCompleted), false);
     assert.equal(await visible('#gemini-popup-composer'), true);
     assert.equal(await visible('#gemini-custom-question'), false);
     assert.match(await (await get('#gemini-popup-query-input')).getAttribute('placeholder'), /follow-up/i);
@@ -127,17 +129,60 @@ const server = http.createServer((req, res) => {
     await page.keyboard.press('Enter');
     await waitText('Local follow-up response with 1 earlier turn.');
     assert.equal((await requests()).at(-1).conversationHistory.length, 2);
+    assert.equal(await visible('#gemini-review-prompt'), false, 'a recent reminder does not repeat');
+    assert.equal(await page.evaluate(() => window.__panelTestRoot.querySelectorAll('.gemini-answer-history-item').length), 2);
+    await click('#gemini-answer-history > summary');
+    assert.equal(await visible('.gemini-answer-history-list'), true);
+    await click('.gemini-answer-history-item:nth-child(1)');
+    await waitText('The selected chart rises from 40 to 100 pages.');
+    assert.match(await text('#gemini-answer-history-summary'), /Viewing 1/);
+    await (await get('#gemini-popup-query-input')).fill('Compare with the earlier answer');
+    await page.keyboard.press('Enter');
+    await waitText('Local follow-up response with 1 earlier turn.');
+    assert.equal((await requests()).at(-1).conversationHistory.length, 2, 'an older answer branches from its own ancestry');
+    await page.waitForFunction(() => window.__panelTestRoot.querySelectorAll('.gemini-answer-history-item').length === 3);
+    await page.waitForFunction(() => !window.__panelTestRoot.querySelector('#gemini-popup-send')?.disabled);
+    assert.equal(await page.evaluate(() => window.__panelTestRoot.querySelectorAll('.gemini-answer-history-item').length), 3);
+    await click('#gemini-answer-history > summary');
+    await click('.gemini-answer-history-item:nth-child(2)');
     await click('.gemini-answer-actions button:nth-child(2)');
     await waitText('Local follow-up response with 1 earlier turn.');
-    assert.equal((await requests()).at(-1).conversationHistory.length, 2);
+    assert.equal((await requests()).at(-1).conversationHistory.length, 2, 'retry uses the selected answer ancestry');
+    await page.waitForFunction(() => window.__panelTestRoot.querySelectorAll('.gemini-answer-history-item').length === 4);
+    await page.waitForFunction(() => !window.__panelTestRoot.querySelector('#gemini-popup-send')?.disabled);
+    assert.equal(await page.evaluate(() => window.__panelTestRoot.querySelectorAll('.gemini-answer-history-item').length), 4);
 
+    await click('#gemini-popup-close');
+    await page.waitForFunction(() => !document.querySelector('#ai-vision-host'));
+    await page.evaluate(() => {
+      const script = document.createElement('script');
+      script.src = `../../src/content/assistant-panel.js?v=2.10-reopen-${Date.now()}`;
+      document.body.appendChild(script);
+    });
+    await page.waitForFunction(() => window.__panelTestRoot?.querySelector('#gemini-popup'));
+    assert.equal(await page.evaluate(() => window.__panelTestRoot.querySelectorAll('.gemini-answer-history-item').length), 4, 'history survives panel close and reopen');
+    assert.match(await text('#gemini-popup-response-area'), /Local follow-up response/);
     await click('#gemini-primary-mode');
     await page.keyboard.press('Escape');
     assert.match(await text('#gemini-popup-response-area'), /Local follow-up response/);
     assert.equal(await visible('.gemini-capture-preview img'), true);
+
+    await click('#gemini-popup-close');
+    await page.waitForFunction(() => !document.querySelector('#ai-vision-host'));
+    await page.evaluate(() => {
+      window.__aiVisionLaunchOptions = { mode: 'tab' };
+      const script = document.createElement('script');
+      script.src = `../../src/content/assistant-panel.js?v=2.10-context-${Date.now()}`;
+      document.body.appendChild(script);
+    });
+    await page.waitForFunction(() => window.__panelTestRoot?.querySelector('#gemini-popup'));
+    assert.equal(await (await get('#gemini-mode-select')).inputValue(), 'tab', 'a new context selects its requested mode');
+    assert.equal(await page.evaluate(() => window.__panelTestRoot.querySelectorAll('.gemini-answer-history-item').length), 0, 'a new context clears the previous history');
+    await choose('capture');
+
     await captureArea();
     assert.equal(await visible('#gemini-popup-response-area'), false, 'a new capture starts a new conversation');
-    assert.equal((await requests()).length, 3, 'a fresh manual capture waits for Explain');
+    assert.equal((await requests()).length, 4, 'a fresh manual capture waits for Explain');
 
     await choose('tab');
     assert.equal(await visible('#gemini-capture-frame'), false);
@@ -183,10 +228,28 @@ const server = http.createServer((req, res) => {
     await click('.gemini-done-button');
 
     await open('review-dismiss', false);
-    assert.equal(await visible('#gemini-review-prompt'), true);
+    assert.equal(await visible('#gemini-review-prompt'), false);
+    await captureArea();
+    await click('#gemini-explain-capture');
+    await waitText('The selected chart rises from 40 to 100 pages.');
+    await page.waitForFunction(() => window.__panelTestRoot.querySelector('#gemini-review-prompt')?.getClientRects().length > 0);
     await click('#gemini-review-dont-show');
     await page.waitForFunction(() => window.__aiVisionTestSettings.geminiReviewPromptDismissed === true);
     assert.equal(await visible('#gemini-review-prompt'), false);
+    await (await get('#gemini-popup-query-input')).fill('A later question');
+    await page.keyboard.press('Enter');
+    await waitText('Local follow-up response with 1 earlier turn.');
+    assert.equal(await visible('#gemini-review-prompt'), false, 'dismissal persists after another successful answer');
+
+    for (const scenario of ['due', 'inactive']) {
+      await open(scenario, false);
+      assert.equal(await visible('#gemini-review-prompt'), false, `${scenario} reminder waits for an answer`);
+      await captureArea();
+      await click('#gemini-explain-capture');
+      await waitText('The selected chart rises from 40 to 100 pages.');
+      await page.waitForFunction(() => window.__panelTestRoot.querySelector('#gemini-review-prompt')?.getClientRects().length > 0);
+      await click('#gemini-review-close');
+    }
 
     for (const width of [390, 768, 1024, 1440]) {
       await page.setViewportSize({ width, height: width === 390 ? 640 : 768 });
@@ -252,6 +315,7 @@ const server = http.createServer((req, res) => {
     await captureArea();
     await waitText('The selected chart rises from 40 to 100 pages.');
     assert.equal((await requests()).length, 1, 'automatic mode sends exactly once');
+    if (await visible('#gemini-review-prompt')) await click('#gemini-review-close');
     await captureArea();
     await waitText('The selected chart rises from 40 to 100 pages.');
     assert.equal((await requests()).length, 2, 'a successful retake explains exactly once');

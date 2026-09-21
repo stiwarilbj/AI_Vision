@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const projectRoot = path.resolve(__dirname, '..');
-const defaultArchive = path.join(projectRoot, 'dist', 'ai-vision-extension-v2.8.2.zip');
+const defaultArchive = path.join(projectRoot, 'dist', 'ai-vision-extension-v2.10.0.zip');
 const defaultAlias = path.join(projectRoot, 'AI_Vision_Extension_Package.zip');
 const defaultAllowlist = path.join(__dirname, 'package-allowlist.json');
 

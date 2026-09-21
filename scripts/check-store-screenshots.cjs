@@ -7,7 +7,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const { checkSourceProvenance, checkStoreAssets } = require('./check-store-assets.cjs');
 
 const projectRoot = path.resolve(__dirname, '..');
-const artworkRoot = path.join(projectRoot, 'release-assets-v2.8.2');
+const artworkRoot = path.join(projectRoot, 'release-assets-v2.10.0');
 const screenshotRoot = path.join(artworkRoot, 'store-screenshots');
 const artworkPath = path.join(artworkRoot, 'store-artwork.html');
 const names = [

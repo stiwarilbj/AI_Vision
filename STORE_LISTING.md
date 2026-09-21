@@ -1,8 +1,8 @@
-# Chrome Web Store copy – version 2.8.2 package (public listing currently v2.5)
+# Chrome Web Store copy – version 2.10.0 package (public listing currently v2.5)
 
 Official active listing (public v2.5): https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk
 
-Prepared v2.8.2 capture set: `outputs/ai-vision-v282/store-assets/`. These five 1280×800 captures show the extension’s screenshot, OCR, webpage summary, multi-tab research, and Browser task approval workflows.
+Prepared v2.10.0 capture set: `outputs/ai-vision-v210/store-assets/`. These five 1280×800 captures show the extension’s screenshot, OCR, webpage summary, multi-tab research, and Browser task approval workflows.
 
 ## Title from package
 
@@ -20,14 +20,16 @@ Workflow & Planning
 
 Turn what you see on screen into instant answers, extracted text, and actionable research with Google Gemini AI.
 
-AI Vision (v2.8.2) is an all-in-one multimodal AI screenshot assistant, image OCR text grabber, webpage summarizer, and multi-tab research copilot for Google Chrome. Powered directly by Google Gemini models using your own personal Google AI Studio API key, AI Vision lets you analyze visual content, extract unselectable text, summarize long-form articles, and synthesize information across multiple open tabs in real time.
+AI Vision (v2.10.0) is an all-in-one multimodal AI screenshot assistant, image OCR text grabber, webpage summarizer, and multi-tab research copilot for Google Chrome. Powered directly by Google Gemini models using your own personal Google AI Studio API key, AI Vision lets you analyze visual content, extract unselectable text, summarize long-form articles, and synthesize information across multiple open tabs in real time.
 
 No monthly subscriptions, no third-party data tracking, and no copy-pasting between browser windows. Just snap, ask, and get intelligent answers.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🌟 WHAT'S NEW IN VERSION 2.8.2
+🌟 WHAT'S NEW IN VERSION 2.10.0
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Enhanced Gemini 2.0 & 1.5 multimodal vision reasoning for charts, diagrams, and code snippets.
+• Browseable answer history keeps successful questions and answers available for review.
+• Unlimited follow-up questions can branch from earlier answers, with retry and copy controls.
+• Light-blue review reminders appear only after successful answers and respect a 48-hour cadence.
 • Accelerated Image-to-Text OCR: higher accuracy on small, blurry, rotated, or low-contrast text.
 • Smarter Multi-Tab Research: compare up to 20 open tabs simultaneously for faster synthesis.
 • Refined Agent Mode (Beta): safer, human-in-the-loop autonomous browser workflows with explicit step approval.

@@ -151,7 +151,7 @@ function writeReport(report) {
   let freshContext;
   let debugPage;
   try {
-    assert.equal(manifest.version, '2.8.2', 'the smoke test targets the v2.8.2 manifest');
+    assert.equal(manifest.version, '2.10.0', 'the smoke test targets the v2.10.0 manifest');
     assert.equal(manifest.manifest_version, 3, 'the release uses Manifest V3');
     assert.ok(manifest.permissions.includes('storage'), 'storage permission is declared');
     assert.ok(manifest.permissions.includes('activeTab'), 'activeTab permission is declared');
@@ -226,6 +226,9 @@ function writeReport(report) {
     await panel.locator('.gemini-capture-preview img').waitFor({ state: 'visible', timeout: 15000 });
     assert.equal(await panel.locator('#gemini-explain-capture').isVisible(), true, 'the real panel offers Explain screenshot after capture');
     await panel.locator('#gemini-explain-capture').click();
+    await panel.locator('.gemini-answer-text').waitFor({ state: 'attached', timeout: 15000 });
+    await panel.locator('#gemini-review-prompt').waitFor({ state: 'visible', timeout: 15000 });
+    await panel.locator('#gemini-review-close').click();
     await panel.locator('.gemini-answer-text').waitFor({ state: 'visible', timeout: 15000 });
     assert.match(await panel.locator('.gemini-answer-text').textContent(), /Fixture answer/);
     await panel.locator('#gemini-popup-query-input').fill('What should I ask next?');
@@ -301,7 +304,7 @@ function writeReport(report) {
 
     report.status = 'passed';
     report.checks = [
-      'Manifest V3 and v2.8.2 metadata',
+      'Manifest V3 and v2.10.0 metadata',
       'service worker startup and bundled ADK runtime',
       'extension-page messaging and default settings',
       'isolated storage persistence and fresh-profile reset',

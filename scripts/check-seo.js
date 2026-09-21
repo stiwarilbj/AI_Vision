@@ -160,7 +160,7 @@ function checkPage(relativePath, expectedCanonical, requiredTypes) {
     assert(website?.url === expectedCanonical, `${relativePath} WebSite URL must match canonical`);
     assert(application?.url === expectedCanonical, `${relativePath} SoftwareApplication URL must match canonical`);
     assert(application?.softwareVersion === '2.5', `${relativePath} SoftwareApplication must reflect the public Store version 2.5`);
-    assert(String(application?.releaseNotes || '').includes('v2.8'), `${relativePath} SoftwareApplication release notes must identify the v2.8 preview`);
+    assert(String(application?.releaseNotes || '').includes('v2.10'), `${relativePath} SoftwareApplication release notes must identify the v2.10 preview`);
     const appImage = localPathFor(application?.image || '', relativePath);
     assert(appImage && fs.existsSync(appImage.file), `${relativePath} SoftwareApplication image is missing`);
   }

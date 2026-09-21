@@ -1,5 +1,5 @@
 // Compare panel screenshots produced by check-panel-ui.cjs with the reviewed
-// v2.8 captures. The comparison runs in Chromium so PNG decoding needs no new
+// Reviewed captures. The comparison runs in Chromium so PNG decoding needs no new
 // native dependency and the baseline files remain ordinary repository assets.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');

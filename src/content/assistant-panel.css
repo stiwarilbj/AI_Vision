@@ -69,6 +69,61 @@
 #gemini-popup-response-area:empty { display: none; }
 .gemini-answer-text { line-height: 1.65; }
 .gemini-answer-actions { margin-top: 16px; padding-top: 12px; border-top: 1px solid #e1edf8; }
+#gemini-popup #gemini-answer-history {
+  display: block;
+  min-width: 0;
+  margin: 0 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--theme-card);
+  overflow: hidden;
+}
+#gemini-popup #gemini-answer-history[hidden] { display: none !important; }
+#gemini-popup #gemini-answer-history > summary {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 36px;
+  padding: 8px 11px;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  list-style: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#gemini-popup #gemini-answer-history > summary::-webkit-details-marker { display: none; }
+#gemini-popup #gemini-answer-history > summary::after { content: '+'; margin-left: auto; padding-left: 10px; color: var(--blue); font-size: 17px; }
+#gemini-popup #gemini-answer-history[open] > summary::after { content: '−'; }
+.gemini-answer-history-list {
+  display: grid;
+  gap: 5px;
+  max-height: 148px;
+  padding: 0 7px 7px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#gemini-popup .gemini-answer-history-item {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 34px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+  font-size: 11px;
+}
+#gemini-popup .gemini-answer-history-item:hover,
+#gemini-popup .gemini-answer-history-item.selected { border-color: var(--line); background: #ffffffb8; color: var(--ink); }
+.gemini-answer-history-number { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 7px; background: #dceeff; color: var(--blue-hover); font-size: 10px; font-weight: 750; }
+.gemini-answer-history-preview { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gemini-mode-note { padding: 10px 12px; border: 1px solid #91b8dc; border-radius: 10px; font-size: 12px; color: var(--ink); background: #dfedfc; }
 #gemini-settings-panel { display: none; }
 #gemini-settings-panel.show { display: grid; gap: 18px; min-width: 0; }
@@ -366,14 +421,19 @@
    close control keep the normal assistant one click away. */
 #gemini-popup-content.gemini-review-open #gemini-workspace { display: none; }
 #gemini-popup #gemini-review-prompt {
+  --review-ink: #173b62;
+  --review-muted: #5d7d9e;
+  --review-line: #b9daf3;
+  --review-blue: #79b8e8;
+  --review-blue-hover: #5da1d7;
   display: grid;
   align-content: start;
   gap: 14px;
   min-width: 0;
   padding: 16px 16px 18px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--review-line);
   border-radius: 22px;
-  background: var(--theme-card);
+  background: #eef8ff;
   box-shadow: 0 12px 30px #6c9fc326, inset 0 1px 0 #ffffffb8;
 }
 #gemini-popup #gemini-review-prompt[hidden] { display: none !important; }
@@ -383,11 +443,11 @@
   padding: 5px 8px;
   border: 0;
   background: transparent;
-  color: var(--muted);
+  color: var(--review-muted);
   font-size: 10px;
   font-weight: 650;
 }
-#gemini-popup .gemini-review-dont-show:hover { background: #ffffff9e; color: var(--ink); }
+#gemini-popup .gemini-review-dont-show:hover { background: #ffffff9e; color: var(--review-ink); }
 #gemini-popup .gemini-review-close {
   width: 30px;
   min-height: 30px;
@@ -398,7 +458,7 @@
 #gemini-popup .gemini-review-close svg { width: 15px; height: 15px; }
 #gemini-popup #gemini-review-title {
   margin: -2px 0 0;
-  color: var(--ink);
+  color: var(--review-ink);
   font-size: 27px;
   line-height: 1.15;
   text-align: center;
@@ -406,9 +466,9 @@
 }
 #gemini-popup .gemini-review-lead,
 #gemini-popup .gemini-review-body,
-#gemini-popup .gemini-review-question { margin: 0; color: var(--ink); text-align: center; }
+#gemini-popup .gemini-review-question { margin: 0; color: var(--review-ink); text-align: center; }
 #gemini-popup .gemini-review-lead { font-size: 16px; line-height: 1.4; }
-#gemini-popup .gemini-review-link { color: var(--blue-hover); font-weight: 750; text-underline-offset: 3px; }
+#gemini-popup .gemini-review-link { color: #3177b5; font-weight: 750; text-underline-offset: 3px; }
 #gemini-popup .gemini-review-meme {
   display: block;
   width: min(100%, 310px);
@@ -421,7 +481,7 @@
   box-shadow: 0 10px 22px #527d9b24;
   object-fit: contain;
 }
-#gemini-popup .gemini-review-body { max-width: 360px; margin-inline: auto; color: var(--muted); font-size: 13px; line-height: 1.45; }
+#gemini-popup .gemini-review-body { max-width: 360px; margin-inline: auto; color: var(--review-muted); font-size: 13px; line-height: 1.45; }
 #gemini-popup .gemini-review-question { font-size: 15px; }
 #gemini-popup .gemini-review-deal {
   display: inline-flex;
@@ -431,16 +491,16 @@
   min-height: 44px;
   min-width: 132px;
   padding: 10px 20px;
-  border: 1px solid var(--blue);
+  border: 1px solid var(--review-blue);
   border-radius: 14px;
-  background: var(--blue);
+  background: var(--review-blue);
   box-shadow: 0 8px 18px #6aa9dd29;
-  color: var(--button-ink);
+  color: var(--review-ink);
   font-size: 17px;
   font-weight: 750;
   text-decoration: none;
 }
-#gemini-popup .gemini-review-deal:hover { border-color: var(--blue-hover); background: var(--blue-hover); }
+#gemini-popup .gemini-review-deal:hover { border-color: var(--review-blue-hover); background: var(--review-blue-hover); }
 
 @media (max-width: 480px) {
   #gemini-popup .gemini-theme-grid { grid-template-columns: 1fr; }

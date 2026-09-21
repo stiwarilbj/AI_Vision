@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Vision store artwork</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; min-height: 100%; }
+    body { overflow: hidden; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .artboard { position: relative; width: 1280px; height: 800px; overflow: hidden; isolation: isolate; background-color: #06152b; }
+    .backdrop { position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; }
+    .artboard::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg, #06152b20, transparent 42%, #06152b18); }
+    .brand { position: absolute; z-index: 8; top: 36px; left: 54px; display: inline-flex; align-items: center; gap: 10px; color: #f5fbff; font-size: 17px; font-weight: 800; letter-spacing: -.45px; border-radius: 18px; }
+    .mark { position: relative; width: 32px; height: 32px; border: 2px solid currentColor; border-radius: 11px; box-shadow: 0 0 18px #70e8ff73; }
+    .mark::before { content: ""; position: absolute; inset: 7px; border: 2px solid currentColor; border-radius: 50%; }
+    .mark::after { content: ""; position: absolute; top: 4px; right: 5px; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .copy { position: absolute; z-index: 6; border-radius: 18px; }
+    h1 { margin: 0; font-size: 70px; line-height: .92; letter-spacing: -5px; font-weight: 900; }
+    .subline { margin: 20px 0 0; max-width: 390px; font-size: 20px; line-height: 1.25; font-weight: 650; letter-spacing: -.45px; border-radius: 18px; }
+    .ui-wrap { position: absolute; z-index: 7; padding: 10px; border-radius: 30px; background: #e9f7ffb8; border: 1px solid #ffffffd9; box-shadow: 0 28px 64px #061a3e55, 0 0 0 7px #8be8ff24; }
+    .ui-wrap img { display: block; width: 100%; height: auto; border-radius: 22px; }
+    .glass { position: absolute; z-index: 3; border: 1px solid #ffffff73; background: #ffffff18; box-shadow: inset 0 0 35px #ffffff1e; backdrop-filter: blur(3px); }
+    .glow-dot { position: absolute; z-index: 4; width: 13px; height: 13px; border-radius: 50%; background: #77efff; box-shadow: 0 0 0 8px #77efff21, 0 0 28px #77efff; }
+
+    .slide-1 .backdrop { background-image: url("source/backgrounds/01-screenshot-insight.png"); }
+    .slide-1::after { background: linear-gradient(90deg, #020e2e35, transparent 48%, #03092710); }
+    .slide-1 .brand { color: #f8fdff; }
+    .slide-1 .copy { left: 76px; top: 276px; width: 340px; color: #f9fdff; }
+    .slide-1 .copy h1 { text-shadow: 0 8px 25px #020a2d80; }
+    .slide-1 .subline { color: #c6ecff; }
+    .slide-1 .ui-wrap { left: 454px; top: 42px; width: 398px; transform: rotate(1.4deg); }
+    .slide-1 .glass { left: 392px; top: 194px; width: 485px; height: 315px; border-radius: 42px; transform: rotate(-7deg); }
+    .slide-1 .glass::before { content: ""; position: absolute; inset: 30px; border: 2px solid #6deaff; border-radius: 27px; box-shadow: 0 0 22px #6deaff9c, inset 0 0 22px #6deaff1f; }
+    .slide-1 .glow-dot { left: 427px; top: 214px; }
+    .slide-1 .orbit-note { position: absolute; z-index: 6; right: 90px; bottom: 60px; width: 210px; height: 72px; border-top: 1px solid #a9f4ff7d; border-bottom: 1px solid #a9f4ff7d; transform: rotate(-7deg); border-radius: 30px; }
+
+    .slide-2 .backdrop { background-image: url("source/backgrounds/02-ocr-glass.png"); }
+    .slide-2::after { background: linear-gradient(90deg, #effaff05, #d7f4ff12 48%, #084c9a20); }
+    .slide-2 .brand { left: auto; right: 58px; color: #123967; }
+    .slide-2 .mark { box-shadow: 0 0 18px #49a9ed55; }
+    .slide-2 .copy { right: 73px; top: 80px; width: 520px; color: #0b3767; }
+    .slide-2 h1 { font-size: 67px; }
+    .slide-2 .subline { color: #315f88; }
+    .slide-2 .ui-wrap { left: 63px; top: 136px; width: 358px; background: #dff3ffc7; box-shadow: 0 30px 60px #16477742, 0 0 0 8px #ffffff65; transform: rotate(-1.5deg); }
+    .slide-2 .glass { right: 79px; top: 365px; width: 470px; height: 255px; border-radius: 34px; transform: rotate(-8deg); background: #ffffff55; }
+    .slide-2 .glass::before { content: ""; position: absolute; inset: 29px; border: 1px solid #367fc57e; border-radius: 20px; background: repeating-linear-gradient(0deg, transparent 0 28px, #2c82c329 29px 30px); }
+    .slide-2 .glass::after { content: ""; position: absolute; left: 50px; right: 52px; top: 92px; height: 4px; background: #3a9ce4; border-radius: 99px; box-shadow: 0 0 18px #3a9ce4; }
+    .slide-2 .scan-beam { position: absolute; z-index: 4; right: 283px; top: 283px; width: 180px; height: 2px; background: #4bc3ff; box-shadow: 0 0 18px #4bc3ff; transform: rotate(-50deg); border-radius: 99px; }
+
+    .slide-3 .backdrop { background-image: url("source/backgrounds/03-webpage-flow.png"); }
+    .slide-3::after { background: linear-gradient(180deg, #e5f7ff1c 0%, transparent 38%, #043f9840 100%); }
+    .slide-3 .brand { color: #093b74; }
+    .slide-3 .mark { box-shadow: 0 0 18px #55c8ff54; }
+    .slide-3 .copy { left: 67px; top: 64px; width: 760px; color: #07366a; }
+    .slide-3 h1 { font-size: 67px; }
+    .slide-3 .subline { color: #2e628f; max-width: 360px; }
+    .slide-3 .article-stack { position: absolute; z-index: 4; left: 84px; top: 350px; width: 570px; height: 300px; transform: rotate(-4deg); }
+    .slide-3 .sheet { position: absolute; width: 440px; height: 240px; padding: 38px 44px; border-radius: 27px; background: #f5fcffeb; border: 1px solid #ffffff; box-shadow: 0 24px 46px #0754a633; }
+    .slide-3 .sheet:nth-child(1) { left: 0; top: 40px; transform: rotate(-5deg); opacity: .56; }
+    .slide-3 .sheet:nth-child(2) { left: 60px; top: 15px; transform: rotate(2deg); opacity: .8; }
+    .slide-3 .sheet:nth-child(3) { left: 121px; top: 0; transform: rotate(7deg); }
+    .slide-3 .sheet::before { content: ""; display: block; width: 180px; height: 14px; border-radius: 99px; background: #256fb9; box-shadow: 0 43px 0 #8bc9ef, 0 74px 0 #b7ddf5, 0 105px 0 #c6e6f8; }
+    .slide-3 .flow-line { position: absolute; z-index: 5; left: 578px; top: 432px; width: 280px; height: 175px; overflow: visible; }
+    .slide-3 .ui-wrap { right: 73px; top: 165px; width: 335px; transform: rotate(3deg); background: #e9f8ffc7; }
+    .slide-3 .glow-dot { left: 737px; top: 463px; background: #c4f6ff; box-shadow: 0 0 0 8px #c4f6ff30, 0 0 26px #8ce5ff; }
+
+    .slide-4 .backdrop { background-image: url("source/backgrounds/04-tab-geometry.png"); }
+    .slide-4::after { background: linear-gradient(135deg, #062b8733 0%, transparent 47%, #eaf6ff18 100%); }
+    .slide-4 .brand { color: #f8fdff; }
+    .slide-4 .copy { left: 69px; top: 527px; width: 440px; color: #fff; }
+    .slide-4 h1 { font-size: 67px; text-shadow: 0 8px 25px #07318a66; }
+    .slide-4 .subline { color: #d8ecff; }
+    .slide-4 .tab-grid { position: absolute; z-index: 4; left: 80px; top: 145px; width: 545px; height: 290px; }
+    .slide-4 .tab-tile { position: absolute; width: 245px; height: 155px; padding: 20px; overflow: hidden; border: 1px solid #ffffffa8; border-radius: 25px; background: #dff3ffbd; box-shadow: 0 22px 45px #05328a35; }
+    .slide-4 .tab-tile:nth-child(1) { left: 0; top: 48px; transform: rotate(-10deg); }
+    .slide-4 .tab-tile:nth-child(2) { left: 151px; top: 4px; background: #f0f5ffc9; transform: rotate(1deg); }
+    .slide-4 .tab-tile:nth-child(3) { left: 300px; top: 50px; background: #b9eaffcf; transform: rotate(10deg); }
+    .slide-4 .tab-tile::before { content: ""; display: block; height: 9px; width: 86px; margin-bottom: 24px; border-radius: 99px; background: #216bc2; box-shadow: 0 33px 0 #76b6e8, 0 66px 0 #a4d2f0; }
+    .slide-4 .tab-tile::after { content: ""; position: absolute; inset: 14px; border: 1px solid #4f93d25e; border-radius: 16px; }
+    .slide-4 .ui-wrap { right: 76px; top: 123px; width: 353px; transform: rotate(2.5deg); background: #eaf7ffc7; box-shadow: 0 32px 65px #06318361, 0 0 0 8px #9ff0ff35; }
+    .slide-4 .glass { left: 38px; bottom: 56px; width: 455px; height: 110px; border-radius: 28px; transform: rotate(-4deg); background: #ffffff22; }
+
+    .slide-5 .backdrop { background-image: url("source/backgrounds/05-task-grid.png"); }
+    .slide-5::after { background: linear-gradient(90deg, #020c2454 0%, transparent 56%, #020b2434 100%); }
+    .slide-5 .brand { color: #eefaff; }
+    .slide-5 .copy { left: 69px; top: 99px; width: 520px; color: #f7fcff; }
+    .slide-5 h1 { font-size: 68px; }
+    .slide-5 .subline { color: #bfeaff; }
+    .slide-5 .ui-wrap { left: 82px; top: 290px; width: 390px; background: #eaf7ffc7; box-shadow: 0 30px 65px #020d285e, 0 0 0 8px #70e9ff2d; transform: rotate(-1deg); }
+    .slide-5 .route { position: absolute; z-index: 4; right: 86px; top: 145px; width: 425px; height: 520px; overflow: visible; border-radius: 24px; }
+    .slide-5 .route path { fill: none; stroke: #63eaff; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1 15; filter: drop-shadow(0 0 8px #63eaff); }
+    .slide-5 .route circle { fill: #b3f8ff; stroke: #1b86d7; stroke-width: 5; filter: drop-shadow(0 0 11px #63eaff); }
+    .slide-5 .task-orbit { position: absolute; z-index: 5; right: 126px; top: 203px; width: 225px; height: 310px; border: 1px solid #5ddffb7a; border-radius: 120px 120px 30px 30px; transform: rotate(12deg); background: #0a3d7b2b; box-shadow: inset 0 0 30px #4edcfb19; }
+    .slide-5 .task-orbit::before, .slide-5 .task-orbit::after { content: ""; position: absolute; left: 42px; right: 42px; height: 12px; border-radius: 99px; background: #8cefff46; box-shadow: 0 49px 0 #8cefff32, 0 98px 0 #8cefff24; }
+    .slide-5 .task-orbit::before { top: 68px; }
+    .slide-5 .task-orbit::after { top: 192px; width: 86px; left: 70px; right: auto; background: #63eaff8c; box-shadow: none; }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  </style>
+</head>
+<body>
+  <main id="art" class="artboard" aria-label="AI Vision Chrome extension store screenshot"></main>
+  <script>
+    const slide = new URLSearchParams(location.search).get('slide') || '1';
+    const brand = '<div class="brand"><span class="mark" aria-hidden="true"></span><span>AI Vision</span></div>';
+    const capture = (file, extra = '') => `<div class="ui-wrap ${extra}"><img src="source/ui-captures/${file}" alt="AI Vision extension interface"></div>`;
+    const slides = {
+      '1': `<section class="slide-1 artboard"><div class="backdrop"></div>${brand}<div class="copy"><h1>See it<br>Understand it</h1><p class="subline">Ask what the pixels mean</p></div><div class="glass"></div><div class="glow-dot"></div><div class="orbit-note"></div>${capture('01-screenshot-answer.png')}</section>`,
+      '2': `<section class="slide-2 artboard"><div class="backdrop"></div>${brand}<div class="copy"><h1>Images into<br>editable text</h1><p class="subline">Turn locked pixels into useful words</p></div><div class="glass"></div><div class="scan-beam"></div>${capture('02-ocr-text.png')}</section>`,
+      '3': `<section class="slide-3 artboard"><div class="backdrop"></div>${brand}<div class="copy"><h1>Long page<br>Short answer</h1><p class="subline">Scan a page and keep the signal</p></div><div class="article-stack"><div class="sheet"></div><div class="sheet"></div><div class="sheet"></div></div><svg class="flow-line" viewBox="0 0 280 175" aria-hidden="true"><path d="M5 142 C80 142 83 28 170 44 S225 150 275 32" fill="none" stroke="#d9fbff" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 15"/><circle cx="5" cy="142" r="8" fill="#fff"/><circle cx="275" cy="32" r="8" fill="#fff"/></svg>${capture('03-page-summary.png')}</section>`,
+      '4': `<section class="slide-4 artboard"><div class="backdrop"></div>${brand}<div class="tab-grid"><div class="tab-tile"></div><div class="tab-tile"></div><div class="tab-tile"></div></div><div class="glass"></div><div class="copy"><h1>Compare tabs<br>Find clarity</h1><p class="subline">Bring the useful details together</p></div>${capture('04-tabs-comparison.png')}</section>`,
+      '5': `<section class="slide-5 artboard"><div class="backdrop"></div>${brand}<div class="copy"><h1>Your browser<br>Your command</h1><p class="subline">Keep every action in your hands</p></div><svg class="route" viewBox="0 0 425 520" aria-hidden="true"><path d="M15 40 C235 10 355 103 257 213 C182 297 366 313 393 458"/><circle cx="15" cy="40" r="9"/><circle cx="257" cy="213" r="9"/><circle cx="393" cy="458" r="9"/></svg><div class="task-orbit"></div>${capture('05-task-approval.png')}</section>`
+    };
+    const rendered = document.createRange().createContextualFragment(slides[slide] || slides['1']);
+    rendered.firstElementChild.id = 'art';
+    document.querySelector('#art').replaceWith(rendered);
+  </script>
+</body>
+</html>

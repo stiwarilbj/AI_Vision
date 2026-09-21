@@ -1,6 +1,6 @@
 {
   "name": "ai-vision-chrome-extension",
-  "version": "2.8.2",
+  "version": "2.10.0",
   "private": true,
   "description": "Gemini AI screenshot assistant, OCR image-to-text, webpage summarizer & multi-tab research copilot for Chrome with your own API key",
   "engines": {

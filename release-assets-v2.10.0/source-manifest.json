@@ -1,0 +1,49 @@
+{
+  "version": "2.10.0",
+  "files": [
+    {
+      "file": "store-artwork.html",
+      "sha256": "fa77937ca51f5ff7b0601c1d5ed16c6f2763eac643c64ce165b78fb571120e6f"
+    },
+    {
+      "file": "source/backgrounds/01-screenshot-insight.png",
+      "sha256": "82d8f3f14588b210fa5d683e3f8d6c55dde0c0da45842907290d5eff1aa5d5ec"
+    },
+    {
+      "file": "source/backgrounds/02-ocr-glass.png",
+      "sha256": "d264eb0b30545257b8c96cf210ee589880d38a0765ca58d018b97a43d564359b"
+    },
+    {
+      "file": "source/backgrounds/03-webpage-flow.png",
+      "sha256": "21f118aedb2d101aee5214726f420ec3a5e0597da44984749e4e7b4c0b070bbc"
+    },
+    {
+      "file": "source/backgrounds/04-tab-geometry.png",
+      "sha256": "9ef8e1c92bbff8f4a74d6a2d51d0dda9237d1309e134eb7eeb8aab92a6905584"
+    },
+    {
+      "file": "source/backgrounds/05-task-grid.png",
+      "sha256": "166cee4a5eb2b9f5aee7b0cd4b947ce8e2963a7ce523bdf2bcfb34dfad0612ce"
+    },
+    {
+      "file": "source/ui-captures/01-screenshot-answer.png",
+      "sha256": "587ee74cb4b6b1cd9e477cd13d33e22d5a1d9a4654bf277665a8ade067bfe61c"
+    },
+    {
+      "file": "source/ui-captures/02-ocr-text.png",
+      "sha256": "7e11834ec2a3ce61799d44ade9cae91c878013883ff74985197451a0a3d4e2cc"
+    },
+    {
+      "file": "source/ui-captures/03-page-summary.png",
+      "sha256": "aea2cb71b11f47b37c6a37b388a09871fef15da99d6d9760ac5c795fbff54ee6"
+    },
+    {
+      "file": "source/ui-captures/04-tabs-comparison.png",
+      "sha256": "f4a270ebd8b2349620bc1e28cfb0a28ccd23e35e6ecbee27f7e41bb42da28709"
+    },
+    {
+      "file": "source/ui-captures/05-task-approval.png",
+      "sha256": "408e4092e914325f15fb3608ef4d0845f299b3465f7fe7c223b4f3247915cd82"
+    }
+  ]
+}
