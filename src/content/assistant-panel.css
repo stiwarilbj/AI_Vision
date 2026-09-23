@@ -37,6 +37,7 @@
 .gemini-workspace-heading { text-align: center; padding-top: 10px; }
 #gemini-workspace-title { margin: 0 0 8px; font-size: 25px; line-height: 1.2; font-weight: 650; letter-spacing: -.9px; }
 #gemini-workspace-description { max-width: 290px; margin: 0 auto; color: var(--muted); font-size: 13px; line-height: 1.6; }
+#gemini-activity-hint { max-width: 290px; margin: 6px auto 0; color: var(--muted); font-size: 11px; line-height: 1.45; opacity: 0.85; }
 .ready .gemini-workspace-heading { text-align: left; padding-top: 0; }
 .ready #gemini-workspace-title { font-size: 22px; }
 .ready #gemini-workspace-description { max-width: none; }

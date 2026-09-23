@@ -190,19 +190,19 @@ test('rollback preparation rejects short SHAs and commits without a successful P
 test('release archive matches every allowlisted source byte and detects a stale fixture', () => {
   const result = checkArchive();
   assert.equal(result.status, 'passed');
-  assert.equal(result.version, '2.10.0');
-  assert.equal(result.entries.length, 14);
+  assert.equal(result.version, '2.11');
+  assert.equal(result.entries.length, 16);
   assert.throws(() => checkArchive({
     readEntry: (archive, entry) => entry === 'src/background/service-worker.js' ? Buffer.from('stale fixture') : readArchiveEntry(archive, entry)
   }), /Release archive is stale for src\/background\/service-worker\.js/);
 });
 
-test('root upload alias is a separately validated v2.10.0 package', () => {
+test('root upload alias is a separately validated v2.11 package', () => {
   const alias = path.join(projectRoot, 'AI_Vision_Extension_Package.zip');
   assert.ok(fs.existsSync(alias), 'The root upload alias must be present for repository handoff.');
   const result = checkArchive({ archivePath: alias });
   assert.equal(result.status, 'passed');
-  assert.equal(result.version, '2.10.0');
+  assert.equal(result.version, '2.11');
 });
 
 test('reviewed visual baseline guard catches a missing state before comparison', () => {

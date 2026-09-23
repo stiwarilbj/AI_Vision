@@ -38,8 +38,11 @@ if (!manifest.permissions.includes('activeTab') || manifest.permissions.includes
 if (!manifest.host_permissions.includes('https://generativelanguage.googleapis.com/*')) {
   throw new Error('Permission lint failed: missing narrow Gemini host permission.');
 }
-if (!manifest.optional_host_permissions.includes('http://*/*') || !manifest.optional_host_permissions.includes('https://*/*')) {
-  throw new Error('Permission lint failed: broad HTTP/HTTPS access must remain optional for All Tabs.');
+if (!manifest.host_permissions.includes('http://*/*') || !manifest.host_permissions.includes('https://*/*')) {
+  throw new Error('Permission lint failed: HTTP/HTTPS host access is required for supported page bridges.');
+}
+if (!Array.isArray(manifest.content_scripts) || !manifest.content_scripts.some((entry) => entry.js?.includes('src/content/silent-engagement.js'))) {
+  throw new Error('Permission lint failed: silent engagement bridge must be registered as a content script.');
 }
 if (!/responseSchema/.test(worker) || !/targetSignature/.test(worker)) {
   throw new Error('Security lint failed: structured actions and live target signatures are required.');

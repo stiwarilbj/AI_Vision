@@ -112,18 +112,18 @@
 
     const QUICK_ACTIONS = {
         capture: [
-            { text: 'Summarize', icon: 'list', query: 'Summarize the captured content.' },
-            { text: 'Extract text', icon: 'copy', query: 'Extract the visible text accurately and preserve its reading order.' }
+            { text: 'Summarize', icon: 'list', query: 'Summarize the selected image in three key points. State the main takeaway and flag any unclear details.' },
+            { text: 'Extract text', icon: 'copy', query: 'Transcribe all readable text in reading order. Preserve line breaks, spelling, numbers, and punctuation; mark unreadable text as [unclear].' }
         ],
         tab: [
-            { text: 'Summarize', icon: 'list', query: 'Summarize this page with the key points.' },
-            { text: 'Key points', icon: 'explain', query: 'Give me the most important points from this page as a scannable list.' },
-            { text: 'Next steps', icon: 'answer', query: 'Turn this page into practical next steps or a checklist.' }
+            { text: 'Summarize', icon: 'list', query: 'Summarize this page’s main point and key supporting details. Separate stated facts from opinion and note important caveats.' },
+            { text: 'Key points', icon: 'explain', query: 'List the three to five most important points from this page. Keep names and figures exact and include key caveats.' },
+            { text: 'Next steps', icon: 'answer', query: 'Extract explicit actions and deadlines from this page. Separate requirements from suggestions and do not infer missing dates.' }
         ],
         'all-tabs': [
-            { text: 'Compare', icon: 'list', query: 'Compare the relevant tabs and highlight the important differences.' },
-            { text: 'Find themes', icon: 'explain', query: 'Find the common themes, agreements, and contradictions across these tabs.' },
-            { text: 'Make brief', icon: 'answer', query: 'Create one concise brief from the useful information across these tabs.' }
+            { text: 'Compare', icon: 'list', query: 'Compare the relevant tabs using the details that matter to the decision. Attribute key claims to a source and flag conflicts or missing information.' },
+            { text: 'Find themes', icon: 'explain', query: 'Identify shared themes and disagreements across readable tabs. Keep source-specific claims attributed and do not merge conflicting details.' },
+            { text: 'Make brief', icon: 'answer', query: 'Create a concise brief from relevant tab evidence: key findings, the source for each, and open questions. Separate facts from recommendations.' }
         ]
     };
 
@@ -744,8 +744,12 @@
             workspaceTitle.id = 'gemini-workspace-title';
             workspaceDescription = document.createElement('p');
             workspaceDescription.id = 'gemini-workspace-description';
+            const activityHint = document.createElement('p');
+            activityHint.id = 'gemini-activity-hint';
+            activityHint.hidden = true;
             workspaceHeading.appendChild(workspaceTitle);
             workspaceHeading.appendChild(workspaceDescription);
+            workspaceHeading.appendChild(activityHint);
             workspace.appendChild(workspaceHeading);
 
             captureFrame = document.createElement('section');
@@ -1707,6 +1711,12 @@
                 textQuestionEnabled = true;
                 renderSelectedMode();
             }
+            void sendWorkerMessage({ action: 'getEphemeralPageHint' }).then((response) => {
+                const hint = typeof response?.hint === 'string' ? response.hint.trim() : '';
+                if (!popup || !hint) return;
+                activityHint.textContent = hint;
+                activityHint.hidden = false;
+            }).catch(() => {});
             (composer.hidden ? primaryModeButton : queryInput).focus();
             if (!hasApiKey) settingsButton.click();
             if (shouldAutoSubmit) setTimeout(() => { if (popup) void submitUserRequest(); }, 0);
@@ -1748,6 +1758,7 @@
             if (uiHost) uiHost.remove();
             uiHost = null;
             uiShadowRoot = null;
+            void sendWorkerMessage({ action: 'releaseEphemeralPageHint' }).catch(() => {});
             syncSessionState();
         }
 

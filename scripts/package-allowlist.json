@@ -5,6 +5,8 @@
   "src/background/service-worker.js",
   "src/background/adk-runtime.js",
   "src/content/capture-utils.js",
+  "src/content/silent-engagement.js",
+  "src/content/page-activity.js",
   "src/content/assistant-panel.js",
   "src/content/assistant-panel.css",
   "extension-assets/icons/icon-16.png",

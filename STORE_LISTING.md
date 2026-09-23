@@ -1,4 +1,4 @@
-# Chrome Web Store copy – version 2.10.0 package (public listing currently v2.5)
+# Chrome Web Store copy – version 2.11 package (public listing currently v2.5)
 
 Official active listing (public v2.5): https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk
 
@@ -111,7 +111,7 @@ AI Vision is a browser-content assistant that lets users ask Google's Gemini API
 
 ### activeTab justification
 
-The activeTab permission supports user-initiated activation from the toolbar or context menu on the page the user is viewing. AI Vision uses the active page as the source for Screenshot capture, This page questions, and the starting point for window-scoped tasks. Access is initiated by an explicit user action; the extension does not silently activate itself on a page.
+The activeTab permission supports user-initiated activation from the toolbar or context menu on the page the user is viewing. AI Vision uses the active page as the source for Screenshot capture, This page questions, and the starting point for window-scoped tasks. A small page-activity bridge also runs where Chrome allows the declared HTTP/HTTPS host access; it records only a short-lived title, path, and selected-text preview in extension memory.
 
 ### scripting justification
 
@@ -131,7 +131,7 @@ The optional tabs permission supports Compare tabs and Compare tabs Browser task
 
 ### Host permission justification
 
-The required host permission is limited to `https://generativelanguage.googleapis.com/*` for Gemini requests and the bundled ADK planner. Optional `http://*/*` and `https://*/*` access is requested only when the user chooses Compare tabs, because that mode reads supported pages across multiple domains. Screenshot and This page use user-initiated `activeTab` access. Restricted Chrome pages and the Chrome Web Store remain inaccessible.
+The required host permissions include `https://generativelanguage.googleapis.com/*` for Gemini requests and the bundled ADK planner, plus HTTP/HTTPS host access for the page-activity bridge and supported page features. The optional `tabs` permission is requested only when the user chooses Compare tabs, because that mode lists tabs in the starting Chrome window. Restricted Chrome pages and the Chrome Web Store remain inaccessible.
 
 ### Are you using remote code?
 
@@ -148,10 +148,10 @@ Disclose these data categories because the extension handles them for its user-f
 - Authentication information: the Gemini API key supplied by the user and sent to Google for API authentication.
 - Website content: user-selected screenshots, visible page text, and labels or destinations of visible page controls sent to Gemini when needed for a request.
 - Web history/browsing activity: live tab titles and URLs used for This page, Compare tabs, and Browser tasks. AI Vision does not read Chrome's stored browsing-history database.
-- User activity: the user's prompts and selected browser task actions.
+- User activity: the user's prompts and selected browser task actions. A page-activity bridge also observes pointer and scroll events and sends a throttled keyboard ping; it does not collect key values. A short-lived title, path, and selected-text preview can be sent with a Gemini request if the user submits one while the hint is available.
 
 State that data is used only for the extension's single purpose, is not sold, and is not used for advertising or credit decisions. Normal and Browser tasks requests are sent directly to Google from the service worker using the user-supplied key. Link the store listing to the hosted version of `PRIVACY.md` before submission.
 
 ## Reviewer note about the retained permissions
 
-This version keeps only `activeTab`, `scripting`, `contextMenus`, `storage`, and the narrow Gemini host permission as required permissions. `tabs` and ordinary HTTP/HTTPS host access are optional. Retest Screenshot, This page, Compare tabs, ADK rotation, and Browser tasks after any permission change.
+This version requires `activeTab`, `scripting`, `contextMenus`, `storage`, Gemini API access, and HTTP/HTTPS host access for page bridges and supported page features. `tabs` remains optional and is requested when the user chooses Compare tabs. Retest Screenshot, This page, Compare tabs, ADK rotation, and Browser tasks after any permission change.

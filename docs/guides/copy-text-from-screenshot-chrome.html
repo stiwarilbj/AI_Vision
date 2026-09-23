@@ -52,7 +52,7 @@
     <h2 id="examples">3. Worked examples</h2>
     <h3 id="error-message">Error message</h3>
     <p>Capture the complete error, including its code and the first line of surrounding context. Ask:</p>
-    <blockquote>“Transcribe this error exactly. Keep punctuation and line breaks. Separate the error code from the explanatory text, and write [unclear] instead of guessing.”</blockquote>
+    <blockquote>“Transcribe this error exactly, preserving punctuation and line breaks. Separate the error code from its explanation and mark unreadable text as [unclear].”</blockquote>
     <div class="paired-example"><div><p class="example-label">Fictional source text in the screenshot</p><pre><code>Upload failed (E-204)
 The selected file is larger than 25 MB.
 Try a smaller file and upload again.</code></pre></div><div><p class="example-label">Expected transcription</p><pre><code>Upload failed (E-204)
@@ -61,7 +61,7 @@ Try a smaller file and upload again.</code></pre></div></div>
 
     <h3 id="announcement-image">Announcement image</h3>
     <p>Include the title, date, location, and any small-print condition. Ask:</p>
-    <blockquote>“Extract the announcement in reading order. Preserve the date, time, names, and punctuation. Put each bullet on its own line.”</blockquote>
+    <blockquote>“Transcribe the announcement in reading order. Preserve dates, times, names, and punctuation; put each bullet on its own line and mark unreadable text as [unclear].”</blockquote>
     <div class="paired-example"><div><p class="example-label">Fictional source text in the screenshot</p><pre><code>Quiet study hour
 Tuesdays and Thursdays · 4–5 pm
 Six-week trial beginning September 15
@@ -72,7 +72,7 @@ The ground floor remains open for conversation.</code></pre></div></div>
 
     <h3 id="small-table">Small table</h3>
     <p>Drag around the table with its column headings. Ask Gemini to keep the row and column relationship visible:</p>
-    <blockquote>“Transcribe this table as Markdown. Keep the header names, preserve units, and do not fill in blank cells.”</blockquote>
+    <blockquote>“Transcribe this table as Markdown. Preserve the original headers and units; leave blank cells blank and mark unreadable cells as [unclear].”</blockquote>
     <div class="paired-example"><div><p class="example-label">Fictional source table in the screenshot</p><table class="source-table"><caption>Source material</caption><thead><tr><th scope="col">Plan</th><th scope="col">Storage</th><th scope="col">Price</th></tr></thead><tbody><tr><th scope="row">Starter</th><td>5 GB</td><td>$4/month</td></tr><tr><th scope="row">Team</th><td>50 GB</td><td>$12/month</td></tr><tr><th scope="row">Enterprise</th><td></td><td>Contact us</td></tr></tbody></table></div><div><p class="example-label">Expected transcription</p><pre><code>| Plan       | Storage | Price       |
 |------------|---------|-------------|
 | Starter    | 5 GB    | $4/month    |
@@ -81,7 +81,7 @@ The ground floor remains open for conversation.</code></pre></div></div>
     <p>Tables are easy to misread when the selection misses a header or a row. Check every number before you use a copied transcription.</p>
 
     <h2 id="prompts">Prompts that protect accuracy</h2>
-    <ul><li><strong>Reading order:</strong> “Read from top to bottom and left to right. Keep headings before the paragraphs they introduce.”</li><li><strong>Exact copy:</strong> “Preserve capitalization, punctuation, symbols, and visible spelling. Do not improve the wording.”</li><li><strong>Uncertainty:</strong> “Mark letters or numbers you cannot read as [unclear]. List the uncertain regions after the transcription.”</li><li><strong>Structured output:</strong> “Return only the text in a code block,” or “Return a Markdown table with the original headers.”</li></ul>
+    <ul><li><strong>Reading order:</strong> “Transcribe readable text from top to bottom and left to right. Keep headings with the sections they introduce.”</li><li><strong>Exact copy:</strong> “Copy the visible wording exactly, preserving capitalization, punctuation, symbols, and spelling. Do not rewrite or correct it.”</li><li><strong>Uncertainty:</strong> “Mark unreadable letters or numbers as [unclear]. After the transcription, list only the regions that remain uncertain.”</li><li><strong>Structured output:</strong> “Return only the transcription in a code block,” or “Return a Markdown table with the original headers.”</li></ul>
 
     <h2 id="troubleshooting">If extraction does not work</h2>
     <ul><li><strong>Blurry text:</strong> zoom the webpage before selecting, choose a tighter area, and include enough surrounding context for the reading order.</li><li><strong>A line is missing:</strong> retake the screenshot with the full line and its heading. A narrow crop can make Gemini lose the relationship between labels and values.</li><li><strong>Selection is cancelled:</strong> press Escape or Cancel to return to the earlier capture. A new successful capture starts a fresh conversation.</li><li><strong>Restricted page:</strong> move to a normal HTTP or HTTPS webpage. AI Vision cannot capture Chrome internal pages or the Chrome Web Store.</li><li><strong>Invalid key or quota error:</strong> open Settings, keep the saved key, and use the feedback to check Google AI Studio’s project, model access, and limits. See the <a href="get-gemini-api-key.html#troubleshooting">key troubleshooting guide</a>.</li></ul>

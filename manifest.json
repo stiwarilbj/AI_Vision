@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "AI Vision: Gemini Screenshot, Webpage & Multi-Tab AI Assistant for Chrome",
   "short_name": "AI Vision",
-  "version": "2.10.0",
+  "version": "2.11",
   "minimum_chrome_version": "102",
   "description": "Gemini AI screenshot assistant, OCR image-to-text, webpage summarizer & multi-tab research copilot for Chrome with your own API key",
   "permissions": [
@@ -15,9 +15,7 @@
     "tabs"
   ],
   "host_permissions": [
-    "https://generativelanguage.googleapis.com/*"
-  ],
-  "optional_host_permissions": [
+    "https://generativelanguage.googleapis.com/*",
     "http://*/*",
     "https://*/*"
   ],
@@ -48,6 +46,19 @@
     "48": "extension-assets/icons/icon-48.png",
     "128": "extension-assets/icons/icon-128.png"
   },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "src/content/silent-engagement.js",
+        "src/content/page-activity.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
   "web_accessible_resources": [
     {
       "resources": [

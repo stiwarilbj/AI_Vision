@@ -6,7 +6,7 @@ AI Vision is a Chrome extension that lets a user ask Google's Gemini API about a
 
 ## Data AI Vision handles
 
-Only when the user invokes a feature, AI Vision may handle:
+When the user invokes a feature, AI Vision may handle:
 
 - the user's question, response-style choice, selected model, and task controls;
 - a screenshot region selected by the user;
@@ -14,6 +14,8 @@ Only when the user invokes a feature, AI Vision may handle:
 - titles, sanitized URLs, and bounded readable content from up to 20 supported tabs in the starting Chrome window;
 - a Gemini API key supplied by the user; and
 - local preferences such as mode, temperature, response style, and whether Agent Mode is enabled.
+
+A small page-activity bridge also runs on supported HTTP and HTTPS pages where Chrome allows the extension's host access. After pointer or scroll activity, it sends the page title, path, and up to 120 characters of selected text to the extension service worker. The worker keeps this hint in memory for up to three seconds after activity, or while the AI Vision panel is open, and clears it on navigation or tab close. If the user sends a Gemini request while the hint is available, the hint is included with that request. A separate throttled keyboard ping records no key values or page text.
 
 AI Vision does not read the user's saved Chrome browsing-history database. Page text, labels, URLs, and screenshots are treated as untrusted model input and cannot authorize an extension action.
 
@@ -31,7 +33,7 @@ URLs sent as context have query strings and fragments removed. HTTP pages may be
 
 The full Gemini API key and preferences are stored locally in the current Chrome profile through `chrome.storage.local`. Local storage access is restricted to trusted extension contexts, and the content script receives only a boolean key status and masked suffix. The full key is not rendered in the page DOM or sent to the content panel's settings state.
 
-AI Vision does not intentionally store screenshots, page content, prompts, Gemini responses, or task context on a developer server. In-progress Agent Mode state and the next ADK model index may be held in Chrome extension storage so a service-worker restart can validate a task ID and preserve rotation; task state is removed when the task ends or is cancelled. Users can remove extension data by clearing the extension's data or uninstalling it.
+AI Vision does not intentionally store screenshots, page content, prompts, Gemini responses, or task context on a developer server. The short-lived page-activity hint is held only in service-worker memory and is cleared on navigation, tab close, request use, or expiry. In-progress Agent Mode state and the next ADK model index may be held in Chrome extension storage so a service-worker restart can validate a task ID and preserve rotation; task state is removed when the task ends or is cancelled. Users can remove extension data by clearing the extension's data or uninstalling it.
 
 ## Agent Mode controls
 
@@ -46,7 +48,8 @@ Reading, waiting, scrolling, and activating an existing in-scope tab can proceed
 - `contextMenus` provides the right-click launcher.
 - `storage` stores the key and preferences locally.
 - `https://generativelanguage.googleapis.com/*` is the narrow Gemini API host permission.
-- Optional `tabs`, `http://*/*`, and `https://*/*` access is requested only when the user chooses All Tabs or an All Tabs Agent task.
+- HTTP and HTTPS host access supports the page-activity bridge and user-invoked page features on supported sites. Chrome site access controls determine where content scripts can run.
+- Optional `tabs` access is requested only when the user chooses All Tabs or an All Tabs Agent task; it enables tab listing and window-scoped context.
 
 Chrome internal pages, the Chrome Web Store, and other restricted pages are not accessible to these features.
 

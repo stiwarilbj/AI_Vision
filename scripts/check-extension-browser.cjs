@@ -151,7 +151,7 @@ function writeReport(report) {
   let freshContext;
   let debugPage;
   try {
-    assert.equal(manifest.version, '2.10.0', 'the smoke test targets the v2.10.0 manifest');
+    assert.equal(manifest.version, '2.11', 'the smoke test targets the v2.11 manifest');
     assert.equal(manifest.manifest_version, 3, 'the release uses Manifest V3');
     assert.ok(manifest.permissions.includes('storage'), 'storage permission is declared');
     assert.ok(manifest.permissions.includes('activeTab'), 'activeTab permission is declared');
@@ -304,7 +304,7 @@ function writeReport(report) {
 
     report.status = 'passed';
     report.checks = [
-      'Manifest V3 and v2.10.0 metadata',
+      'Manifest V3 and v2.11 metadata',
       'service worker startup and bundled ADK runtime',
       'extension-page messaging and default settings',
       'isolated storage persistence and fresh-profile reset',
