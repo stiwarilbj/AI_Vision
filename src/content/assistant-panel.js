@@ -1717,7 +1717,9 @@
                 activityHint.textContent = hint;
                 activityHint.hidden = false;
             }).catch(() => {});
-            (composer.hidden ? primaryModeButton : queryInput).focus();
+            // Keep initial focus on the dialog surface so opening the panel does
+            // not flash a focus ring around its primary action.
+            popup.focus({ preventScroll: true });
             if (!hasApiKey) settingsButton.click();
             if (shouldAutoSubmit) setTimeout(() => { if (popup) void submitUserRequest(); }, 0);
             const shouldAutomaticallyExplain = pendingAutomaticExplanation;
