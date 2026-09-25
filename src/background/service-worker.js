@@ -279,6 +279,7 @@ function normalizeSettings(result = {}) {
     geminiMode: normalizeMode(result.geminiMode),
     geminiResponseStyle: normalizeResponseStyle(result.geminiResponseStyle),
     geminiCaptureBehavior: normalizeCaptureBehavior(result.geminiCaptureBehavior),
+    geminiStartCaptureOnOpen: result.geminiStartCaptureOnOpen !== false,
     geminiTheme: normalizeTheme(result.geminiTheme),
     ...normalizeReviewPromptState(result),
     geminiAgentMode: result.geminiAgentMode === true
@@ -296,6 +297,7 @@ async function getStoredSettings() {
     'geminiMode',
     'geminiResponseStyle',
     'geminiCaptureBehavior',
+    'geminiStartCaptureOnOpen',
     'geminiTheme',
     'geminiReviewPromptLastShownAt',
     'geminiReviewPromptDismissed',
@@ -367,6 +369,7 @@ async function saveSettings(request = {}) {
     'geminiResponseStyle',
     'geminiAgentMode',
     'geminiCaptureBehavior',
+    'geminiStartCaptureOnOpen',
     'geminiTheme'
   ]);
   const values = {
@@ -375,6 +378,9 @@ async function saveSettings(request = {}) {
     geminiMode: normalizeMode(request.geminiMode ?? current.geminiMode),
     geminiResponseStyle: normalizeResponseStyle(request.geminiResponseStyle ?? current.geminiResponseStyle),
     geminiCaptureBehavior: normalizeCaptureBehavior(request.geminiCaptureBehavior ?? current.geminiCaptureBehavior),
+    geminiStartCaptureOnOpen: typeof request.geminiStartCaptureOnOpen === 'boolean'
+      ? request.geminiStartCaptureOnOpen
+      : current.geminiStartCaptureOnOpen !== false,
     geminiTheme: normalizeTheme(request.geminiTheme ?? current.geminiTheme),
     geminiAgentMode: request.geminiAgentMode ?? (current.geminiAgentMode === true)
   };
@@ -397,7 +403,9 @@ function normalizeLaunchOptions(options = {}) {
   const query = typeof options.query === 'string'
     ? options.query.replace(/\s+/g, ' ').trim().slice(0, MAX_AGENT_TASK_CHARS)
     : '';
-  return { mode, query, autoSubmit: options.autoSubmit === true && query !== '' };
+  const launchOptions = { mode, query, autoSubmit: options.autoSubmit === true && query !== '' };
+  if (options.startCapture === true) launchOptions.startCapture = true;
+  return launchOptions;
 }
 
 function normalizePageActivityKind(value) {
@@ -612,7 +620,9 @@ async function bootstrapExtension() {
 
 chrome.runtime.onInstalled.addListener(() => { void bootstrapExtension(); });
 chrome.runtime.onStartup?.addListener(() => { void bootstrapExtension(); });
-chrome.action.onClicked.addListener(openAssistantInTab);
+chrome.action.onClicked.addListener((tab) => {
+  void openAssistantInTab(tab, { startCapture: true });
+});
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === CONTEXT_MENU_IDS.capture) {

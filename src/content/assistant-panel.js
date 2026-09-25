@@ -8,6 +8,7 @@
     const DEFAULT_MODE = "capture";
     const DEFAULT_RESPONSE_STYLE = "balanced";
     const DEFAULT_CAPTURE_BEHAVIOR = "manual";
+    const DEFAULT_START_CAPTURE_ON_OPEN = true;
     const EXPLAIN_CAPTURE_QUERY = 'Explain the captured content and what it means.';
     const STORE_URL = "https://chromewebstore.google.com/detail/ai-vision-gemini-screensh/ghmmlbclopoakmjjbkkmoefjldgjimgk";
     const STORE_REVIEW_URL = `${STORE_URL}/reviews`;
@@ -94,6 +95,7 @@
     let selectedMode = DEFAULT_MODE;
     let selectedResponseStyle = DEFAULT_RESPONSE_STYLE;
     let captureBehavior = DEFAULT_CAPTURE_BEHAVIOR;
+    let startCaptureOnOpen = DEFAULT_START_CAPTURE_ON_OPEN;
     let isAgentModeEnabled = false;
     let availableModels = [];
     let reviewPromptState = {
@@ -197,7 +199,8 @@
             geminiTheme: selectedTheme,
             geminiTemperature: responseTemperature,
             geminiResponseStyle: selectedResponseStyle,
-            geminiCaptureBehavior: captureBehavior
+            geminiCaptureBehavior: captureBehavior,
+            geminiStartCaptureOnOpen: startCaptureOnOpen
         });
         if (response) {
             hasApiKey = response.hasApiKey === true;
@@ -205,6 +208,7 @@
             captureBehavior = response.geminiCaptureBehavior === 'auto-explain'
                 ? 'auto-explain'
                 : DEFAULT_CAPTURE_BEHAVIOR;
+            startCaptureOnOpen = response.geminiStartCaptureOnOpen !== false;
             if (extra.apiKey || extra.clearApiKey) {
                 keyConnectionState = hasApiKey ? 'saved' : 'missing';
                 keyConnectionError = '';
@@ -231,6 +235,7 @@
         captureBehavior = result?.geminiCaptureBehavior === 'auto-explain'
             ? 'auto-explain'
             : DEFAULT_CAPTURE_BEHAVIOR;
+        startCaptureOnOpen = result?.geminiStartCaptureOnOpen !== false;
         isAgentModeEnabled = false;
         hasApiKey = result?.hasApiKey === true;
         apiKeyMasked = result?.apiKeyMasked || '';
@@ -366,6 +371,7 @@
 
         let overlay, selectionRectDiv, startX, startY, isSelecting = false;
         let capturePopupDisplay = null;
+        let captureReturnFocus = null;
         let capturedImageData = typeof sessionState.capturedImageData === 'string'
             ? sessionState.capturedImageData
             : null;
@@ -459,6 +465,7 @@
         function startCaptureSelection() {
             ensureUiRoot();
             const attemptGeneration = ++captureAttemptGeneration;
+            captureReturnFocus = uiShadowRoot.activeElement || popup;
             if (popup) {
                 capturePopupDisplay = popup.style.display;
                 popup.style.display = 'none';
@@ -467,6 +474,7 @@
             overlay.id = 'gemini-screenshot-overlay';
             overlay.dataset.captureAttempt = String(attemptGeneration);
             overlay.setAttribute('aria-label', 'Screenshot selection. Drag around what you want explained.');
+            overlay.tabIndex = -1;
             selectionRectDiv = document.createElement('div');
             selectionRectDiv.id = 'gemini-selection-rectangle';
             selectionRectDiv.style.display = 'none';
@@ -506,6 +514,7 @@
             overlay.style.touchAction = 'none';
             overlay.style.pointerEvents = 'auto';
             uiShadowRoot.appendChild(overlay);
+            overlay.focus({ preventScroll: true });
         }
 
         function handlePointerDown(e) {
@@ -647,10 +656,11 @@
                 popup.style.display = capturePopupDisplay || '';
                 capturePopupDisplay = null;
                 refreshModeControls();
-                const focusTarget = selectedMode === 'capture'
-                    ? uiQuery('#gemini-primary-mode')
-                    : queryInput;
-                focusTarget?.focus();
+                const focusTarget = captureReturnFocus?.isConnected && captureReturnFocus.getClientRects().length
+                    ? captureReturnFocus
+                    : popup;
+                captureReturnFocus = null;
+                focusTarget.focus({ preventScroll: true });
                 if (message) showUserError(message);
             } else if (hadPanel) {
                 openAssistantPanel();
@@ -1296,6 +1306,52 @@
             autoChoice.append(autoRadio, autoCopy);
             captureBehaviorGroup.append(captureBehaviorLegend, manualChoice, autoChoice, captureBehaviorFeedback);
 
+            const startCaptureOnOpenGroup = document.createElement('fieldset');
+            startCaptureOnOpenGroup.id = 'gemini-start-capture-on-open';
+            startCaptureOnOpenGroup.className = 'gemini-capture-behavior';
+            const startCaptureOnOpenLegend = document.createElement('legend');
+            startCaptureOnOpenLegend.textContent = 'Toolbar button';
+            const startCaptureOnOpenChoice = document.createElement('label');
+            startCaptureOnOpenChoice.className = 'gemini-capture-behavior-choice';
+            const startCaptureOnOpenInput = document.createElement('input');
+            startCaptureOnOpenInput.type = 'checkbox';
+            startCaptureOnOpenInput.id = 'gemini-start-capture-on-open-input';
+            const startCaptureOnOpenCopy = document.createElement('span');
+            startCaptureOnOpenCopy.innerHTML = '<strong>Start screenshot selection on open</strong><small>Show the area picker when you click the AI Vision toolbar icon.</small>';
+            startCaptureOnOpenChoice.append(startCaptureOnOpenInput, startCaptureOnOpenCopy);
+            const startCaptureOnOpenFeedback = document.createElement('p');
+            startCaptureOnOpenFeedback.id = 'gemini-start-capture-on-open-feedback';
+            startCaptureOnOpenFeedback.className = 'gemini-capture-behavior-feedback';
+            startCaptureOnOpenFeedback.setAttribute('role', 'status');
+            startCaptureOnOpenGroup.append(startCaptureOnOpenLegend, startCaptureOnOpenChoice, startCaptureOnOpenFeedback);
+
+            function renderStartCaptureOnOpen() {
+                startCaptureOnOpenInput.checked = startCaptureOnOpen;
+                startCaptureOnOpenChoice.classList.toggle('selected', startCaptureOnOpen);
+            }
+
+            async function saveStartCaptureOnOpen() {
+                const previousPreference = startCaptureOnOpen;
+                startCaptureOnOpen = startCaptureOnOpenInput.checked;
+                renderStartCaptureOnOpen();
+                startCaptureOnOpenFeedback.textContent = 'Saving…';
+                try {
+                    await saveSettings();
+                    startCaptureOnOpenFeedback.textContent = startCaptureOnOpen
+                        ? 'Toolbar clicks will start screenshot selection.'
+                        : 'Toolbar clicks will open the panel without starting screenshot selection.';
+                } catch (error) {
+                    startCaptureOnOpen = previousPreference;
+                    renderStartCaptureOnOpen();
+                    startCaptureOnOpenFeedback.textContent = error.message || 'Could not save this preference. Your previous choice is still selected.';
+                }
+            }
+
+            startCaptureOnOpenInput.addEventListener('change', () => {
+                void saveStartCaptureOnOpen();
+            });
+            renderStartCaptureOnOpen();
+
             function renderCaptureBehavior() {
                 const isAutomatic = captureBehavior === 'auto-explain';
                 manualRadio.checked = !isAutomatic;
@@ -1351,6 +1407,7 @@
             settingsPanel.appendChild(setupIntro);
             settingsPanel.appendChild(getKeyGuide);
             settingsPanel.appendChild(apiKeyGroup);
+            settingsPanel.appendChild(startCaptureOnOpenGroup);
             settingsPanel.appendChild(captureBehaviorGroup);
             settingsPanel.appendChild(optionalSettings);
             settingsPanel.appendChild(themeGroup);
@@ -1704,6 +1761,13 @@
             }
             const launchQuery = typeof launchOptions.query === 'string' ? launchOptions.query.trim() : '';
             const shouldAutoSubmit = launchOptions.autoSubmit === true && launchQuery !== '';
+            const shouldStartCaptureOnOpen = launchOptions.startCapture === true
+                && startCaptureOnOpen
+                && hasApiKey
+                && selectedMode === 'capture'
+                && !launchQuery
+                && !shouldAutoSubmit;
+            launchOptions.startCapture = false;
             launchOptions.query = '';
             launchOptions.autoSubmit = false;
             if (launchQuery) {
@@ -1717,9 +1781,12 @@
                 activityHint.textContent = hint;
                 activityHint.hidden = false;
             }).catch(() => {});
-            // Keep initial focus on the dialog surface so opening the panel does
-            // not flash a focus ring around its primary action.
-            popup.focus({ preventScroll: true });
+            if (shouldStartCaptureOnOpen) {
+                startCaptureSelection();
+            } else {
+                // Focus the dialog itself so opening it does not ring the primary action.
+                popup.focus({ preventScroll: true });
+            }
             if (!hasApiKey) settingsButton.click();
             if (shouldAutoSubmit) setTimeout(() => { if (popup) void submitUserRequest(); }, 0);
             const shouldAutomaticallyExplain = pendingAutomaticExplanation;
@@ -2374,18 +2441,27 @@
                     : { mode: DEFAULT_MODE, agentMode: false };
                 const launchQuery = typeof launchOptions.query === 'string' ? launchOptions.query.trim() : '';
                 const shouldAutoSubmit = launchOptions.autoSubmit === true && launchQuery !== '';
+                const shouldStartCaptureOnOpen = launchOptions.startCapture === true
+                    && startCaptureOnOpen
+                    && hasApiKey
+                    && launchState.mode === DEFAULT_MODE
+                    && !launchQuery
+                    && !shouldAutoSubmit;
                 const startsNewConversation = launchState.mode !== DEFAULT_MODE || Boolean(launchQuery) || shouldAutoSubmit;
                 if (startsNewConversation) {
                     capturedImageData = null;
                     resetConversation();
                 }
-                const restoreSession = answerHistory.length > 0
+                const restoreSession = !shouldStartCaptureOnOpen
+                    && answerHistory.length > 0
                     && launchOptions.mode === DEFAULT_MODE
                     && !launchQuery
                     && !shouldAutoSubmit;
-                selectedMode = restoreSession && typeof sessionState.selectedMode === 'string'
-                    ? sessionState.selectedMode
-                    : launchState.mode;
+                selectedMode = shouldStartCaptureOnOpen
+                    ? DEFAULT_MODE
+                    : restoreSession && typeof sessionState.selectedMode === 'string'
+                        ? sessionState.selectedMode
+                        : launchState.mode;
                 isAgentModeEnabled = launchState.agentMode;
                 if (launchOptions.autoSubmit === true) isAgentModeEnabled = false;
                 syncSessionState();
