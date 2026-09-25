@@ -1763,7 +1763,6 @@
             const shouldAutoSubmit = launchOptions.autoSubmit === true && launchQuery !== '';
             const shouldStartCaptureOnOpen = launchOptions.startCapture === true
                 && startCaptureOnOpen
-                && hasApiKey
                 && selectedMode === 'capture'
                 && !launchQuery
                 && !shouldAutoSubmit;
@@ -2443,7 +2442,6 @@
                 const shouldAutoSubmit = launchOptions.autoSubmit === true && launchQuery !== '';
                 const shouldStartCaptureOnOpen = launchOptions.startCapture === true
                     && startCaptureOnOpen
-                    && hasApiKey
                     && launchState.mode === DEFAULT_MODE
                     && !launchQuery
                     && !shouldAutoSubmit;
